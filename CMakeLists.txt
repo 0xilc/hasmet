@@ -15,7 +15,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Add source to this project's executable.
-add_executable (raytracer "src/main.cpp" "src/core/vec.h" "src/core/logging.h" "src/core/ray.h" "src/core/spectrum.h" "src/io/image_io.cpp" "src/film/film.h" "src/film/film.cpp" "src/camera/camera.h" "src/camera/pinhole.h" "src/camera/pinhole.cpp")
+add_executable (raytracer "src/main.cpp" "src/core/vec.h" "src/core/logging.h" "src/core/ray.h" "src/core/spectrum.h" "src/io/image_io.cpp" "src/film/film.h" "src/film/film.cpp" "src/camera/camera.h" "src/camera/pinhole.h" "src/camera/pinhole.cpp" "src/geometry/shape.h" "src/geometry/sphere.h")
 
 target_include_directories(raytracer PUBLIC 
 "${CMAKE_CURRENT_SOURCE_DIR}/src"
