@@ -15,6 +15,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Add source to this project's executable.
-add_executable (raytracer "src/main.cpp" "src/core/vec.h" "src/core/logging.h" "src/core/ray.h" "src/core/spectrum.h")
+add_executable (raytracer "src/main.cpp" "src/core/vec.h" "src/core/logging.h" "src/core/ray.h" "src/core/spectrum.h" "src/io/image_io.cpp")
 
-target_include_directories(raytracer PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_include_directories(raytracer PUBLIC 
+"${CMAKE_CURRENT_SOURCE_DIR}/src"
+"${CMAKE_CURRENT_SOURCE_DIR}/external"
+)
