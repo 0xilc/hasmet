@@ -1,7 +1,7 @@
-#include "pinhole.h"
 #define _USE_MATH_DEFINES
-#include <cmath>
+#include "pinhole.h"
 #include "core/ray.h"
+#include <cmath>
 
 PinholeCamera::PinholeCamera(const Vec3& position, const Vec3& look_at,
                              const Vec3& up, float vertical_fov_degrees,
@@ -19,7 +19,7 @@ PinholeCamera::PinholeCamera(const Vec3& position, const Vec3& look_at,
 
   horizontal_spacing_ = 2.0f * half_width * u / static_cast<float>(film_width);
   vertical_spacing_ = 2.0f * half_height * v / static_cast<float>(film_height);
-   
+
   lower_left_corner_ = position_ - half_width * u - half_height * v - w;
 }
 

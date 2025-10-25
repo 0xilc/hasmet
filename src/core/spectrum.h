@@ -10,6 +10,9 @@ struct Spectrum {
   Spectrum(float val) : r(val), g(val), b(val) {}
   Spectrum(float r, float g, float b) : r(r), g(g), b(b) {}
 
+  Spectrum operator+(const Spectrum& other) const {
+    return Spectrum(r + other.r, g + other.g, b + other.b);
+  }
   Spectrum operator*(const Spectrum& other) const {
     return Spectrum(r * other.r, g * other.g, b * other.b);
   }
