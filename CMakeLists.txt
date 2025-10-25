@@ -12,6 +12,6 @@ endif()
 project ("hasmet")
 
 # Add source to this project's executable.
-add_executable (raytracer "src/main.cpp")
+add_executable (raytracer "src/main.cpp" "src/core/vec.h")
 
 target_include_directories(raytracer PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
