@@ -1,16 +1,15 @@
 #pragma once
 
 #include "core/ray.h"
-#include "core/vec.h"
 
 struct HitRecord {
   float t;
-  Vec3 p;
-  Vec3 normal;
+  glm::vec3 p;
+  glm::vec3 normal;
   bool front_face;
 
-  inline void set_face_normal(const Ray& r, const Vec3& outward_normal) {
-    front_face = dot(r.direction, outward_normal);
+  inline void set_face_normal(const Ray& r, const glm::vec3& outward_normal) {
+    front_face = glm::dot(r.direction, outward_normal);
     normal = front_face ? outward_normal : -outward_normal;
   }
 };

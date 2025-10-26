@@ -3,13 +3,13 @@
 #include "core/ray.h"
 #include <cmath>
 
-PinholeCamera::PinholeCamera(const Vec3& position, const Vec3& look_at,
-                             const Vec3& up, float vertical_fov_degrees,
+PinholeCamera::PinholeCamera(const glm::vec3& position, const glm::vec3& look_at,
+                             const glm::vec3& up, float vertical_fov_degrees,
                              int film_width, int film_height)
     : position_(position) {
-  Vec3 w = normalize(position - look_at);
-  Vec3 u = normalize(cross(up, w));
-  Vec3 v = cross(w, u);
+  glm::vec3 w = normalize(position - look_at);
+  glm::vec3 u = normalize(cross(up, w));
+  glm::vec3 v = cross(w, u);
 
   float aspect_ratio =
       static_cast<float>(film_width) / static_cast<float>(film_height);
@@ -24,9 +24,9 @@ PinholeCamera::PinholeCamera(const Vec3& position, const Vec3& look_at,
 }
 
 Ray PinholeCamera::generateRay(float px, float py) const {
-  Vec3 point_on_plane =
+  glm::vec3 point_on_plane =
       lower_left_corner_ + px * horizontal_spacing_ + py * vertical_spacing_;
-  Vec3 ray_direction = normalize(point_on_plane - position_);
+  glm::vec3 ray_direction = normalize(point_on_plane - position_);
 
   return Ray(position_, ray_direction);
 }

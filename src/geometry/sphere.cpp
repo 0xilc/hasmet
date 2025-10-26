@@ -4,15 +4,15 @@
 
 #include <cmath>
 
-Sphere::Sphere(const Vec3& center, float radius)
+Sphere::Sphere(const glm::vec3& center, float radius)
     : center_(center), radius_(radius) {}
 
 bool Sphere::intersect(const Ray& r, HitRecord& rec) const {
-  Vec3 oc = r.origin - center_;
+  glm::vec3 oc = r.origin - center_;
 
-  double a = r.direction.length_squared();
-  double half_b = dot(oc, r.direction);
-  double c = oc.length_squared() - radius_ * radius_;
+  double a = glm::dot(r.direction, r.direction);
+  double half_b = glm::dot(oc, r.direction);
+  double c = glm::dot(oc, oc) - radius_ * radius_;
 
   double discriminant = half_b * half_b - a * c;
 
@@ -32,7 +32,7 @@ bool Sphere::intersect(const Ray& r, HitRecord& rec) const {
 
   rec.t = static_cast<float>(root);
   rec.p = r.at(rec.t);
-  Vec3 outward_normal = (rec.p - center_) / radius_;
+  glm::vec3 outward_normal = (rec.p - center_) / radius_;
   rec.set_face_normal(r, outward_normal);
 
   return true;
