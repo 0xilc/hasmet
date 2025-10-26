@@ -2,8 +2,21 @@
 
 Scene::Scene() {}
 
-void Scene::add(std::unique_ptr<Shape> shape) {
+void Scene::add_shape(std::unique_ptr<Shape> shape) {
   shapes_.push_back(std::move(shape));
+}
+
+Material* Scene::add_material(std::unique_ptr<Material> material) {
+  materials_.push_back(std::move(material));
+  return materials_.back().get();
+}
+
+void Scene::add_point_light(std::unique_ptr<PointLight> light){
+  point_lights_.push_back(std::move(light));
+}
+
+void Scene::add_ambient_light(std::unique_ptr<AmbientLight> light) {
+  ambient_light_ = std::move(light);
 }
 
 bool Scene::intersect(const Ray& r, HitRecord& rec) const {
