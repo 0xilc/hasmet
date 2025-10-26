@@ -21,4 +21,6 @@ bool Scene::intersect(const Ray& r, HitRecord& rec) const {
       rec = temp_rec;
     }
   }
+
+  return hit_anything;
 }
