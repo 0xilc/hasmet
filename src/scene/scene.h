@@ -18,8 +18,6 @@ class Scene {
   void add_ambient_light(std::unique_ptr<AmbientLight> light);
   bool intersect(const Ray& r, HitRecord& rec) const;
 
-
- private:
   std::vector<std::unique_ptr<Shape>> shapes_;
   std::vector<std::unique_ptr<Material>> materials_;
   std::unique_ptr<AmbientLight> ambient_light_;

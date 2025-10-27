@@ -34,6 +34,6 @@ bool Sphere::intersect(const Ray& r, HitRecord& rec) const {
   rec.p = r.at(rec.t);
   glm::vec3 outward_normal = (rec.p - center_) / radius_;
   rec.set_face_normal(r, outward_normal);
-
+  rec.mat_ptr = material_;
   return true;
 }
