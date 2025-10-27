@@ -11,6 +11,21 @@
 #include "material/material.h"
 #include "scene/scene.h"
 
+namespace {
+constexpr float kEpsilon = 1e-4f;
+
+// Exact Fresnel for dielectrics (unpolarized)
+inline float fresnel_dielectric(float cosThetaI, float etaI, float etaT,
+                                float cosThetaT) {
+  // R_s and R_p
+  float r_s = (etaT * cosThetaI - etaI * cosThetaT) /
+              (etaT * cosThetaI + etaI * cosThetaT);
+  float r_p = (etaI * cosThetaI - etaT * cosThetaT) /
+              (etaI * cosThetaI + etaT * cosThetaT);
+  return 0.5f * (r_s * r_s + r_p * r_p);
+}
+}  // namespace
+
 Spectrum calculate_blinn_phong(const HitRecord& rec, const Scene& scene,
                                const glm::vec3& view_dir);
 
@@ -39,14 +54,10 @@ void WhittedIntegrator::render(const Scene& scene, Film& film) const {
 
 Spectrum WhittedIntegrator::Li(const Ray& ray, const Scene& scene,
                                int depth) const {
-  if (depth <= 0) {
-    return Spectrum(0.0f);
-  }
+  if (depth <= 0) return Spectrum(0.0f);
 
   HitRecord rec;
-  if (!scene.intersect(ray, rec)) {
-    return Spectrum(0.4f, 0.1, 0.1f);
-  }
+  if (!scene.intersect(ray, rec)) return Spectrum(0.4f, 0.1, 0.1f);
 
   const Material& mat = *rec.mat_ptr;
   glm::vec3 final_color(0.0f);
@@ -56,7 +67,6 @@ Spectrum WhittedIntegrator::Li(const Ray& ray, const Scene& scene,
 
   switch (mat.type) {
     case MaterialType::Mirror: {
-      // Reflection ray.
       glm::vec3 reflected_dir = glm::reflect(ray.direction, rec.normal);
       Ray reflected_ray(rec.p, reflected_dir);
 
@@ -64,7 +74,49 @@ Spectrum WhittedIntegrator::Li(const Ray& ray, const Scene& scene,
           mat.mirror_reflectance * Li(reflected_ray, scene, depth - 1);
       break;
     }
-    case MaterialType::Dielectric:
+    case MaterialType::Dielectric: {
+      glm::vec3 I = glm::normalize(ray.direction);
+      glm::vec3 N = glm::normalize(rec.normal);
+      bool front_face = glm::dot(I, N) < 0.0f;
+
+      glm::vec3 Nf = front_face ? N : -N;
+
+      float etaI = 1.0f;
+      float etaT = mat.refraction_index;
+      if (!front_face) std::swap(etaI, etaT);
+
+      float eta = etaI / etaT;
+      float cosI = glm::clamp(-glm::dot(I, Nf), 0.0f, 1.0f);
+      float sin2T = eta * eta * std::max(0.0f, 1.0f - cosI * cosI);
+      if (sin2T >= 1.0f) {
+        glm::vec3 R = glm::reflect(I, Nf);
+        Ray rRay(rec.p + Nf * kEpsilon, R);
+        final_color += Li(rRay, scene, depth - 1);
+        break;
+      }
+
+      float cosT = std::sqrt(std::max(0.0f, 1.0f - sin2T));
+
+      // Exact Fresnel term
+      float Fr = fresnel_dielectric(cosI, etaI, etaT, cosT);
+      float Ft = 1.0f - Fr;
+
+      // Reflection ray
+      glm::vec3 R = glm::reflect(I, Nf);
+      Ray rRay(rec.p + Nf * kEpsilon, R);
+
+      // Refraction ray (GLM expects eta = etaI/etaT with N facing against I)
+      glm::vec3 T = glm::refract(I, Nf, eta);
+      Ray tRay(rec.p - Nf * kEpsilon, T);
+
+      Spectrum LoR = Li(rRay, scene, depth - 1);
+      Spectrum LoT = Li(tRay, scene, depth - 1);
+
+      // No Beer's law yet; add it later by multiplying LoT with transmittance
+      final_color += Fr * LoR + Ft * LoT;
+      break;
+    }
+
     case MaterialType::BlinnPhong:
     case MaterialType::Conductor:
     default:
