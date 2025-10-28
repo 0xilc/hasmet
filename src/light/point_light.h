@@ -3,8 +3,8 @@
 
 struct PointLight : public Light {
   glm::vec3 position;
-  Spectrum intensity;
+  Color intensity;
 
-  PointLight(const glm::vec3& pos, const Spectrum& i)
+  PointLight(const glm::vec3& pos, const Color& i)
       : position(pos), intensity(i) {}
 };

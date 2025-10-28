@@ -1,8 +1,8 @@
 #pragma once
 
-#include "core/spectrum.h"
+#include "core/color.h"
 #include <vector>
 #include <string>
 
-bool write_png(const std::string& filename, const std::vector<Spectrum>& pixels,
+bool write_png(const std::string& filename, const std::vector<Color>& pixels,
                int width, int height);

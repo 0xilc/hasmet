@@ -14,10 +14,8 @@
 namespace {
 constexpr float kEpsilon = 1e-4f;
 
-// Exact Fresnel for dielectrics (unpolarized)
 inline float fresnel_dielectric(float cosThetaI, float etaI, float etaT,
                                 float cosThetaT) {
-  // R_s and R_p
   float r_s = (etaT * cosThetaI - etaI * cosThetaT) /
               (etaT * cosThetaI + etaI * cosThetaT);
   float r_p = (etaI * cosThetaI - etaT * cosThetaT) /
@@ -26,7 +24,7 @@ inline float fresnel_dielectric(float cosThetaI, float etaI, float etaT,
 }
 }  // namespace
 
-Spectrum calculate_blinn_phong(const HitRecord& rec, const Scene& scene,
+Color calculate_blinn_phong(const HitRecord& rec, const Scene& scene,
                                const glm::vec3& view_dir);
 
 WhittedIntegrator::WhittedIntegrator(int max_depth) : max_depth_(max_depth) {}
@@ -45,19 +43,19 @@ void WhittedIntegrator::render(const Scene& scene, Film& film) const {
     }
     for (int x = 0; x < width; ++x) {
       Ray r = camera.generateRay(static_cast<float>(x), static_cast<float>(y));
-      Spectrum pixel_color = Li(r, scene, max_depth_);
+      Color pixel_color = Li(r, scene, max_depth_);
       film.addSample(x, y, pixel_color);
     }
   }
   std::cout << "\nDone." << std::endl;
 }
 
-Spectrum WhittedIntegrator::Li(const Ray& ray, const Scene& scene,
+Color WhittedIntegrator::Li(const Ray& ray, const Scene& scene,
                                int depth) const {
-  if (depth <= 0) return Spectrum(0.0f);
+  if (depth <= 0) return Color(0.0f);
 
   HitRecord rec;
-  if (!scene.intersect(ray, rec)) return Spectrum(0.4f, 0.1, 0.1f);
+  if (!scene.intersect(ray, rec)) return Color(0.4f, 0.1, 0.1f);
 
   const Material& mat = *rec.mat_ptr;
   glm::vec3 final_color(0.0f);
@@ -105,30 +103,30 @@ Spectrum WhittedIntegrator::Li(const Ray& ray, const Scene& scene,
       glm::vec3 R = glm::reflect(I, Nf);
       Ray rRay(rec.p + Nf * kEpsilon, R);
 
-      // Refraction ray (GLM expects eta = etaI/etaT with N facing against I)
+      // Refraction ray
       glm::vec3 T = glm::refract(I, Nf, eta);
       Ray tRay(rec.p - Nf * kEpsilon, T);
 
-      Spectrum LoR = Li(rRay, scene, depth - 1);
-      Spectrum LoT = Li(tRay, scene, depth - 1);
+      Color LoR = Li(rRay, scene, depth - 1);
+      Color LoT = Li(tRay, scene, depth - 1);
 
       // No Beer's law yet; add it later by multiplying LoT with transmittance
       final_color += Fr * LoR + Ft * LoT;
       break;
     }
-
-    case MaterialType::BlinnPhong:
     case MaterialType::Conductor:
+    case MaterialType::BlinnPhong:
     default:
       break;
   }
 
-  return Spectrum(final_color.x, final_color.y, final_color.z);
+  return Color(final_color.x, final_color.y, final_color.z);
 }
 
-Spectrum calculate_blinn_phong(const HitRecord& rec, const Scene& scene,
+
+Color calculate_blinn_phong(const HitRecord& rec, const Scene& scene,
                                const glm::vec3& view_dir) {
-  Spectrum color(0.0f);
+  Color color(0.0f);
   Material& material = *rec.mat_ptr;
 
   for (const auto& p_light : scene.point_lights_) {
@@ -146,15 +144,15 @@ Spectrum calculate_blinn_phong(const HitRecord& rec, const Scene& scene,
 
     // Diffuse component
     float cos_theta = std::max(0.0f, glm::dot(rec.normal, light_dir));
-    Spectrum diffuse = material.diffuse_reflectance * cos_theta;
+    Color diffuse = material.diffuse_reflectance * cos_theta;
 
     // Specular component
     glm::vec3 halfway_dir = glm::normalize(light_dir + view_dir);
     float cos_alpha = std::max(0.0f, glm::dot(rec.normal, halfway_dir));
-    Spectrum specular =
+    Color specular =
         material.specular_reflectance * pow(cos_alpha, material.phong_exponent);
 
-    Spectrum light_contribution = (diffuse + specular) * p_light->intensity /
+    Color light_contribution = (diffuse + specular) * p_light->intensity /
                                   (distance_to_light * distance_to_light);
     color = color + light_contribution;
   }

@@ -26,32 +26,32 @@ int main() {
   // A simple matte red material
   Material* mat_red = world.add_material(std::make_unique<Material>());
   mat_red->type = MaterialType::BlinnPhong;
-  mat_red->diffuse_reflectance = Spectrum(0.1f, 0.5f, 0.1f);
+  mat_red->diffuse_reflectance = Color(0.1f, 0.5f, 0.1f);
   mat_red->ambient_reflectance =
       mat_red->diffuse_reflectance;
-  mat_red->specular_reflectance = Spectrum(0.5f);
+  mat_red->specular_reflectance = Color(0.5f);
   mat_red->phong_exponent = 32.0f;
 
   // A gray, matte ground material
   auto mat_ground = world.add_material(std::make_unique<Material>());
   mat_ground->type = MaterialType::BlinnPhong;
-  mat_ground->diffuse_reflectance = Spectrum(0.5f);
+  mat_ground->diffuse_reflectance = Color(0.5f);
   mat_ground->ambient_reflectance = mat_ground->diffuse_reflectance;
 
   // A perfect mirror material
   auto mat_mirror = world.add_material(std::make_unique<Material>());
   mat_mirror->type = MaterialType::Mirror;
-  mat_mirror->mirror_reflectance = Spectrum(0.9f);
+  mat_mirror->mirror_reflectance = Color(0.9f);
 
   // A glass material
   auto mat_glass = world.add_material(std::make_unique<Material>());
   mat_glass->type = MaterialType::Dielectric;
   mat_glass->refraction_index = 1.5;
-  mat_glass->mirror_reflectance = Spectrum(1.0f);
+  mat_glass->mirror_reflectance = Color(1.0f);
 
-  world.add_ambient_light(std::make_unique<AmbientLight>(Spectrum(0.1f)));
+  world.add_ambient_light(std::make_unique<AmbientLight>(Color(0.1f)));
   world.add_point_light(
-      std::make_unique<PointLight>(glm::vec3(2, 5, 2), Spectrum(100.0f)));
+      std::make_unique<PointLight>(glm::vec3(2, 5, 2), Color(100.0f)));
 
   world.add_shape(
       std::make_unique<Sphere>(glm::vec3(0, -100.5, -1), 100.0f, mat_ground));

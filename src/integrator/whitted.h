@@ -1,6 +1,6 @@
 #pragma once
 #include "core/ray.h"
-#include "core/spectrum.h"
+#include "core/color.h"
 #include "integrator.h"
 
 class WhittedIntegrator : public Integrator {
@@ -10,6 +10,6 @@ class WhittedIntegrator : public Integrator {
   virtual void render(const Scene& scene, Film& film) const override;
 
  private:
-  Spectrum Li(const Ray& ray, const Scene& scene, int depth) const;
+  Color Li(const Ray& ray, const Scene& scene, int depth) const;
   int max_depth_;
 };

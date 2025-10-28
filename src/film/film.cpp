@@ -5,15 +5,15 @@
 #include <vector>
 
 #include "core/logging.h"
-#include "core/spectrum.h"
+#include "core/color.h"
 #include "io/image_io.h"
 
 Film::Film(int width, int height, const std::string& filename)
     : width_(width), height_(height), filename_(filename) {
-  pixels_.resize(width * height, Spectrum(0.0f));
+  pixels_.resize(width * height, Color(0.0f));
 }
 
-void Film::addSample(int x, int y, const Spectrum& color) {
+void Film::addSample(int x, int y, const Color& color) {
   if (x < 0 || x >= width_ || y < 0 || y >= height_) {
     LOG_WARN("Attempted to write to out of bound pixel (" + std::to_string(x) +
              ", " + std::to_string(y) + ")");

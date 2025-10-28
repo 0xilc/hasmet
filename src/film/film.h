@@ -3,13 +3,13 @@
 #include <string>
 #include <vector>
 
-#include "core/spectrum.h"
+#include "core/color.h"
 
 class Film {
  public:
   Film(int width, int height, const std::string& filename);
 
-  void addSample(int x, int y, const Spectrum& color);
+  void addSample(int x, int y, const Color& color);
 
   void write() const;
 
@@ -20,5 +20,5 @@ class Film {
   int width_;
   int height_;
   std::string filename_;
-  std::vector<Spectrum> pixels_;
+  std::vector<Color> pixels_;
 };

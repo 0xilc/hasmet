@@ -2,7 +2,7 @@
 #include "light.h"
 
 struct AmbientLight : public Light {
-  Spectrum radiance;
+  Color radiance;
 
-  AmbientLight(const Spectrum& rad) : radiance(rad) {}
+  AmbientLight(const Color& rad) : radiance(rad) {}
 };

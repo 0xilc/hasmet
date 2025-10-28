@@ -1,5 +1,5 @@
 #pragma once
-#include "core/spectrum.h"
+#include "core/color.h"
 
 enum class MaterialType{
 	BlinnPhong,
@@ -8,19 +8,18 @@ enum class MaterialType{
 	Dielectric
 };
 
-
 struct Material{
   MaterialType type = MaterialType::BlinnPhong;
 
   // Phong properties
-  Spectrum ambient_reflectance{0.0f};
-  Spectrum diffuse_reflectance{0.0f};
-  Spectrum specular_reflectance{0.0f};
+  Color ambient_reflectance{0.0f};
+  Color diffuse_reflectance{0.0f};
+  Color specular_reflectance{0.0f};
   float phong_exponent = 1.0f;
 
   //Recursive RT properties
-  Spectrum mirror_reflectance{0.0f};
-  Spectrum absorption_coefficient{0.0f};
-  Spectrum absorption_index{0.0f};
+  Color mirror_reflectance{0.0f};
+  Color absorption_coefficient{0.0f};
+  Color absorption_index{0.0f};
   float refraction_index = 1.0f;
 };
