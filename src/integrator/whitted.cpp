@@ -13,8 +13,6 @@
 #include "scene/scene.h"
 
 namespace {
-constexpr float kEpsilon = 1e-4f;
-
 inline float fresnel_dielectric(float cosThetaI, float etaI, float etaT,
                                 float cosThetaT) {
   float r_s = (etaT * cosThetaI - etaI * cosThetaT) /
@@ -26,15 +24,16 @@ inline float fresnel_dielectric(float cosThetaI, float etaI, float etaT,
 }  // namespace
 
 Color calculate_blinn_phong(const HitRecord& rec, const Scene& scene,
-                               const glm::vec3& view_dir);
+                            const glm::vec3& view_dir);
 
 WhittedIntegrator::WhittedIntegrator(int max_depth) : max_depth_(max_depth) {}
 
-void WhittedIntegrator::render(const Scene& scene, Film& film, const Camera& camera) const {
+void WhittedIntegrator::render(const Scene& scene, Film& film,
+                               const Camera& camera) const {
   int width = film.getWidth();
   int height = film.getHeight();
 
-  LOG_INFO("Rendering scene with Whitted integrator...");
+  LOG_INFO("Rendering scene...");
   for (int y = height - 1; y >= 0; --y) {
     for (int x = 0; x < width; ++x) {
       Ray r = camera.generateRay(static_cast<float>(x), static_cast<float>(y));
@@ -45,20 +44,18 @@ void WhittedIntegrator::render(const Scene& scene, Film& film, const Camera& cam
   std::cout << "\nDone." << std::endl;
 }
 
-Color WhittedIntegrator::Li(Ray& ray, const Scene& scene,
-                            int depth) const {
+Color WhittedIntegrator::Li(Ray& ray, const Scene& scene, int depth) const {
   if (depth <= 0) return Color(0.0f);
 
   HitRecord rec;
-  if (!scene.intersect(ray, rec))
-    return scene.render_config_.background_color;
-  else
-    return Color(1.0f);
+  if (!scene.intersect(ray, rec)) return scene.render_config_.background_color;
+
   MaterialManager* material_manager = MaterialManager::get_instance();
   const Material& mat = material_manager->get(rec.material_id);
   glm::vec3 final_color(0.0f);
   glm::vec3 view_dir = glm::normalize(-ray.direction);
-
+  float intersection_test_epsilon = scene.render_config_.intersection_test_epsilon;
+  
   final_color += calculate_blinn_phong(rec, scene, view_dir);
 
   switch (mat.type) {
@@ -86,7 +83,7 @@ Color WhittedIntegrator::Li(Ray& ray, const Scene& scene,
       float sin2T = eta * eta * std::max(0.0f, 1.0f - cosI * cosI);
       if (sin2T >= 1.0f) {
         glm::vec3 R = glm::reflect(I, Nf);
-        Ray rRay(rec.p + Nf * kEpsilon, R);
+        Ray rRay(rec.p + Nf * intersection_test_epsilon, R);
         final_color += Li(rRay, scene, depth - 1);
         break;
       }
@@ -99,11 +96,11 @@ Color WhittedIntegrator::Li(Ray& ray, const Scene& scene,
 
       // Reflection ray
       glm::vec3 R = glm::reflect(I, Nf);
-      Ray rRay(rec.p + Nf * kEpsilon, R);
+      Ray rRay(rec.p + Nf * intersection_test_epsilon, R);
 
       // Refraction ray
       glm::vec3 T = glm::refract(I, Nf, eta);
-      Ray tRay(rec.p - Nf * kEpsilon, T);
+      Ray tRay(rec.p - Nf * intersection_test_epsilon, T);
 
       Color LoR = Li(rRay, scene, depth - 1);
       Color LoT = Li(tRay, scene, depth - 1);
@@ -121,9 +118,8 @@ Color WhittedIntegrator::Li(Ray& ray, const Scene& scene,
   return Color(final_color.x, final_color.y, final_color.z);
 }
 
-
 Color calculate_blinn_phong(const HitRecord& rec, const Scene& scene,
-                               const glm::vec3& view_dir) {
+                            const glm::vec3& view_dir) {
   Color color(0.0f);
   MaterialManager* material_manager = MaterialManager::get_instance();
   const Material& material = material_manager->get(rec.material_id);
@@ -132,12 +128,13 @@ Color calculate_blinn_phong(const HitRecord& rec, const Scene& scene,
     glm::vec3 light_dir = p_light->position - rec.p;
     float distance_to_light = glm::length(light_dir);
     light_dir = glm::normalize(light_dir);
+    float shadow_ray_epsilon = scene.render_config_.shadow_ray_epsilon;
 
     // Shadow test
-    Ray shadow_ray(rec.p, light_dir);
+    Ray shadow_ray(rec.p + rec.normal * shadow_ray_epsilon, light_dir);
     HitRecord shadow_rec;
     shadow_ray.interval_.max = distance_to_light;
-    if (scene.intersect(shadow_ray, shadow_rec)) {
+    if (scene.intersect(shadow_ray  , shadow_rec)) {
       continue;
     }
 
@@ -151,8 +148,9 @@ Color calculate_blinn_phong(const HitRecord& rec, const Scene& scene,
     Color specular =
         material.specular_reflectance * pow(cos_alpha, material.phong_exponent);
 
-    Color light_contribution = (diffuse + specular) * p_light->intensity /
-                                  (distance_to_light * distance_to_light);
+    Color light_contribution =
+        (diffuse + specular) * p_light->intensity /
+        (4 * 3.1415 * distance_to_light * distance_to_light);
     color = color + light_contribution;
   }
 

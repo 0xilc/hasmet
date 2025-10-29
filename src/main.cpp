@@ -17,7 +17,7 @@
 int main() {
   LOG_INFO("Hasmet Renderer");
 
-  const std::string filename = "cornellbox";
+  const std::string filename = "simple";
   const std::string input_folder = "C:/Users/akin/Desktop/hw1/inputs/";
   const std::string input_filename = input_folder + filename + ".json"; 
   const std::string output_folder = "C:/Users/akin/Desktop/whitted/";

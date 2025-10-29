@@ -113,6 +113,9 @@ Scene read_scene(std::string filename) {
         std::make_unique<PointLight>(create_point_light(light_)));
   }
 
+  scene.ambient_light_ =
+      std::make_unique<AmbientLight>(create_color(parsed_scene.ambient_light));
+
   for (const Parser::Triangle_& triangle_ : parsed_scene.triangles) {
     scene.objects_.push_back(std::make_unique<Triangle>(
         create_triangle(triangle_, parsed_scene.vertex_data)));

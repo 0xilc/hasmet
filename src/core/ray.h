@@ -10,7 +10,6 @@ struct Ray {
 
   Interval interval_ = Interval(0.004f, INFINITY);
 
-
   Ray() = default;
   Ray(const glm::vec3& o, const glm::vec3& d) : origin(o), direction(d) {}
 
