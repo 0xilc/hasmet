@@ -14,9 +14,7 @@ class MaterialManager {
   void operator=(const MaterialManager&) = delete;
 
   static MaterialManager* get_instance();
-  Material* get(int material_id) const;
-  Material* add(const Material& material);
+  Material& get(int material_id) const;
+  int add(const Material& material);
 
 };
-
-MaterialManager* MaterialManager::instance_ptr_ = nullptr;

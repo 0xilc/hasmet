@@ -15,7 +15,6 @@ class Scene {
   bool intersect(const Ray& r, HitRecord& rec) const;
   
   void add_shape(std::unique_ptr<Shape> shape);
-  Material* add_material(std::unique_ptr<Material> material);
   void add_point_light(std::unique_ptr<PointLight> light);
   void add_ambient_light(std::unique_ptr<AmbientLight> light);
  

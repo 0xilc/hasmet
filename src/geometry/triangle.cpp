@@ -1,4 +1,5 @@
 #include "triangle.h"
+#include <glm/glm.hpp>
 
 Triangle::Triangle(const glm::vec3& p1, const glm::vec3& p2,
                    const glm::vec3& p3) {
@@ -35,7 +36,7 @@ bool Triangle::intersect(const Ray& ray, HitRecord& rec) const {
 
     rec.t = t;
     rec.normal = vec1;
-    rec.p = ray.origin + t * ray.direction;
+    rec.p = ray.origin + ray.direction * static_cast<float>(t);
     // TODO: Implement this after material manager. rec.mat_ptr = mat_ptr;
     return true;
   }

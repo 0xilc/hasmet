@@ -9,6 +9,7 @@
 #include "core/logging.h"
 #include "film/film.h"
 #include "material/material.h"
+#include "material/material_manager.h"
 #include "scene/scene.h"
 
 namespace {
@@ -57,7 +58,8 @@ Color WhittedIntegrator::Li(const Ray& ray, const Scene& scene,
   HitRecord rec;
   if (!scene.intersect(ray, rec)) return Color(0.4f, 0.1, 0.1f);
 
-  const Material& mat = *rec.mat_ptr;
+  MaterialManager* material_manager = MaterialManager::get_instance();
+  const Material& mat = material_manager->get(rec.material_id);
   glm::vec3 final_color(0.0f);
   glm::vec3 view_dir = glm::normalize(-ray.direction);
 
@@ -127,7 +129,8 @@ Color WhittedIntegrator::Li(const Ray& ray, const Scene& scene,
 Color calculate_blinn_phong(const HitRecord& rec, const Scene& scene,
                                const glm::vec3& view_dir) {
   Color color(0.0f);
-  Material& material = *rec.mat_ptr;
+  MaterialManager* material_manager = MaterialManager::get_instance();
+  const Material& material = material_manager->get(rec.material_id);
 
   for (const auto& p_light : scene.point_lights_) {
     glm::vec3 light_dir = p_light->position - rec.p;

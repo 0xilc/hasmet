@@ -9,6 +9,8 @@
 #include "integrator/whitted.h" 
 #include "material/material.h"
 #include "scene/scene.h"
+#include "material/material_manager.h"
+
 
 int main() {
   LOG_INFO("Hasmet Renderer | Assignment 1");
@@ -24,42 +26,46 @@ int main() {
   Scene world;
 
   // A simple matte red material
-  Material* mat_red = world.add_material(std::make_unique<Material>());
-  mat_red->type = MaterialType::BlinnPhong;
-  mat_red->diffuse_reflectance = Color(0.1f, 0.5f, 0.1f);
-  mat_red->ambient_reflectance =
-      mat_red->diffuse_reflectance;
-  mat_red->specular_reflectance = Color(0.5f);
-  mat_red->phong_exponent = 32.0f;
+  MaterialManager* material_manager = MaterialManager::get_instance();
+  Material mat_red;
+  mat_red.type = MaterialType::BlinnPhong;
+  mat_red.diffuse_reflectance = Color(0.1f, 0.5f, 0.1f);
+  mat_red.ambient_reflectance = mat_red.diffuse_reflectance;
+  mat_red.specular_reflectance = Color(0.5f);
+  mat_red.phong_exponent = 32.0f;
+  int mat_red_id = material_manager->add(mat_red);
 
   // A gray, matte ground material
-  auto mat_ground = world.add_material(std::make_unique<Material>());
-  mat_ground->type = MaterialType::BlinnPhong;
-  mat_ground->diffuse_reflectance = Color(0.5f);
-  mat_ground->ambient_reflectance = mat_ground->diffuse_reflectance;
+  Material mat_ground;
+  mat_ground.type = MaterialType::BlinnPhong;
+  mat_ground.diffuse_reflectance = Color(0.5f);
+  mat_ground.ambient_reflectance = mat_ground.diffuse_reflectance;
+  int mat_ground_id = material_manager->add(mat_ground);
 
   // A perfect mirror material
-  auto mat_mirror = world.add_material(std::make_unique<Material>());
-  mat_mirror->type = MaterialType::Mirror;
-  mat_mirror->mirror_reflectance = Color(0.9f);
+  Material mat_mirror;
+  mat_mirror.type = MaterialType::Mirror;
+  mat_mirror.mirror_reflectance = Color(0.9f);
+  int mat_mirror_id = material_manager->add(mat_mirror);
 
   // A glass material
-  auto mat_glass = world.add_material(std::make_unique<Material>());
-  mat_glass->type = MaterialType::Dielectric;
-  mat_glass->refraction_index = 1.5;
-  mat_glass->mirror_reflectance = Color(1.0f);
+  Material mat_glass;
+  mat_glass.type = MaterialType::Dielectric;
+  mat_glass.refraction_index = 1.5;
+  mat_glass.mirror_reflectance = Color(1.0f);
+  int mat_glass_id = material_manager->add(mat_glass);
 
   world.add_ambient_light(std::make_unique<AmbientLight>(Color(0.1f)));
   world.add_point_light(
       std::make_unique<PointLight>(glm::vec3(2, 5, 2), Color(100.0f)));
 
   world.add_shape(
-      std::make_unique<Sphere>(glm::vec3(0, -100.5, -1), 100.0f, mat_ground));
-  world.add_shape(std::make_unique<Sphere>(glm::vec3(0, 0, -1), 0.5f, mat_red));
-  world.add_shape(std::make_unique<Sphere>(glm::vec3(-1.2, 0, -1), 0.5f, mat_glass));
-  world.add_shape(std::make_unique<Sphere>(glm::vec3(-1.2, 0, -2), 0.5f, mat_red));
+      std::make_unique<Sphere>(glm::vec3(0, -100.5, -1), 100.0f, mat_ground_id));
+  world.add_shape(std::make_unique<Sphere>(glm::vec3(0, 0, -1), 0.5f, mat_red_id));
+  world.add_shape(std::make_unique<Sphere>(glm::vec3(-1.2, 0, -1), 0.5f, mat_glass_id));
+  world.add_shape(std::make_unique<Sphere>(glm::vec3(-1.2, 0, -2), 0.5f, mat_red_id));
   world.add_shape(
-      std::make_unique<Sphere>(glm::vec3(1.2, 0, -1), 0.5f, mat_mirror));
+      std::make_unique<Sphere>(glm::vec3(1.2, 0, -1), 0.5f, mat_mirror_id));
 
   // Ray tracer rendering
   WhittedIntegrator integrator(max_recursion_depth);

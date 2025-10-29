@@ -1,5 +1,6 @@
 #pragma once
 #include "light.h"
+#include "core/color.h"
 
 struct PointLight : public Light {
   glm::vec3 position;

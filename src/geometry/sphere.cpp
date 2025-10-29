@@ -4,8 +4,8 @@
 
 #include <cmath>
 
-Sphere::Sphere(const glm::vec3& center, float radius, Material* material)
-    : center_(center), radius_(radius), material_(material) {}
+Sphere::Sphere(const glm::vec3& center, float radius, int material_id)
+    : center_(center), radius_(radius), material_id_(material_id) {}
 
 bool Sphere::intersect(const Ray& r, HitRecord& rec) const {
   glm::vec3 oc = r.origin - center_;
@@ -34,6 +34,6 @@ bool Sphere::intersect(const Ray& r, HitRecord& rec) const {
   rec.p = r.at(rec.t);
   glm::vec3 outward_normal = (rec.p - center_) / radius_;
   rec.set_face_normal(r, outward_normal);
-  rec.mat_ptr = material_;
+  rec.material_id = material_id_;
   return true;
 }

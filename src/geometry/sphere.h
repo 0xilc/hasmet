@@ -7,12 +7,12 @@
 
 class Sphere : public Shape {
  public:
-  Sphere(const glm::vec3& center, float radius, Material* material);
+  Sphere(const glm::vec3& center, float radius, int material_id);
 
   virtual bool intersect(const Ray& r, HitRecord& rec) const override;
 
  private:
   glm::vec3 center_;
   float radius_;
-  Material* material_;
+  int material_id_;
 };
