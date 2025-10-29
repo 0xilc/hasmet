@@ -10,6 +10,6 @@ class WhittedIntegrator : public Integrator {
   virtual void render(const Scene& scene, Film& film) const override;
 
  private:
-  Color Li(const Ray& ray, const Scene& scene, int depth) const;
+  Color Li(Ray& ray, const Scene& scene, int depth) const;
   int max_depth_;
 };

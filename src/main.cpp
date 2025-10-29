@@ -16,8 +16,8 @@ int main() {
   LOG_INFO("Hasmet Renderer | Assignment 1");
 
   // --- Image and Render Setup ---
-  const int image_width = 1920;
-  const int image_height = 1080;
+  const int image_width = 4000;
+  const int image_height = 2000;
   const std::string output_filename = "assignment_render.png";
   const int max_recursion_depth = 5;
 
@@ -74,6 +74,7 @@ int main() {
       std::make_unique<Triangle>(glm::vec3(-1, 0, -1), glm::vec3(-0.5, 1, -1),
                                  glm::vec3(-1.5, 1, -1), mat_red_id));
 
+  world.build_bvh();
   // Ray tracer rendering
   WhittedIntegrator integrator(max_recursion_depth);
   integrator.render(world, film);

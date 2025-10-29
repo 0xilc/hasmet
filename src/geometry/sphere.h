@@ -3,9 +3,9 @@
 #include <glm/glm.hpp>
 
 #include "material/material.h"
-#include "shape.h"
+#include "accelerator/hittable.h"
 
-class Sphere : public Shape {
+class Sphere : public Hittable {
  public:
   Sphere(const glm::vec3& center, float radius, int material_id);
 

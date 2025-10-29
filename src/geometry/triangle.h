@@ -1,9 +1,9 @@
 #pragma once
 #include <glm/glm.hpp>
 
-#include "shape.h"
+#include "accelerator/hittable.h"
 
-class Triangle : public Shape {
+class Triangle : public Hittable {
  public:
   Triangle(const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, int material_id);
   

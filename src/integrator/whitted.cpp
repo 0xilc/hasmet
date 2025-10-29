@@ -39,9 +39,9 @@ void WhittedIntegrator::render(const Scene& scene, Film& film) const {
 
   LOG_INFO("Rendering scene with Whitted integrator...");
   for (int y = height - 1; y >= 0; --y) {
-    if (y % 10 == 0) {
+ /*   if (y % 10 == 0) {
       std::cout << "\rScanlines remaining: " << y << ' ' << std::flush;
-    }
+    }*/
     for (int x = 0; x < width; ++x) {
       Ray r = camera.generateRay(static_cast<float>(x), static_cast<float>(y));
       Color pixel_color = Li(r, scene, max_depth_);
@@ -51,7 +51,7 @@ void WhittedIntegrator::render(const Scene& scene, Film& film) const {
   std::cout << "\nDone." << std::endl;
 }
 
-Color WhittedIntegrator::Li(const Ray& ray, const Scene& scene,
+Color WhittedIntegrator::Li(Ray& ray, const Scene& scene,
                                int depth) const {
   if (depth <= 0) return Color(0.0f);
 
