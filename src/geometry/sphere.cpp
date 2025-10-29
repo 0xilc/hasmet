@@ -7,7 +7,7 @@
 Sphere::Sphere(const glm::vec3& center, float radius, int material_id)
     : center_(center), radius_(radius), material_id_(material_id) {}
 
-bool Sphere::intersect(const Ray& r, HitRecord& rec) const {
+bool Sphere::intersect(Ray& r, HitRecord& rec) const {
   glm::vec3 oc = r.origin - center_;
 
   double a = glm::dot(r.direction, r.direction);
@@ -37,3 +37,5 @@ bool Sphere::intersect(const Ray& r, HitRecord& rec) const {
   rec.material_id = material_id_;
   return true;
 }
+
+AABB Sphere::getAABB() const { return aabb_; }
