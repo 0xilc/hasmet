@@ -3,6 +3,8 @@
 #include <iostream>
 #include "camera/pinhole.h"
 #include "geometry/sphere.h"
+#include "geometry/triangle.h"
+#include "geometry/plane.h"
 #include "material/material_manager.h"
 #include "parser/parser.h"
 #include "scene/scene.h"
@@ -19,6 +21,14 @@ Sphere create_sphere(const Parser::Sphere_& sphere_,
                      const std::vector<Parser::Vec3f_>& vertex_data_) {
   return Sphere(create_vec3(vertex_data_[sphere_.center_vertex_id]),
                 sphere_.radius, sphere_.material_id);
+}
+
+Triangle create_triangle(const Parser::Triangle_& triangle_,
+                         const std::vector<Parser::Vec3f_>& vertex_data_) {
+  return Triangle(create_vec3(vertex_data_[triangle_.v0_id]),
+                  create_vec3(vertex_data_[triangle_.v1_id]),
+                  create_vec3(vertex_data_[triangle_.v2_id]),
+                  triangle_.material_id);
 }
 
 PointLight create_point_light(const Parser::PointLight_ light_) {
@@ -102,6 +112,27 @@ Scene read_scene(std::string filename) {
     scene.point_lights_.push_back(
         std::make_unique<PointLight>(create_point_light(light_)));
   }
+
+  for (const Parser::Triangle_& triangle_ : parsed_scene.triangles) {
+    scene.objects_.push_back(std::make_unique<Triangle>(
+        create_triangle(triangle_, parsed_scene.vertex_data)));
+  }
+  
+  for (const Parser::Mesh_& mesh_ : parsed_scene.meshes) {
+    for (const Parser::Triangle_& face_ : mesh_.faces) {
+      scene.objects_.push_back(std::make_unique<Triangle>(
+          create_triangle(face_, parsed_scene.vertex_data)));
+    }
+  }
+
+  for (const Parser::Plane_& plane_ : parsed_scene.planes) {
+    glm::vec3 point =
+        create_vec3(parsed_scene.vertex_data[plane_.point_vertex_id]);
+    glm::vec3 normal = create_vec3(plane_.normal);
+    scene.objects_.push_back(
+        std::make_unique<Plane>(point, normal, plane_.material_id));
+  }
+
   scene.build_bvh();
   return scene;
 }
