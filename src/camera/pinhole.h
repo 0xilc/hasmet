@@ -11,6 +11,10 @@ class PinholeCamera : public Camera {
 
   Ray generateRay(float px, float py) const override;
 
+  // TODO: seperate this to film class
+  int film_width_;
+  int film_height_;
+
  private:
   glm::vec3 position_;
   glm::vec3 lower_left_corner_;

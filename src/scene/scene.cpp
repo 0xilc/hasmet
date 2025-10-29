@@ -16,21 +16,6 @@ void Scene::add_ambient_light(std::unique_ptr<AmbientLight> light) {
 
 bool Scene::intersect(Ray& r, HitRecord& rec) const {
  return bvh_root_->intersect(r, rec);
-  //HitRecord temp_rec;
-  //bool hit_anything = false;
-  //auto closest_so_far = r.interval_.max;
-  //for (const auto& shape : objects_) {
-  //  Ray temp_ray = r;
-  //  temp_ray.interval_.max = closest_so_far;
-
-  //  if (shape->intersect(temp_ray, temp_rec)){
-  //    hit_anything = true;
-  //    closest_so_far = temp_rec.t;
-  //    rec = temp_rec;
-  //  }
-  //}
-
-  //return hit_anything;
 }
 
 void Scene::build_bvh() { bvh_root_ = std::make_unique<BvhNode>(objects_, 0, objects_.size() -1); }

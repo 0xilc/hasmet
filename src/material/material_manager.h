@@ -15,6 +15,6 @@ class MaterialManager {
 
   static MaterialManager* get_instance();
   Material& get(int material_id) const;
-  int add(const Material& material);
+  int add(int material_id, const Material& material);
 
 };

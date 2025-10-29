@@ -6,10 +6,10 @@
 PinholeCamera::PinholeCamera(const glm::vec3& position, const glm::vec3& look_at,
                              const glm::vec3& up, float vertical_fov_degrees,
                              int film_width, int film_height)
-    : position_(position) {
-  glm::vec3 w = normalize(position - look_at);
+    : position_(position), film_width_(film_width), film_height_(film_height){
+  glm::vec3 w = normalize(position + look_at);
   glm::vec3 u = normalize(cross(up, w));
-  glm::vec3 v = cross(w, u);
+  glm::vec3 v = -cross(w, u);
 
   float aspect_ratio =
       static_cast<float>(film_width) / static_cast<float>(film_height);

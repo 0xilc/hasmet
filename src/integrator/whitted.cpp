@@ -30,18 +30,12 @@ Color calculate_blinn_phong(const HitRecord& rec, const Scene& scene,
 
 WhittedIntegrator::WhittedIntegrator(int max_depth) : max_depth_(max_depth) {}
 
-void WhittedIntegrator::render(const Scene& scene, Film& film) const {
+void WhittedIntegrator::render(const Scene& scene, Film& film, const Camera& camera) const {
   int width = film.getWidth();
   int height = film.getHeight();
 
-  PinholeCamera camera(glm::vec3(0, 0, 1), glm::vec3(0, 0, 0),
-                       glm::vec3(0, -1, 0), 90.0f, width, height);
-
   LOG_INFO("Rendering scene with Whitted integrator...");
   for (int y = height - 1; y >= 0; --y) {
- /*   if (y % 10 == 0) {
-      std::cout << "\rScanlines remaining: " << y << ' ' << std::flush;
-    }*/
     for (int x = 0; x < width; ++x) {
       Ray r = camera.generateRay(static_cast<float>(x), static_cast<float>(y));
       Color pixel_color = Li(r, scene, max_depth_);
@@ -52,12 +46,14 @@ void WhittedIntegrator::render(const Scene& scene, Film& film) const {
 }
 
 Color WhittedIntegrator::Li(Ray& ray, const Scene& scene,
-                               int depth) const {
+                            int depth) const {
   if (depth <= 0) return Color(0.0f);
 
   HitRecord rec;
-  if (!scene.intersect(ray, rec)) return Color(0.4f, 0.1, 0.1f);
-
+  if (!scene.intersect(ray, rec))
+    return scene.render_config_.background_color;
+  else
+    return Color(1.0f);
   MaterialManager* material_manager = MaterialManager::get_instance();
   const Material& mat = material_manager->get(rec.material_id);
   glm::vec3 final_color(0.0f);

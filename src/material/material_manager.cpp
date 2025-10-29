@@ -20,8 +20,7 @@ Material& MaterialManager::get(int material_id) const {
   return *it->second.get();
 }
 
-int MaterialManager::add(const Material& material) {
-  int new_index = materials_.size();
-  materials_[new_index] = std::make_unique<Material>(material);
-  return new_index;
+int MaterialManager::add(int material_id, const Material& material) {
+  materials_[material_id] = std::make_unique<Material>(material);
+  return material_id;
 }

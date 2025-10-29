@@ -7,6 +7,14 @@
 #include "light/point_light.h"
 #include "material/material.h"
 #include "accelerator/bvh.h"
+#include "camera/pinhole.h"
+
+struct RenderConfig{
+  Color background_color;
+  float shadow_ray_epsilon;
+  float intersection_test_epsilon;
+  int max_recursion_depth;
+};
 
 class Scene {
  public:
@@ -21,7 +29,8 @@ class Scene {
 
   std::unique_ptr<BvhNode> bvh_root_;
   std::vector<std::shared_ptr<Hittable>> objects_;
-  std::vector<std::unique_ptr<Material>> materials_;
   std::vector<std::unique_ptr<PointLight>> point_lights_;
+  std::vector<std::unique_ptr<PinholeCamera>> cameras_;
   std::unique_ptr<AmbientLight> ambient_light_;
+  RenderConfig render_config_;
 };

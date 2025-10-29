@@ -1,0 +1,21 @@
+#pragma once
+
+#include <iostream>
+
+#include "camera/pinhole.h"
+#include "parser/parser.h"
+#include "scene/scene.h"
+#include "material/material_manager.h"
+
+namespace Parser::ParserAdapter {
+
+Color create_color(const Parser::Vec3f_ v_);
+Sphere create_sphere(const Parser::Sphere_& sphere_,
+                     const std::vector<Parser::Vec3f_>& vertex_data_);
+PointLight create_point_light(const Parser::PointLight_ light_);
+Material create_material(const Parser::Material_& material_);
+PinholeCamera create_pinhole_camera(const Parser::Camera_& camera_);
+Scene read_scene(std::string filename);
+glm::vec3 create_vec3(const Parser::Vec3f_& v_);
+
+}  // namespace Parser
