@@ -20,6 +20,6 @@ struct Material{
   //Recursive RT properties
   Color mirror_reflectance{0.0f};
   Color absorption_coefficient{0.0f};
-  Color absorption_index{0.0f};
+  float absorption_index = 0.0f;
   float refraction_index = 1.0f;
 };

@@ -15,11 +15,11 @@ bool write_png(const std::string& filename, const std::vector<Color>& pixels,
     clamped_pixel.clamp();
 
     image_data.push_back(
-        static_cast<unsigned char>(clamped_pixel.r * 255.999f));
+        static_cast<unsigned char>(clamped_pixel.r));
     image_data.push_back(
-        static_cast<unsigned char>(clamped_pixel.g * 255.999f));
+        static_cast<unsigned char>(clamped_pixel.g));
     image_data.push_back(
-        static_cast<unsigned char>(clamped_pixel.b * 255.999f));
+        static_cast<unsigned char>(clamped_pixel.b));
   }
 
   int result = stbi_write_png(filename.c_str(), width, height, 3,

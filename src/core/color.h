@@ -12,7 +12,7 @@ struct Color {
   Color(float r, float g, float b) : r(r), g(g), b(b) {}
   operator glm::vec3() const { return glm::vec3(r, g, b); }
 
-  Color(const glm::vec3& v) : r(v.x), g(v.y), b(v.z) {}
+  //Color(const glm::vec3& v) : r(v.x), g(v.y), b(v.z) {}
 
   Color operator+(const Color& other) const {
     return Color(r + other.r, g + other.g, b + other.b);
@@ -43,7 +43,7 @@ struct Color {
     return *this;
   }
 
-  void clamp(float min = 0.0f, float max = 1.0f) {
+  void clamp(float min = 0.0f, float max = 255.0f) {
     r = std::clamp(r, min, max);
     g = std::clamp(g, min, max);
     b = std::clamp(b, min, max);

@@ -42,7 +42,7 @@ typedef struct Material_ {
     float phong_exponent;
     float refraction_index;
     Vec3f_ absorption_coefficient;
-    Vec3f_ absorption_index;
+    float absorption_index;
 } Material_;
 
 typedef struct Triangle_ {

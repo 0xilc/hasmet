@@ -14,12 +14,26 @@
 
 namespace {
 inline float fresnel_dielectric(float cosThetaI, float etaI, float etaT,
+
                                 float cosThetaT) {
   float r_s = (etaT * cosThetaI - etaI * cosThetaT) /
+
               (etaT * cosThetaI + etaI * cosThetaT);
+
   float r_p = (etaI * cosThetaI - etaT * cosThetaT) /
+
               (etaI * cosThetaI + etaT * cosThetaT);
+
   return 0.5f * (r_s * r_s + r_p * r_p);
+}
+
+inline double fresnel_conductor(double cos_theta, double n, double k) {
+  double r_s = ((n * n + k * k) - 2 * n * cos_theta + cos_theta * cos_theta) /
+               ((n * n + k * k) + 2 * n * cos_theta + cos_theta * cos_theta);
+  double r_p =
+      ((n * n + k * k) * cos_theta * cos_theta - 2 * n * cos_theta + 1) /
+      ((n * n + k * k) * cos_theta * cos_theta + 2 * n * cos_theta + 1);
+  return 0.5 * (r_s + r_p);
 }
 }  // namespace
 
@@ -33,12 +47,15 @@ void WhittedIntegrator::render(const Scene& scene, Film& film,
   LOG_INFO("Rendering scene...");
   for (int y = 0; y < height - 1; ++y) {
     for (int x = 0; x < width; ++x) {
+      if (x == 446 && y == 518) {
+        int debug = 0;
+      }
       Ray r = camera.generateRay(static_cast<float>(x), static_cast<float>(y));
       Color pixel_color = Li(r, scene, max_depth_);
       film.addSample(x, y, pixel_color);
     }
   }
-  std::cout << "\nDone." << std::endl;
+  LOG_INFO("Rendering completed.");
 }
 
 Color WhittedIntegrator::Li(Ray& ray, const Scene& scene, int depth) const {
@@ -49,87 +66,111 @@ Color WhittedIntegrator::Li(Ray& ray, const Scene& scene, int depth) const {
 
   MaterialManager* material_manager = MaterialManager::get_instance();
   const Material& mat = material_manager->get(rec.material_id);
-  glm::vec3 final_color(0.0f);
-  glm::vec3 view_dir = glm::normalize(-ray.direction);
+  Color final_color(0.0f);
+
   float intersection_test_epsilon =
       scene.render_config_.intersection_test_epsilon;
 
-  final_color += calculate_blinn_phong(rec, scene, view_dir);
-
   switch (mat.type) {
     case MaterialType::Mirror: {
-      glm::vec3 reflected_dir = glm::reflect(ray.direction, rec.normal);
-      Ray reflected_ray(rec.p, reflected_dir);
+      final_color += calculate_blinn_phong(ray, rec, scene);
+      glm::vec3 wo = glm::normalize(ray.origin - rec.p);
+      glm::vec3 wr = glm::normalize(glm::reflect(-wo, rec.normal));
+
+      Ray reflected_ray =
+          Ray(rec.p + rec.normal * intersection_test_epsilon, wr);
 
       final_color +=
-          mat.mirror_reflectance * Li(reflected_ray, scene, depth - 1);
+          Li(reflected_ray, scene, depth - 1) * mat.mirror_reflectance;
       break;
     }
+
     case MaterialType::Dielectric: {
-      glm::vec3 I = glm::normalize(ray.direction);
-      glm::vec3 N = glm::normalize(rec.normal);
-      bool front_face = glm::dot(I, N) < 0.0f;
+      bool front_face = glm::dot(ray.direction, rec.normal) < 0.0f;
+      glm::vec3 Nf = front_face ? rec.normal : -rec.normal;
 
-      glm::vec3 Nf = front_face ? N : -N;
+      if (front_face) {
+        final_color += calculate_blinn_phong(ray, rec, scene);
+      }
+      float n_1 = 1.0f;
+      float n_2 = mat.refraction_index;
+      if (!front_face) std::swap(n_1, n_2);
 
-      float etaI = 1.0f;
-      float etaT = mat.refraction_index;
-      if (!front_face) std::swap(etaI, etaT);
+      float eta = n_1 / n_2;
+      glm::vec3 wo = glm::normalize(-ray.direction);
+      float cos_theta = std::clamp(-glm::dot(Nf, wo), 0.0f, 1.0f);
+      float sin2_phi = eta * eta * std::max(0.0f, 1.0f - cos_theta * cos_theta);
 
-      float eta = etaI / etaT;
-      float cosI = glm::clamp(-glm::dot(I, Nf), 0.0f, 1.0f);
-      float sin2T = eta * eta * std::max(0.0f, 1.0f - cosI * cosI);
-      if (sin2T >= 1.0f) {
-        glm::vec3 R = glm::reflect(I, Nf);
-        Ray rRay(rec.p + Nf * intersection_test_epsilon, R);
-        final_color += Li(rRay, scene, depth - 1);
+      // Total reflection
+      if (sin2_phi >= 1.0f) {
+        glm::vec3 wr = glm::reflect(wo, Nf);
+        Ray reflected_ray(rec.p + Nf * intersection_test_epsilon, wr);
+        final_color += Li(reflected_ray, scene, depth - 1);
         break;
       }
 
-      float cosT = std::sqrt(std::max(0.0f, 1.0f - sin2T));
+      // Reflection and Refraction
+      double cos_phi = std::sqrt(std::max(0.0f, 1.0f - sin2_phi));
+      double Fr = fresnel_dielectric(cos_theta, n_1, n_2, cos_phi);
+      double Ft = 1.0 - Fr;
 
-      // Exact Fresnel term
-      float Fr = fresnel_dielectric(cosI, etaI, etaT, cosT);
-      float Ft = 1.0f - Fr;
+      // Reflection
+      glm::vec3 wr = glm::normalize(glm::reflect(-wo, rec.normal));
+      Ray reflected_ray = Ray(rec.p + Nf * intersection_test_epsilon, wr);
 
-      // Reflection ray
-      glm::vec3 R = glm::reflect(I, Nf);
-      Ray rRay(rec.p + Nf * intersection_test_epsilon, R);
+      // Refraction
+      glm::vec3 wt = glm::refract(wo, Nf, eta);
+      Ray refracted_ray = Ray(rec.p - Nf * intersection_test_epsilon, wt);
+      final_color += Fr * Li(reflected_ray, scene, depth - 1) +
+                     Ft * Li(refracted_ray, scene, depth - 1);
 
-      // Refraction ray
-      glm::vec3 T = glm::refract(I, Nf, eta);
-      Ray tRay(rec.p - Nf * intersection_test_epsilon, T);
-
-      Color LoR = Li(rRay, scene, depth - 1);
-      Color LoT = Li(tRay, scene, depth - 1);
-
-      // No Beer's law yet; add it later by multiplying LoT with transmittance
-      final_color += Fr * LoR + Ft * LoT;
       break;
     }
-    case MaterialType::Conductor:
-    case MaterialType::BlinnPhong:
+
+    case MaterialType::Conductor: {
+      glm::vec3 wo = glm::normalize(ray.origin - rec.p);
+      glm::vec3 wr = glm::normalize(glm::reflect(-wo, rec.normal));
+
+      Ray reflected_ray =
+          Ray(rec.p + rec.normal * intersection_test_epsilon, wr);
+
+      double cos_theta = glm::dot(rec.normal, wr);
+      double k = mat.absorption_index;
+      double n = mat.refraction_index;
+      double Fr = fresnel_conductor(cos_theta, n, k);
+      final_color +=
+          Fr * Li(reflected_ray, scene, depth - 1) * mat.mirror_reflectance;
+      break;
+    }
+
+    case MaterialType::BlinnPhong: {
+      final_color += calculate_blinn_phong(ray, rec, scene);
+      break;
+    }
+
     default:
       break;
   }
 
-  return Color(final_color.x, final_color.y, final_color.z);
+  return final_color;
 }
 
- Color WhittedIntegrator::calculate_blinn_phong(const HitRecord& rec, const Scene& scene,
-                            const glm::vec3& view_dir) const {
+Color WhittedIntegrator::calculate_blinn_phong(const Ray& ray,
+                                               const HitRecord& rec,
+                                               const Scene& scene) const {
   Color color(0.0f);
   MaterialManager* material_manager = MaterialManager::get_instance();
   const Material& material = material_manager->get(rec.material_id);
-
-  for (const auto& p_light : scene.point_lights_) {
-    glm::vec3 light_dir = p_light->position - rec.p;
-    float distance_to_light = glm::length(light_dir);
-    light_dir = glm::normalize(light_dir);
-    float shadow_ray_epsilon = scene.render_config_.shadow_ray_epsilon;
+  float shadow_ray_epsilon = scene.render_config_.shadow_ray_epsilon;
+  // Add ambient light
+  color += material.ambient_reflectance * Color(scene.ambient_light_->radiance);
+  for (const std::unique_ptr<PointLight>& light : scene.point_lights_) {
+    glm::vec3 wi = light->position - rec.p;
+    float distance_to_light = glm::length(wi);
+    wi = glm::normalize(wi);
 
     // Shadow test
-    Ray shadow_ray(rec.p + rec.normal * shadow_ray_epsilon, light_dir);
+    Ray shadow_ray(rec.p + rec.normal * shadow_ray_epsilon, wi);
     HitRecord shadow_rec;
     shadow_ray.interval_.max = distance_to_light;
     if (scene.intersect(shadow_ray, shadow_rec)) {
@@ -137,19 +178,17 @@ Color WhittedIntegrator::Li(Ray& ray, const Scene& scene, int depth) const {
     }
 
     // Diffuse component
-    float cos_theta = std::max(0.0f, glm::dot(rec.normal, light_dir));
-    Color diffuse = material.diffuse_reflectance * cos_theta;
+    double cos_theta = std::max(0.0f, glm::dot(rec.normal, wi));
+    color += Color(material.diffuse_reflectance) * Color(light->intensity) *
+             (cos_theta / (distance_to_light * distance_to_light));
 
     // Specular component
-    glm::vec3 halfway_dir = glm::normalize(light_dir + view_dir);
-    float cos_alpha = std::max(0.0f, glm::dot(rec.normal, halfway_dir));
-    Color specular =
-        material.specular_reflectance * pow(cos_alpha, material.phong_exponent);
-
-    Color light_contribution =
-        (diffuse + specular) * p_light->intensity /
-        (4 * 3.1415 * distance_to_light * distance_to_light);
-    color = color + light_contribution;
+    glm::vec3 wo = glm::normalize(ray.origin - rec.p);
+    glm::vec3 h = glm::normalize(wi + wo);
+    double cos_alpha = std::max(0.0f, glm::dot(rec.normal, h));
+    color += Color(material.specular_reflectance) * Color(light->intensity) *
+             (std::pow(cos_alpha, material.phong_exponent) /
+              (distance_to_light * distance_to_light));
   }
 
   return color;

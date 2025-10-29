@@ -524,8 +524,8 @@ void parseScene(const std::string& filename, Scene_& scene) {
 				else mat.refraction_index = 1.0f;
 				if (mat_json.contains("AbsorptionCoefficient")) mat.absorption_coefficient = parseVec3f(mat_json["AbsorptionCoefficient"]);
 				else mat.absorption_coefficient = { 0.0f, 0.0f, 0.0f };
-        if (mat_json.contains("AbsorptionIndex")) mat.absorption_index = parseVec3f(mat_json["AbsorptionIndex"]);
-				else mat.absorption_index = { 0.0f, 0.0f, 0.0f };
+        if (mat_json.contains("AbsorptionIndex")) mat.absorption_index = std::stof(mat_json["AbsorptionIndex"].get<std::string>());
+				else mat.absorption_index = 0.0f;
         scene.materials.push_back(mat);
     };
     if (materials_json.is_array()) {

@@ -56,7 +56,7 @@ Material create_material(const Parser::Material_& material_) {
   mat.specular_reflectance = create_color(material_.specular_reflectance);
   mat.mirror_reflectance = create_color(material_.mirror_reflectance);
   mat.absorption_coefficient = create_color(material_.absorption_coefficient);
-  mat.absorption_index = create_color(material_.absorption_index);
+  mat.absorption_index = material_.absorption_index;
 
   mat.phong_exponent = material_.phong_exponent;
   mat.refraction_index = material_.refraction_index;
