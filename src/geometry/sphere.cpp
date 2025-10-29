@@ -5,7 +5,10 @@
 #include <cmath>
 
 Sphere::Sphere(const glm::vec3& center, float radius, int material_id)
-    : center_(center), radius_(radius), material_id_(material_id) {}
+    : center_(center), radius_(radius), material_id_(material_id) {
+  aabb_ = AABB(center - glm::vec3(radius, radius, radius),
+                      center + glm::vec3(radius, radius, radius));
+}
 
 bool Sphere::intersect(Ray& r, HitRecord& rec) const {
   glm::vec3 oc = r.origin - center_;

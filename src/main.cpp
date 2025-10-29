@@ -6,11 +6,11 @@
 #include "core/logging.h"
 #include "film/film.h"
 #include "geometry/sphere.h"
-#include "integrator/whitted.h" 
+#include "geometry/triangle.h"
+#include "integrator/whitted.h"
 #include "material/material.h"
-#include "scene/scene.h"
 #include "material/material_manager.h"
-
+#include "scene/scene.h"
 
 int main() {
   LOG_INFO("Hasmet Renderer | Assignment 1");
@@ -59,13 +59,20 @@ int main() {
   world.add_point_light(
       std::make_unique<PointLight>(glm::vec3(2, 5, 2), Color(100.0f)));
 
+  world.add_shape(std::make_unique<Sphere>(glm::vec3(0, -100.5, -1), 100.0f,
+                                           mat_ground_id));
   world.add_shape(
-      std::make_unique<Sphere>(glm::vec3(0, -100.5, -1), 100.0f, mat_ground_id));
-  world.add_shape(std::make_unique<Sphere>(glm::vec3(0, 0, -1), 0.5f, mat_red_id));
-  world.add_shape(std::make_unique<Sphere>(glm::vec3(-1.2, 0, -1), 0.5f, mat_glass_id));
-  world.add_shape(std::make_unique<Sphere>(glm::vec3(-1.2, 0, -2), 0.5f, mat_red_id));
+      std::make_unique<Sphere>(glm::vec3(0, 0, -1), 0.5f, mat_red_id));
+  world.add_shape(
+      std::make_unique<Sphere>(glm::vec3(-1.2, 0, -1), 0.5f, mat_glass_id));
+  world.add_shape(
+      std::make_unique<Sphere>(glm::vec3(-1.2, 0, -2), 0.5f, mat_red_id));
   world.add_shape(
       std::make_unique<Sphere>(glm::vec3(1.2, 0, -1), 0.5f, mat_mirror_id));
+
+  world.add_shape(
+      std::make_unique<Triangle>(glm::vec3(-1, 0, -1), glm::vec3(-0.5, 1, -1),
+                                 glm::vec3(-1.5, 1, -1), mat_red_id));
 
   // Ray tracer rendering
   WhittedIntegrator integrator(max_recursion_depth);

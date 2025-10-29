@@ -8,6 +8,10 @@ Triangle::Triangle(const glm::vec3& p1, const glm::vec3& p2,
   indices_[1] = p2;
   indices_[2] = p3;
   material_id_ = material_id;
+
+  glm::vec3 min_v = glm::min(glm::min(indices_[0], indices_[1]), indices_[2]);
+  glm::vec3 max_v = glm::max(glm::max(indices_[0], indices_[1]), indices_[2]);
+  aabb_ = AABB(min_v, max_v);
 }
 
 bool Triangle::intersect(Ray& ray, HitRecord& rec) const {

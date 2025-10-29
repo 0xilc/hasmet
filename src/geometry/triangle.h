@@ -3,7 +3,7 @@
 
 #include "shape.h"
 
-class Triangle : Shape {
+class Triangle : public Shape {
  public:
   Triangle(const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, int material_id);
   
