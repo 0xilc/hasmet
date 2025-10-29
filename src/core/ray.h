@@ -2,13 +2,14 @@
 
 #include <glm/glm.hpp>
 #include <limits>
+#include "interval.h"
 
 struct Ray {
   glm::vec3 origin;
   glm::vec3 direction;
 
-  float tmin = 1e-4f;
-  float tmax = std::numeric_limits<float>::infinity();
+  Interval interval_ = Interval(0.004f, INFINITY);
+
 
   Ray() = default;
   Ray(const glm::vec3& o, const glm::vec3& d) : origin(o), direction(d) {}

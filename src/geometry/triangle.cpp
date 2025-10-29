@@ -27,7 +27,7 @@ bool Triangle::intersect(const Ray& ray, HitRecord& rec) const {
   c2 = indices_[0] - indices_[2];
   double t = glm::determinant(glm::mat3(c1, c2, c3)) / detA;
 
-  if (t < ray.tmin + 0.0001 || 0.0001 + t > ray.tmax) return false;
+  if (t < ray.interval_.min + 0.0001 || 0.0001 + t > ray.interval_.max) return false;
 
   if (beta + gamma <= 1 && beta + 0.00001 >= 0 && gamma + 0.00001 >= 0) {
     glm::vec3 vec1 = indices_[1] - indices_[0];

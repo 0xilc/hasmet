@@ -23,9 +23,9 @@ bool Sphere::intersect(const Ray& r, HitRecord& rec) const {
   double sqrtd = sqrt(discriminant);
 
   double root = (-half_b - sqrtd) / a;
-  if (root < r.tmin || root > r.tmax) {
+  if (root < r.interval_.min || root > r.interval_.max) {
     root = (-half_b + sqrtd) / a;
-    if (root < r.tmin || root > r.tmax) {
+    if (root < r.interval_.min || root > r.interval_.max) {
       return false;
     }
   }

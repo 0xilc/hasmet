@@ -9,6 +9,6 @@ class Hittable {
  public:
   virtual ~Hittable() = default;
 
-  virtual bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const = 0;
+  virtual bool intersect(Ray& ray, HitRecord& rec) const = 0;
   virtual AABB getAABB() const = 0;
 };

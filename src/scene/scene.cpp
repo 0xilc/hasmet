@@ -17,11 +17,11 @@ void Scene::add_ambient_light(std::unique_ptr<AmbientLight> light) {
 bool Scene::intersect(const Ray& r, HitRecord& rec) const {
   HitRecord temp_rec;
   bool hit_anything = false;
-  auto closest_so_far = r.tmax;
+  auto closest_so_far = r.interval_.max;
 
   for (const auto& shape : shapes_) {
     Ray temp_ray = r;
-    temp_ray.tmax = closest_so_far;
+    temp_ray.interval_.max = closest_so_far;
 
     if (shape->intersect(temp_ray, temp_rec)){
       hit_anything = true;

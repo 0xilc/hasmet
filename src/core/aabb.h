@@ -36,17 +36,17 @@ class AABB {
       return z;
   }
 
-  bool hit(const Ray& ray, Interval ray_t) const {
+  bool intersect(Ray& ray) const {
     for (int i = 0; i < 3; i++) {
       double t0 = (axis(i).min - ray.origin[i]) / ray.direction[i];
       double t1 = (axis(i).max - ray.origin[i]) / ray.direction[i];
       if (t0 > t1) std::swap(t0, t1);
 
       // check whether overlaps
-      if (ray_t.min < t0) ray_t.min = t0;
-      if (ray_t.max > t1) ray_t.max = t1;
+      if (ray.interval_.min < t0) ray.interval_.min = t0;
+      if (ray.interval_.max > t1) ray.interval_.max = t1;
 
-      if (ray_t.max <= ray_t.min)
+      if (ray.interval_.max <= ray.interval_.min)
         return false;  // means no overlap between three axices.
     }
     return true;

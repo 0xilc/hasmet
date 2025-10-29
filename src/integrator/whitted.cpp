@@ -140,7 +140,7 @@ Color calculate_blinn_phong(const HitRecord& rec, const Scene& scene,
     // Shadow test
     Ray shadow_ray(rec.p, light_dir);
     HitRecord shadow_rec;
-    shadow_ray.tmax = distance_to_light;
+    shadow_ray.interval_.max = distance_to_light;
     if (scene.intersect(shadow_ray, shadow_rec)) {
       continue;
     }
