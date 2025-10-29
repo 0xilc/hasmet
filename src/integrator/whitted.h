@@ -1,6 +1,7 @@
 #pragma once
 #include "core/ray.h"
 #include "core/color.h"
+#include "core/hit_record.h"
 #include "integrator.h"
 
 class WhittedIntegrator : public Integrator {
@@ -11,5 +12,7 @@ class WhittedIntegrator : public Integrator {
 
  private:
   Color Li(Ray& ray, const Scene& scene, int depth) const;
+  Color calculate_blinn_phong(const HitRecord& rec, const Scene& scene,
+                              const glm::vec3& view_dir) const;
   int max_depth_;
 };

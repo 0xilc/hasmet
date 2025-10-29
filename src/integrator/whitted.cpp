@@ -23,9 +23,6 @@ inline float fresnel_dielectric(float cosThetaI, float etaI, float etaT,
 }
 }  // namespace
 
-Color calculate_blinn_phong(const HitRecord& rec, const Scene& scene,
-                            const glm::vec3& view_dir);
-
 WhittedIntegrator::WhittedIntegrator(int max_depth) : max_depth_(max_depth) {}
 
 void WhittedIntegrator::render(const Scene& scene, Film& film,
@@ -34,7 +31,7 @@ void WhittedIntegrator::render(const Scene& scene, Film& film,
   int height = film.getHeight();
 
   LOG_INFO("Rendering scene...");
-  for (int y = height - 1; y >= 0; --y) {
+  for (int y = 0; y < height - 1; ++y) {
     for (int x = 0; x < width; ++x) {
       Ray r = camera.generateRay(static_cast<float>(x), static_cast<float>(y));
       Color pixel_color = Li(r, scene, max_depth_);
@@ -54,8 +51,9 @@ Color WhittedIntegrator::Li(Ray& ray, const Scene& scene, int depth) const {
   const Material& mat = material_manager->get(rec.material_id);
   glm::vec3 final_color(0.0f);
   glm::vec3 view_dir = glm::normalize(-ray.direction);
-  float intersection_test_epsilon = scene.render_config_.intersection_test_epsilon;
-  
+  float intersection_test_epsilon =
+      scene.render_config_.intersection_test_epsilon;
+
   final_color += calculate_blinn_phong(rec, scene, view_dir);
 
   switch (mat.type) {
@@ -118,8 +116,8 @@ Color WhittedIntegrator::Li(Ray& ray, const Scene& scene, int depth) const {
   return Color(final_color.x, final_color.y, final_color.z);
 }
 
-Color calculate_blinn_phong(const HitRecord& rec, const Scene& scene,
-                            const glm::vec3& view_dir) {
+ Color WhittedIntegrator::calculate_blinn_phong(const HitRecord& rec, const Scene& scene,
+                            const glm::vec3& view_dir) const {
   Color color(0.0f);
   MaterialManager* material_manager = MaterialManager::get_instance();
   const Material& material = material_manager->get(rec.material_id);
@@ -134,7 +132,7 @@ Color calculate_blinn_phong(const HitRecord& rec, const Scene& scene,
     Ray shadow_ray(rec.p + rec.normal * shadow_ray_epsilon, light_dir);
     HitRecord shadow_rec;
     shadow_ray.interval_.max = distance_to_light;
-    if (scene.intersect(shadow_ray  , shadow_rec)) {
+    if (scene.intersect(shadow_ray, shadow_rec)) {
       continue;
     }
 

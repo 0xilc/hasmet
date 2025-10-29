@@ -70,7 +70,7 @@ PinholeCamera create_pinhole_camera(const Parser::Camera_& camera_) {
   glm::vec3 gaze(camera_.gaze.x, camera_.gaze.y, camera_.gaze.z);
   glm::vec3 up(camera_.up.x, camera_.up.y, camera_.up.z);
 
-  glm::vec3 look_at = position - gaze;
+  glm::vec3 look_at = position + gaze;
 
   float top = camera_.near_plane.t;
   float bottom = camera_.near_plane.b;
