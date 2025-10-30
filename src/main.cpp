@@ -53,8 +53,8 @@ int main(int argc, char* argv[]) {
 //
 // int main() {
 //
-//  const std::string filename = "simple";
-//  const std::string input_folder = "C:/Users/akin/Desktop/hw1/inputs/";
+//  const std::string filename = "berserker_smooth";
+//  const std::string input_folder = "C:/Users/akin/Desktop/hw1/inputs/akif_uslu/";
 //  const std::string input_filename = input_folder + filename + ".json";
 //  const std::string output_folder = "C:/Users/akin/Desktop/whitted/";
 //  const std::string output_filename = output_folder + filename + ".png";

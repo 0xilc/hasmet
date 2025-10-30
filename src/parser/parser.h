@@ -54,6 +54,7 @@ typedef struct Mesh_ {
     int id;
     int material_id;
     std::vector<Triangle_> faces;
+    bool smooth_shading;
 } Mesh_;
 
 typedef struct Sphere_ {

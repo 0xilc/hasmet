@@ -552,7 +552,10 @@ void parseScene(const std::string& filename, Scene_& scene) {
         Mesh_ mesh;
         mesh.id = std::stoi(mesh_json["_id"].get<std::string>());
         mesh.material_id = std::stoi(mesh_json["Material"].get<std::string>());
-
+        if (mesh_json.contains("_shadingMode"))
+          mesh.smooth_shading = (mesh_json["_shadingMode"] == "smooth");
+        else
+          mesh.smooth_shading = false;
         const auto& faces_json = mesh_json["Faces"];
 
         if (faces_json.contains("_data"))

@@ -12,6 +12,13 @@
 
 namespace Parser::ParserAdapter {
 
+float get_triangle_area(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3) {
+  glm::vec3 edge1 = v2 - v1;
+  glm::vec3 edge2 = v3 - v1;
+  glm::vec3 cross_product = glm::cross(edge1, edge2);
+  return 0.5f * glm::length(cross_product);
+}
+
 Color create_color(const Parser::Vec3f_ v_) { return Color(v_.x, v_.y, v_.z); }
 
 glm::vec3 create_vec3(const Parser::Vec3f_& v_) {
@@ -25,11 +32,13 @@ Sphere create_sphere(const Parser::Sphere_& sphere_,
 }
 
 Triangle create_triangle(const Parser::Triangle_& triangle_,
-                         const std::vector<Parser::Vec3f_>& vertex_data_) {
+                         const std::vector<Parser::Vec3f_>& vertex_data_,
+                         const glm::vec3 vertex_normals[3] = nullptr,
+                         bool smooth_shading = false) {
   return Triangle(create_vec3(vertex_data_[triangle_.v0_id]),
                   create_vec3(vertex_data_[triangle_.v1_id]),
                   create_vec3(vertex_data_[triangle_.v2_id]),
-                  triangle_.material_id);
+                  triangle_.material_id, vertex_normals, smooth_shading);
 }
 
 PointLight create_point_light(const Parser::PointLight_ light_) {
@@ -123,9 +132,57 @@ Scene read_scene(std::string filename) {
   }
 
   for (const Parser::Mesh_& mesh_ : parsed_scene.meshes) {
-    for (const Parser::Triangle_& face_ : mesh_.faces) {
-      scene.objects_.push_back(std::make_unique<Triangle>(
-          create_triangle(face_, parsed_scene.vertex_data)));
+    if (mesh_.smooth_shading) {
+      std::vector<std::vector<std::pair<glm::vec3, float>>>
+          per_vertex_triangles;
+      per_vertex_triangles.resize(parsed_scene.vertex_data.size());
+      for (const Triangle_& triangle_ : mesh_.faces) {
+        glm::vec3 v0 = create_vec3(parsed_scene.vertex_data[triangle_.v0_id]);
+        glm::vec3 v1 = create_vec3(parsed_scene.vertex_data[triangle_.v1_id]);
+        glm::vec3 v2 = create_vec3(parsed_scene.vertex_data[triangle_.v2_id]);
+        float area = get_triangle_area(v0, v1, v2);
+        glm::vec3 edge1 = v1 - v0;
+        glm::vec3 edge2 = v2 - v0;
+        glm::vec3 face_normal = glm::normalize(glm::cross(edge1, edge2));
+        per_vertex_triangles[triangle_.v0_id].push_back(
+            std::make_pair(face_normal, area));
+        per_vertex_triangles[triangle_.v1_id].push_back(
+            std::make_pair(face_normal, area));
+        per_vertex_triangles[triangle_.v2_id].push_back(
+            std::make_pair(face_normal, area));
+      }
+      std::vector<glm::vec3> vertex_normals;
+      for (const auto& v : per_vertex_triangles) {
+        glm::vec3 normal(0.0, 0.0, 0.0);
+        float total_area = 0.0;
+        for (const auto& pair : v) {
+          normal = normal + pair.first * pair.second;
+          total_area += pair.second;
+        }
+        if (total_area > 0.0) {
+          normal = normal / total_area;
+        }
+        vertex_normals.push_back(normal);
+      }
+      for (const Triangle_& triangle_ : mesh_.faces) {
+        glm::vec3 indices[3] = {
+            create_vec3(parsed_scene.vertex_data[triangle_.v0_id]),
+            create_vec3(parsed_scene.vertex_data[triangle_.v1_id]),
+            create_vec3(parsed_scene.vertex_data[triangle_.v2_id])};
+
+        glm::vec3 per_vertex_normals[3] = {vertex_normals[triangle_.v0_id],
+                                           vertex_normals[triangle_.v1_id],
+                                           vertex_normals[triangle_.v2_id]};
+
+        scene.objects_.push_back(std::make_shared<Triangle>(
+            indices[0], indices[1], indices[2], triangle_.material_id,
+            per_vertex_normals, true));
+      }
+    } else {
+      for (const Parser::Triangle_& face_ : mesh_.faces) {
+        scene.objects_.push_back(std::make_unique<Triangle>(
+            create_triangle(face_, parsed_scene.vertex_data)));
+      }
     }
   }
 

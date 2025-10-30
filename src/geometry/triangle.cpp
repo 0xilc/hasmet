@@ -3,11 +3,19 @@
 #include <glm/glm.hpp>
 
 Triangle::Triangle(const glm::vec3& p1, const glm::vec3& p2,
-                   const glm::vec3& p3, int material_id) {
+                   const glm::vec3& p3, int material_id,
+                   const glm::vec3 vertex_normals[3],
+                   bool smooth_shading) {
   indices_[0] = p1;
   indices_[1] = p2;
   indices_[2] = p3;
   material_id_ = material_id;
+  smooth_shading_ = smooth_shading;
+  if (smooth_shading_) {
+    vertex_normals_[0] = vertex_normals[0];
+    vertex_normals_[1] = vertex_normals[1];
+    vertex_normals_[2] = vertex_normals[2];
+  }
 
   glm::vec3 min_v = glm::min(glm::min(indices_[0], indices_[1]), indices_[2]);
   glm::vec3 max_v = glm::max(glm::max(indices_[0], indices_[1]), indices_[2]);
@@ -42,9 +50,17 @@ bool Triangle::intersect(Ray& ray, HitRecord& rec) const {
     vec1 = glm::normalize(vec1);
 
     rec.t = t;
-    rec.normal = vec1;
     rec.p = ray.origin + ray.direction * static_cast<float>(t);
     rec.material_id = material_id_;
+
+    if (smooth_shading_) {
+      rec.normal = glm::normalize(
+          static_cast<float>(1 - beta - gamma) * vertex_normals_[0] +
+          static_cast<float>(beta) * vertex_normals_[1] +
+          static_cast<float>(gamma) * vertex_normals_[2]);
+    } else {
+      rec.normal = vec1;
+    }
     return true;
   }
   return false;
