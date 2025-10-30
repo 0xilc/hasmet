@@ -11,10 +11,11 @@ endif()
 
 project ("hasmet")
 
+string(APPEND CMAKE_CXX_FLAGS_RELEASE " -O3")
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Add source to this project's executable.
 add_executable (raytracer "src/main.cpp" "src/core/logging.h" "src/core/ray.h" "src/core/color.h" "src/io/image_io.cpp" "src/film/film.h" "src/film/film.cpp" "src/camera/camera.h" "src/camera/pinhole.h" "src/camera/pinhole.cpp"  "src/geometry/sphere.h" "src/geometry/sphere.h" "src/geometry/sphere.cpp" "src/scene/scene.h" "src/scene/scene.cpp" "src/light/light.h" "src/light/ambient_light.h" "src/light/point_light.h" "src/integrator/integrator.h" "src/integrator/whitted.h" "src/integrator/whitted.cpp"  "src/geometry/triangle.h" "src/geometry/triangle.cpp" "src/material/material_manager.h" "src/material/material_manager.cpp"  "src/core/aabb.h" "src/core/interval.h" "src/accelerator/hittable.h" "src/core/hit_record.h" "src/accelerator/bvh.h" "src/accelerator/bvh.cpp" "src/parser/parser.h" "src/parser/parser.cpp" "src/parser/parser_adapter.cpp" "src/parser/parser_adapter.h"   "src/geometry/plane.h" "src/geometry/plane.cpp")
 
 target_include_directories(raytracer PUBLIC 

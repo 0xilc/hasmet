@@ -1,19 +1,22 @@
 #pragma once
 
+#include <glm/glm.hpp>
+
 #include "camera.h"
 #include "core/ray.h"
-#include <glm/glm.hpp>
 
 class PinholeCamera : public Camera {
  public:
-  PinholeCamera(const glm::vec3& position, const glm::vec3& look_at, const glm::vec3& up,
-                float vertical_fov_degrees, int film_width, int film_height);
+  PinholeCamera(const glm::vec3& position, const glm::vec3& look_at,
+                const glm::vec3& up, float vertical_fov_degrees, int film_width,
+                int film_height, std::string image_name);
 
   Ray generateRay(float px, float py) const override;
 
   // TODO: seperate this to film class
   int film_width_;
   int film_height_;
+  std::string image_name_;
 
  private:
   glm::vec3 position_;

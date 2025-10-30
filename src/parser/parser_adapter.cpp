@@ -1,10 +1,11 @@
 #pragma once
 
 #include <iostream>
+
 #include "camera/pinhole.h"
+#include "geometry/plane.h"
 #include "geometry/sphere.h"
 #include "geometry/triangle.h"
-#include "geometry/plane.h"
 #include "material/material_manager.h"
 #include "parser/parser.h"
 #include "scene/scene.h"
@@ -57,7 +58,6 @@ Material create_material(const Parser::Material_& material_) {
   mat.mirror_reflectance = create_color(material_.mirror_reflectance);
   mat.absorption_coefficient = create_color(material_.absorption_coefficient);
   mat.absorption_index = material_.absorption_index;
-
   mat.phong_exponent = material_.phong_exponent;
   mat.refraction_index = material_.refraction_index;
 
@@ -80,7 +80,8 @@ PinholeCamera create_pinhole_camera(const Parser::Camera_& camera_) {
   float vertical_fov_degrees = glm::degrees(vertical_fov_radians);
 
   return PinholeCamera(position, look_at, up, vertical_fov_degrees,
-                       camera_.image_width, camera_.image_height);
+                       camera_.image_width, camera_.image_height,
+                       camera_.image_name);
 }
 
 Scene read_scene(std::string filename) {
@@ -100,7 +101,7 @@ Scene read_scene(std::string filename) {
 
   MaterialManager* material_manager = MaterialManager::get_instance();
   for (const Parser::Material_ material_ : parsed_scene.materials) {
-      material_manager->add(material_.id, create_material(material_));
+    material_manager->add(material_.id, create_material(material_));
   }
 
   for (const Parser::Sphere_& sphere_ : parsed_scene.spheres) {
@@ -120,7 +121,7 @@ Scene read_scene(std::string filename) {
     scene.objects_.push_back(std::make_unique<Triangle>(
         create_triangle(triangle_, parsed_scene.vertex_data)));
   }
-  
+
   for (const Parser::Mesh_& mesh_ : parsed_scene.meshes) {
     for (const Parser::Triangle_& face_ : mesh_.faces) {
       scene.objects_.push_back(std::make_unique<Triangle>(
