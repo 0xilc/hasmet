@@ -503,6 +503,84 @@ void parseScene(const std::string& filename, Scene_& scene) {
         parse_point_light(point_lights_json);
     }
 
+    // --- Transformations ---
+    scene.transformations.clear();
+    if (scene_json.contains("Transformations")) {
+      const auto& T = scene_json["Transformations"];
+
+      auto parse_group = [&](const std::string& key, TransformationType ttype,
+                             const std::string& prefix, size_t expectedCount,
+                             const std::string& expectText) {
+        if (!T.contains(key)) return;
+
+        auto emit_one = [&](const nlohmann::json& j) {
+          Transformation_ tf;
+          tf.id = prefix + j["_id"].get<std::string>();
+          std::stringstream ss(j["_data"].get<std::string>());
+          float v;
+          while (ss >> v) tf.data.push_back(v);
+
+          if (tf.data.size() != expectedCount) {
+            throw std::runtime_error(
+                "Transformation " + tf.id + " has " +
+                std::to_string(tf.data.size()) + " values; expected " +
+                std::to_string(expectedCount) + " " + expectText);
+          }
+
+          tf.type = ttype;
+          scene.transformations.push_back(tf);
+        };
+
+        const auto& node = T[key];
+        if (node.is_array()) {
+          for (const auto& item : node) emit_one(item);
+        } else {
+          emit_one(node);
+        }
+      };
+
+      parse_group("Translation", TransformationType::TRANSLATION, "t", 3,
+                  "(dx dy dz)");
+      parse_group("Scaling", TransformationType::SCALING, "s", 3, "(sx sy sz)");
+      parse_group("Rotation", TransformationType::ROTATION, "r", 4,
+                  "(theta x y z)");
+      parse_group("Composite", TransformationType::COMPOSITE, "c", 16,
+                  "(row-major 4x4)");
+
+      for (auto& [k, _] : T.items()) {
+        if (k != "Translation" && k != "Scaling" && k != "Rotation" &&
+            k != "Composite") {
+          throw std::runtime_error(
+              "parseScene error: unknown transformation group '" + k +
+              "' (expected Translation, Scaling, Rotation, Composite)");
+        }
+      }
+    }
+
+    // Build a lookup table for transformations
+    std::unordered_map<std::string, const Transformation_*> transform_table;
+    
+    for (const auto& t : scene.transformations) {
+      transform_table[t.id] = &t;
+    }
+
+    auto attach_transforms = [&](const nlohmann::json& obj_json,
+                                 std::vector<Transformation_>& out) {
+      if (!obj_json.contains("Transformations")) return;
+      std::stringstream ts(obj_json["Transformations"].get<std::string>());
+      std::string token;
+      while (ts >> token) {
+        if (token.size() < 2)
+          throw std::runtime_error("Invalid transformation token: '" + token +
+                                   "'");
+        auto it = transform_table.find(token);
+        if (it == transform_table.end())
+          throw std::runtime_error("Unknown transformation reference: '" +
+                                   token + "'");
+        out.push_back(*it->second);  // copy
+      }
+    };
+
     // --- Materials ---
     const auto& materials_json = scene_json["Materials"]["Material"];
     auto parse_material = [&](const json& mat_json) {
@@ -544,6 +622,20 @@ void parseScene(const std::string& filename, Scene_& scene) {
     // --- Objects ---
     const auto& objects_json = scene_json["Objects"];
 
+    auto parse_transform_refs = [&](const std::string& refString,
+                                    std::vector<Transformation_>& target) {
+      std::stringstream ss(refString);
+      std::string token;
+      while (ss >> token) {
+        auto it = transform_table.find(token);
+        if (it == transform_table.end()) {
+          throw std::runtime_error("Unknown transformation reference: '" +
+                                   token + "'");
+        }
+        target.push_back(*it->second);
+      }
+    };
+    
     // Parse Meshes
     if (objects_json.contains("Mesh"))
     {
@@ -556,6 +648,12 @@ void parseScene(const std::string& filename, Scene_& scene) {
           mesh.smooth_shading = (mesh_json["_shadingMode"] == "smooth");
         else
           mesh.smooth_shading = false;
+
+        if (mesh_json.contains("Transformations")) {
+          parse_transform_refs(mesh_json["Transformations"].get<std::string>(),
+                               mesh.transformations);
+        }
+
         const auto& faces_json = mesh_json["Faces"];
 
         if (faces_json.contains("_data"))
@@ -603,7 +701,12 @@ void parseScene(const std::string& filename, Scene_& scene) {
          auto parse_triangle = [&](const json& tri_json) {
             Triangle_ tri;
             tri.material_id = std::stoi(tri_json["Material"].get<std::string>());
-             std::stringstream indices_ss(tri_json["Indices"].get<std::string>());
+            if (tri_json.contains("Transformations")) {
+              parse_transform_refs(
+                  tri_json["Transformations"].get<std::string>(),
+                  tri.transformations);
+            }
+            std::stringstream indices_ss(tri_json["Indices"].get<std::string>());
             indices_ss >> tri.v0_id >> tri.v1_id >> tri.v2_id;
             tri.v0_id--; tri.v1_id--; tri.v2_id--;
             scene.triangles.push_back(tri);
@@ -624,6 +727,12 @@ void parseScene(const std::string& filename, Scene_& scene) {
             sphere.material_id = std::stoi(sphere_json["Material"].get<std::string>());
             sphere.center_vertex_id = std::stoi(sphere_json["Center"].get<std::string>()) - 1;
             sphere.radius = std::stof(sphere_json["Radius"].get<std::string>());
+            
+            if (sphere_json.contains("Transformations")) {
+              parse_transform_refs(
+                  sphere_json["Transformations"].get<std::string>(),
+                  sphere.transformations);
+            }
             scene.spheres.push_back(sphere);
         };
         if (spheres_json.is_array()) {
@@ -632,6 +741,8 @@ void parseScene(const std::string& filename, Scene_& scene) {
             parse_sphere(spheres_json);
         }
     }
+    
+    // Parse Planes
     if (objects_json.contains("Plane"))
     {
       const auto& planes_json = objects_json["Plane"];
@@ -641,6 +752,12 @@ void parseScene(const std::string& filename, Scene_& scene) {
 				plane.material_id = std::stoi(plane_json["Material"].get<std::string>());
 				plane.point_vertex_id = std::stoi(plane_json["Point"].get<std::string>()) - 1;
 				plane.normal = parseVec3f(plane_json["Normal"]);
+                if (plane_json.contains("Transformations")) {
+                            parse_transform_refs(
+                                plane_json["Transformations"]
+                                    .get<std::string>(),
+                                plane.transformations);
+                }
 				scene.planes.push_back(plane);
 				};
       if (planes_json.is_array()) {
@@ -712,12 +829,12 @@ void printScene(const Scene_& scene) {
 
     // --- Vertex Data ---
     std::cout << "\n[VERTEX DATA (" << scene.vertex_data.size() << " vertices)]" << std::endl;
-    // We'll just print the first few to avoid a huge log
+
     int vertices_to_print = (int)scene.vertex_data.size();
     for (int i = 0; i < vertices_to_print; ++i) {
         std::cout << "  Vertex " << i + 1 << ": " << scene.vertex_data[i] << std::endl;
     }
-    // --- Objects ---
+    //// --- Objects ---
     std::cout << "\n[OBJECTS]" << std::endl;
     for (const auto& mesh : scene.meshes) {
         std::cout << "  Mesh ID " << mesh.id << ":" << std::endl;
@@ -728,23 +845,43 @@ void printScene(const Scene_& scene) {
             const auto& face = mesh.faces[0];
             std::cout << "    First Face Indices: " << face.v0_id << ", " << face.v1_id << ", " << face.v2_id << std::endl;
         }
+        std::cout << "    Transformations:";
+        for (const auto& tf : mesh.transformations) {
+          std::cout << " " << tf.id;
+        }
+        std::cout << std::endl;
     }
     for (const auto& tri : scene.triangles) {
         std::cout << "  Standalone Triangle:" << std::endl;
         std::cout << "    Material ID: " << tri.material_id << std::endl;
         std::cout << "    Indices: " << tri.v0_id << ", " << tri.v1_id << ", " << tri.v2_id << std::endl;
+        std::cout << "    Transformations:";
+        for (const auto& tf : tri.transformations) {
+          std::cout << " " << tf.id;
+        }
+        std::cout << std::endl;
     }
     for (const auto& sphere : scene.spheres) {
         std::cout << "  Sphere ID " << sphere.id << ":" << std::endl;
         std::cout << "    Material ID: " << sphere.material_id << std::endl;
         std::cout << "    Center Vertex ID: " << sphere.center_vertex_id << std::endl;
         std::cout << "    Radius: " << sphere.radius << std::endl;
+        std::cout << "    Transformations:";
+        for (const auto& tf : sphere.transformations) {
+          std::cout << " " << tf.id;
+        }
+        std::cout << std::endl;
     }
-     for (const auto& plane : scene.planes) {
+    for (const auto& plane : scene.planes) {
         std::cout << "  Plane ID " << plane.id << ":" << std::endl;
         std::cout << "    Material ID: " << plane.material_id << std::endl;
         std::cout << "    Point Vertex ID: " << plane.point_vertex_id << std::endl;
         std::cout << "    Normal: " << plane.normal << std::endl;
+        std::cout << "    Transformations:";
+        for (const auto& tf : plane.transformations) {
+          std::cout << " " << tf.id;
+        }
+        std::cout << std::endl;
     }
 
     std::cout << "\n----------------------------------------" << std::endl;

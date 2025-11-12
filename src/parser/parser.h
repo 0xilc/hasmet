@@ -14,6 +14,19 @@ typedef struct Vec4f_ {
     float l, r, b, t;
 } Vec4f_;
 
+enum TransformationType {
+    TRANSLATION,
+    SCALING,
+    ROTATION,
+    COMPOSITE
+};
+
+typedef struct Transformation_ {
+  std::string id;
+  TransformationType type;
+  std::vector<float> data;
+};
+
 typedef struct Camera_ {
     int id;
     Vec3f_ position;
@@ -48,6 +61,7 @@ typedef struct Material_ {
 typedef struct Triangle_ {
     int material_id;
     int v0_id, v1_id, v2_id;
+    std::vector<Transformation_> transformations;
 } Triangle_;
 
 typedef struct Mesh_ {
@@ -55,6 +69,7 @@ typedef struct Mesh_ {
     int material_id;
     std::vector<Triangle_> faces;
     bool smooth_shading;
+    std::vector<Transformation_> transformations;
 } Mesh_;
 
 typedef struct Sphere_ {
@@ -62,6 +77,7 @@ typedef struct Sphere_ {
     int material_id;
     int center_vertex_id;
     float radius;
+    std::vector<Transformation_> transformations;
 } Sphere_;
 
 typedef struct Plane_ {
@@ -69,6 +85,7 @@ typedef struct Plane_ {
     int material_id;
     int point_vertex_id;
     Vec3f_ normal;
+    std::vector<Transformation_> transformations;
 } Plane_;
 
 typedef struct Scene_ {
@@ -85,6 +102,7 @@ typedef struct Scene_ {
     std::vector<Triangle_> triangles;
     std::vector<Sphere_> spheres;
     std::vector<Plane_> planes;
+    std::vector<Transformation_> transformations;
 } Scene_;
 
 // --- Function Declaration ---

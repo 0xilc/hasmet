@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <chrono>
 
 #include "camera/pinhole.h"
 #include "core/logging.h"
@@ -13,6 +14,8 @@
 #include "material/material_manager.h"
 #include "parser/parser_adapter.h"
 #include "scene/scene.h"
+#include <chrono>
+#include "parser/parser.h"
 //
 //int main(int argc, char* argv[]) {
 //  if (argc != 2) {
@@ -38,11 +41,15 @@
 //      if (!output_path.parent_path().empty()) {
 //        std::filesystem::create_directories(output_path.parent_path());
 //      }
-//
+//      auto start = std::chrono::high_resolution_clock::now();
 //      Film image(camera->film_width_, camera->film_height_, output_name);
 //      LOG_INFO("Rendering to: " << output_path.string());
 //      integrator.render(scene, image, *camera);
+//      auto end = std::chrono::high_resolution_clock::now();
+//      std::chrono::duration<double> elapsed = end - start;
+//      LOG_INFO("Rendering: " << output_path << " : "<< elapsed.count() << " seconds.");
 //      image.write();
+//
 //    }
 //  } catch (const std::exception& e) {
 //    LOG_ERROR("An error occurred: " << e.what());
@@ -52,22 +59,30 @@
 
  int main() {
 
-  const std::string filename = "cornellbox_recursive";
-  const std::string input_folder = "C:/Users/akin/Desktop/hw1/inputs/";
+  const std::string filename = "metal_glass_plates";
+  const std::string input_folder = "C:/Users/akin/Desktop/hw2/inputs/";
   const std::string input_filename = input_folder + filename + ".json";
   const std::string output_folder = "C:/Users/akin/Desktop/whitted/";
   const std::string output_filename = output_folder + filename + ".png";
 
-  LOG_INFO("Reading scene...");
-  Scene scene = Parser::ParserAdapter::read_scene(input_filename);
-  WhittedIntegrator integrator(scene.render_config_.max_recursion_depth);
+  LOG_INFO("Reading the scene: " << filename);
+  Parser::Scene_ scene;
+  Parser::parseScene(input_filename, scene);
+  Parser::printScene(scene);
 
-  for (const std::unique_ptr<PinholeCamera>& camera : scene.cameras_) {
+  //Scene scene = Parser::ParserAdapter::read_scene(input_filename);
+  //WhittedIntegrator integrator(scene.render_config_.max_recursion_depth);
+  
+  /*for (const std::unique_ptr<PinholeCamera>& camera : scene.cameras_) {
     Film image(camera->film_width_, camera->film_height_, output_filename);
+    auto start = std::chrono::high_resolution_clock::now();
     integrator.render(scene, image, *camera);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
+    LOG_INFO(elapsed.count() << " seconds.");
     image.write();
-  }
+  }*/
 
-  LOG_INFO("Program completed.");
+  LOG_INFO("Program terminated.");
   return 0;
 }

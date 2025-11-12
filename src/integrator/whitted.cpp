@@ -44,7 +44,6 @@ void WhittedIntegrator::render(const Scene& scene, Film& film,
   int width = film.getWidth();
   int height = film.getHeight();
 
-  LOG_INFO("Rendering scene...");
   for (int y = 0; y < height - 1; ++y) {
     for (int x = 0; x < width; ++x) {
       if (x == 446 && y == 518) {
@@ -55,7 +54,6 @@ void WhittedIntegrator::render(const Scene& scene, Film& film,
       film.addSample(x, y, pixel_color);
     }
   }
-  LOG_INFO("Rendering completed.");
 }
 
 Color WhittedIntegrator::Li(Ray& ray, const Scene& scene, int depth) const {
