@@ -18,4 +18,4 @@ bool Scene::intersect(Ray& r, HitRecord& rec) const {
  return bvh_root_->intersect(r, rec);
 }
 
-void Scene::build_bvh() { bvh_root_ = std::make_unique<BvhNode>(objects_, 0, objects_.size() -1); }
+void Scene::build_bvh() { bvh_root_ = std::make_unique<BvhNode>(objects_.begin(), objects_.end()); }
