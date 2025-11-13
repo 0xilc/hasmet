@@ -1,17 +1,47 @@
 #pragma once
 
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
 #include "camera/pinhole.h"
+#include "geometry/mesh.h"
 #include "geometry/plane.h"
 #include "geometry/sphere.h"
 #include "geometry/triangle.h"
-#include "geometry/mesh.h"
 #include "material/material_manager.h"
 #include "parser/parser.h"
 #include "scene/scene.h"
 
 namespace Parser::ParserAdapter {
+
+glm::mat4 create_transformation_matrix(
+    const std::vector<Parser::Transformation_>& transforms) {
+  glm::mat4 composite_matrix = glm::mat4(1.0f);
+
+  for (const auto& tf : transforms) {
+    glm::mat4 t_matrix = glm::mat4(1.0f);
+    switch (tf.type) {
+      case Parser::TransformationType::TRANSLATION:
+        t_matrix = glm::translate(
+            glm::mat4(1.0f), glm::vec3(tf.data[0], tf.data[1], tf.data[2]));
+        break;
+      case Parser::TransformationType::SCALING:
+        t_matrix = glm::scale(glm::mat4(1.0f),
+                              glm::vec3(tf.data[0], tf.data[1], tf.data[2]));
+        break;
+      case Parser::TransformationType::ROTATION:
+        t_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(tf.data[0]),
+                               glm::vec3(tf.data[1], tf.data[2], tf.data[3]));
+        break;
+      case Parser::TransformationType::COMPOSITE:
+        t_matrix = glm::transpose(glm::make_mat4(tf.data.data()));
+        break;
+    }
+    composite_matrix = t_matrix * composite_matrix;
+  }
+  return composite_matrix;
+}
 
 float get_triangle_area(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3) {
   glm::vec3 edge1 = v2 - v1;
@@ -115,8 +145,8 @@ Scene read_scene(std::string filename) {
   }
 
   for (const Parser::Sphere_& sphere_ : parsed_scene.spheres) {
-    scene.objects_.push_back(std::make_unique<Sphere>(
-        create_sphere(sphere_, parsed_scene.vertex_data)));
+    auto sphere_obj = std::make_unique<Sphere>(
+        create_sphere(sphere_, parsed_scene.vertex_data));
   }
 
   for (const Parser::PointLight_& light_ : parsed_scene.point_lights) {
@@ -180,16 +210,15 @@ Scene read_scene(std::string filename) {
             indices[0], indices[1], indices[2], triangle_.material_id,
             per_vertex_normals, true));
       }
-    }
-    else {
+    } else {
       for (const Parser::Triangle_& face_ : mesh_.faces) {
         mesh_faces.push_back(std::make_unique<Triangle>(
             create_triangle(face_, parsed_scene.vertex_data)));
       }
     }
 
-    scene.objects_.push_back(std::make_unique<Mesh>(
-        mesh_faces, mesh_.material_id));
+    scene.objects_.push_back(
+        std::make_unique<Mesh>(mesh_faces, mesh_.material_id));
   }
 
   for (const Parser::Plane_& plane_ : parsed_scene.planes) {
