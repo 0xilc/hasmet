@@ -6,6 +6,7 @@
 #include "geometry/plane.h"
 #include "geometry/sphere.h"
 #include "geometry/triangle.h"
+#include "geometry/mesh.h"
 #include "material/material_manager.h"
 #include "parser/parser.h"
 #include "scene/scene.h"
@@ -132,6 +133,7 @@ Scene read_scene(std::string filename) {
   }
 
   for (const Parser::Mesh_& mesh_ : parsed_scene.meshes) {
+    std::vector<std::shared_ptr<Triangle>> mesh_faces;
     if (mesh_.smooth_shading) {
       std::vector<std::vector<std::pair<glm::vec3, float>>>
           per_vertex_triangles;
@@ -174,16 +176,20 @@ Scene read_scene(std::string filename) {
                                            vertex_normals[triangle_.v1_id],
                                            vertex_normals[triangle_.v2_id]};
 
-        scene.objects_.push_back(std::make_shared<Triangle>(
+        mesh_faces.push_back(std::make_shared<Triangle>(
             indices[0], indices[1], indices[2], triangle_.material_id,
             per_vertex_normals, true));
       }
-    } else {
+    }
+    else {
       for (const Parser::Triangle_& face_ : mesh_.faces) {
-        scene.objects_.push_back(std::make_unique<Triangle>(
+        mesh_faces.push_back(std::make_unique<Triangle>(
             create_triangle(face_, parsed_scene.vertex_data)));
       }
     }
+
+    scene.objects_.push_back(std::make_unique<Mesh>(
+        mesh_faces, mesh_.material_id));
   }
 
   for (const Parser::Plane_& plane_ : parsed_scene.planes) {

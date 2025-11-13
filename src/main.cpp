@@ -59,7 +59,7 @@
 
  int main() {
 
-  const std::string filename = "cornellbox_recursive";
+  const std::string filename = "other_dragon";
   const std::string input_folder = "C:/Users/akin/Desktop/hw1/inputs/";
   const std::string input_filename = input_folder + filename + ".json";
   const std::string output_folder = "C:/Users/akin/Desktop/whitted/";
