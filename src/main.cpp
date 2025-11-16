@@ -14,84 +14,82 @@
 #include "scene/scene.h"
 #include <chrono>
 #include "parser/parser.h"
-
-int main(int argc, char* argv[]) {
-  if (argc != 2) {
-    LOG_ERROR("Usage: whitted_renderer <input_json_file>");
-    return 1;
-  }
-
-  std::filesystem::path scene_path(argv[1]);
-  if (!std::filesystem::exists(scene_path)) {
-    LOG_ERROR("Input file does not exist: " << scene_path);
-    return 1;
-  }
-
-  try {
-    LOG_INFO("Reading scene...");
-    Scene scene = Parser::ParserAdapter::read_scene(scene_path.string());
-    WhittedIntegrator integrator(scene.render_config_.max_recursion_depth);
-
-    for (const std::unique_ptr<PinholeCamera>& camera : scene.cameras_) {
-      std::string output_name = camera->image_name_;
-      std::filesystem::path output_path(output_name);
-
-      if (!output_path.parent_path().empty()) {
-        std::filesystem::create_directories(output_path.parent_path());
-      }
-      auto start = std::chrono::high_resolution_clock::now();
-      Film image(camera->film_width_, camera->film_height_, output_name);
-      LOG_INFO("Rendering to: " << output_path.string());
-      integrator.render(scene, image, *camera);
-      auto end = std::chrono::high_resolution_clock::now();
-      std::chrono::duration<double> elapsed = end - start;
-      LOG_INFO("Rendering: " << output_path << " : "<< elapsed.count() << " seconds.");
-      image.write();
-
-    }
-  } catch (const std::exception& e) {
-    LOG_ERROR("An error occurred: " << e.what());
-    return 1;
-  }
-}
-
-// int main() {
-//
-//  /*const std::string filename = "davids_camera_120";
-//  const std::string input_folder = "C:/Users/akin/Desktop/hw2/inputs/raven/camera_around_david/";*/
-//  /*const std::string filename = "davids_camera_zoom_356";
-//  const std::string input_folder =
-//      "C:/Users/akin/Desktop/hw2/inputs/raven/camera_zoom_david/";*/
-//
-//  //const std::string filename = "davids_070";
-//  //const std::string input_folder =
-//  //    "C:/Users/akin/Desktop/hw2/inputs/raven/light_around_david/";
-//  
-//  const std::string filename = "marching_dragons";
-//  const std::string input_folder =
-//      "C:/Users/akin/Desktop/hw2/inputs/";
-//  const std::string input_filename = input_folder + filename + ".json";
-//  const std::string output_folder = "C:/Users/akin/Desktop/whitted2/";
-//  const std::string output_filename = output_folder + filename + ".png";
-//
-//  LOG_INFO("Reading the scene: " << filename);
-// /* Parser::Scene_ parser_scene;
-//  Parser::parseScene(input_filename, parser_scene);
-//  Parser::printScene(parser_scene);*/
-//  Scene scene = Parser::ParserAdapter::read_scene(input_filename);
-//
-//  WhittedIntegrator integrator(scene.render_config_.max_recursion_depth);
-//  
-//  for (const std::unique_ptr<PinholeCamera>& camera : scene.cameras_) {
-//    Film image(camera->film_width_, camera->film_height_, output_filename);
-//    auto start = std::chrono::high_resolution_clock::now();
-//    integrator.render(scene, image, *camera);
-//    auto end = std::chrono::high_resolution_clock::now();
-//    std::chrono::duration<double> elapsed = end - start;
-//    LOG_INFO(elapsed.count() << " seconds.");
-//    image.write();
+#include "integrator/normals.h"
+//int main(int argc, char* argv[]) {
+//  if (argc != 2) {
+//    LOG_ERROR("Usage: whitted_renderer <input_json_file>");
+//    return 1;
 //  }
 //
-//  LOG_INFO("Program terminated.");
-//  return 0;
+//  std::filesystem::path scene_path(argv[1]);
+//  if (!std::filesystem::exists(scene_path)) {
+//    LOG_ERROR("Input file does not exist: " << scene_path);
+//    return 1;
+//  }
+//
+//  try {
+//    LOG_INFO("Reading scene...");
+//    Scene scene = Parser::ParserAdapter::read_scene(scene_path.string());
+//    WhittedIntegrator integrator(scene.render_config_.max_recursion_depth);
+//
+//    for (const std::unique_ptr<PinholeCamera>& camera : scene.cameras_) {
+//      std::string output_name = camera->image_name_;
+//      std::filesystem::path output_path(output_name);
+//
+//      if (!output_path.parent_path().empty()) {
+//        std::filesystem::create_directories(output_path.parent_path());
+//      }
+//      auto start = std::chrono::high_resolution_clock::now();
+//      Film image(camera->film_width_, camera->film_height_, output_name);
+//      LOG_INFO("Rendering to: " << output_path.string());
+//      integrator.render(scene, image, *camera);
+//      auto end = std::chrono::high_resolution_clock::now();
+//      std::chrono::duration<double> elapsed = end - start;
+//      LOG_INFO("Rendering: " << output_path << " : "<< elapsed.count() << " seconds.");
+//      image.write();
+//
+//    }
+//  } catch (const std::exception& e) {
+//    LOG_ERROR("An error occurred: " << e.what());
+//    return 1;
+//  }
 //}
+
+ int main() {
+  /*const std::string filename = "davids_camera_120";
+  const std::string input_folder = "C:/Users/akin/Desktop/hw2/inputs/raven/camera_around_david/";*/
+  /*const std::string filename = "davids_camera_zoom_356";
+  const std::string input_folder =
+      "C:/Users/akin/Desktop/hw2/inputs/raven/camera_zoom_david/";*/
+
+  //const std::string filename = "davids_070";
+  //const std::string input_folder =
+  //    "C:/Users/akin/Desktop/hw2/inputs/raven/light_around_david/";
+  
+  const std::string filename = "mirror_room";
+  const std::string input_folder =
+      "C:/Users/akin/Desktop/hw2/inputs/";
+  const std::string input_filename = input_folder + filename + ".json";
+  const std::string output_folder = "C:/Users/akin/Desktop/whitted2/";
+  const std::string output_filename = output_folder + filename + ".png";
+
+  LOG_INFO("Reading the scene: " << filename);
+ /* Parser::Scene_ parser_scene;
+  Parser::parseScene(input_filename, parser_scene);
+  Parser::printScene(parser_scene);*/
+  Scene scene = Parser::ParserAdapter::read_scene(input_filename);
+  WhittedIntegrator integrator(scene.render_config_.max_recursion_depth);
+  
+  for (const std::unique_ptr<PinholeCamera>& camera : scene.cameras_) {
+    Film image(camera->film_width_, camera->film_height_, output_filename);
+    auto start = std::chrono::high_resolution_clock::now();
+    integrator.render(scene, image, *camera);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
+    LOG_INFO(elapsed.count() << " seconds.");
+    image.write();
+  }
+
+  LOG_INFO("Program terminated.");
+  return 0;
+}
