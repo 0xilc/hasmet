@@ -587,6 +587,10 @@ void parseScene(const std::string& filename, Scene_& scene) {
       pl.id = std::stoi(pl_json["_id"].get<std::string>());
       pl.position = parseVec3f(pl_json["Position"]);
       pl.intensity = parseVec3f(pl_json["Intensity"]);
+      if (pl_json.contains("Transformations")) {
+        parse_transform_refs(pl_json["Transformations"].get<std::string>(),
+                             pl.transformations);
+      }
       scene.point_lights.push_back(pl);
     };
     if (point_lights_json.is_array()) {
@@ -635,8 +639,6 @@ void parseScene(const std::string& filename, Scene_& scene) {
 
     // --- Objects ---
     const auto& objects_json = scene_json["Objects"];
-
-    
 
     std::unordered_map<int, Mesh_*> mesh_id_map;
 

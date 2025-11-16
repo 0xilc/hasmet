@@ -73,7 +73,9 @@ Triangle create_triangle(const Parser::Triangle_& triangle_,
 }
 
 PointLight create_point_light(const Parser::PointLight_ light_) {
-  return PointLight{create_vec3(light_.position),
+  glm::mat4 transform = create_transformation_matrix(light_.transformations);
+  glm::vec3 position = transform * glm::vec4(create_vec3(light_.position), 1.0f);
+  return PointLight{position,
                     create_color(light_.intensity)};
 }
 
@@ -232,13 +234,11 @@ Scene read_scene(std::string filename) {
 
     std::shared_ptr<Mesh> mesh =
         std::make_unique<Mesh>(mesh_faces, mesh_.material_id);
-    
-    glm::mat4 transform =
-        create_transformation_matrix(mesh_.transformations);
+
+    glm::mat4 transform = create_transformation_matrix(mesh_.transformations);
     mesh->set_transform(transform);
     scene.objects_.push_back(std::move(mesh));
     mesh_map[mesh_.id] = static_cast<Mesh*>(scene.objects_.back().get());
-
   }
 
   for (const Parser::MeshInstance_ mi_ : parsed_scene.mesh_instances) {
@@ -256,7 +256,7 @@ Scene read_scene(std::string filename) {
 
     glm::mat4 transform;
     if (mi_.reset_transform) {
-       transform = create_transformation_matrix(mi_.transformations);
+      transform = create_transformation_matrix(mi_.transformations);
     } else {
       glm::mat4 base_transform = base_mesh_->get_transform();
       std::vector<Transformation_> base_transformations;
@@ -264,7 +264,7 @@ Scene read_scene(std::string filename) {
           create_transformation_matrix(mi_.transformations);
       transform = instance_transform * base_transform;
     }
-    
+
     mesh_instance->set_transform(transform);
     scene.objects_.push_back(std::move(mesh_instance));
     mesh_map[mi_.id] = static_cast<Mesh*>(scene.objects_.back().get());

@@ -61,11 +61,15 @@
   const std::string input_folder = "C:/Users/akin/Desktop/hw2/inputs/raven/camera_around_david/";*/
   /*const std::string filename = "davids_camera_zoom_356";
   const std::string input_folder =
-      "C:/Users/akin/Desktop/hw2/inputs/raven/camera_zoom_david/";
-  */
-  const std::string filename = "metal_glass_plates";
+      "C:/Users/akin/Desktop/hw2/inputs/raven/camera_zoom_david/";*/
+
+  const std::string filename = "davids_070";
   const std::string input_folder =
-      "C:/Users/akin/Desktop/hw2/inputs/";
+      "C:/Users/akin/Desktop/hw2/inputs/raven/light_around_david/";
+  
+  //const std::string filename = "metal_glass_plates";
+  //const std::string input_folder =
+  //    "C:/Users/akin/Desktop/hw2/inputs/";
   const std::string input_filename = input_folder + filename + ".json";
   const std::string output_folder = "C:/Users/akin/Desktop/whitted2/";
   const std::string output_filename = output_folder + filename + ".png";

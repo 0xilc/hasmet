@@ -44,6 +44,7 @@ typedef struct PointLight_ {
     int id;
     Vec3f_ position;
     Vec3f_ intensity;
+    std::vector<Transformation_> transformations;
 } PointLight_;
 
 typedef struct Material_ {
