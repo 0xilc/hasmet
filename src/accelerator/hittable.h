@@ -14,6 +14,7 @@ class Hittable {
   virtual AABB getAABB() const = 0;
 
   void set_transform(const glm::mat4& m);
+  glm::mat4 get_transform() const { return transform_; }
 
  protected:
   virtual bool local_intersect(Ray& ray, HitRecord& rec) const = 0;

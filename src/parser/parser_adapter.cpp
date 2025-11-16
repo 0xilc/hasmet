@@ -251,7 +251,18 @@ Scene read_scene(std::string filename) {
     std::shared_ptr<BvhNode> blas = base_mesh_->blas_;
     std::shared_ptr<Mesh> mesh_instance =
         std::make_shared<Mesh>(blas, mi_.material_id);
-    glm::mat4 transform = create_transformation_matrix(mi_.transformations);
+
+    glm::mat4 transform;
+    if (mi_.reset_transform) {
+       transform = create_transformation_matrix(mi_.transformations);
+    } else {
+      glm::mat4 base_transform = base_mesh_->get_transform();
+      std::vector<Transformation_> base_transformations;
+      glm::mat4 instance_transform =
+          create_transformation_matrix(mi_.transformations);
+      transform = instance_transform * base_transform;
+    }
+    
     mesh_instance->set_transform(transform);
     scene.objects_.push_back(std::move(mesh_instance));
     mesh_map[mi_.id] = static_cast<Mesh*>(scene.objects_.back().get());

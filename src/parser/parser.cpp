@@ -636,6 +636,8 @@ void parseScene(const std::string& filename, Scene_& scene) {
       }
     };
 
+    std::unordered_map<int, Mesh_*> mesh_id_map;
+
     // Parse Meshes
     if (objects_json.contains("Mesh"))
     {
@@ -683,6 +685,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
         }
 
         scene.meshes.push_back(mesh);
+        mesh_id_map[mesh.id] = &scene.meshes.back();
         };
 
       if (meshes_json.is_array())
@@ -703,9 +706,21 @@ void parseScene(const std::string& filename, Scene_& scene) {
 
         inst.id = std::stoi(mesh_instance_json["_id"].get<std::string>());
         inst.base_mesh_id = std::stoi(mesh_instance_json["_baseMeshId"].get<std::string>());
-        inst.material_id =
-            std::stoi(mesh_instance_json["Material"].get<std::string>());
-
+        if (mesh_instance_json.contains("Material")){
+          inst.material_id =
+              std::stoi(mesh_instance_json["Material"].get<std::string>());
+        } else {
+          // Use the base mesh's material if not overridden
+          auto it = mesh_id_map.find(inst.base_mesh_id);
+          if (it != mesh_id_map.end()) {
+            inst.material_id = it->second->material_id;
+          } else {
+            throw std::runtime_error("MeshInstance " + std::to_string(inst.id) +
+                                     " references unknown base mesh ID " +
+                                     std::to_string(inst.base_mesh_id));
+          }
+        }
+        
         inst.reset_transform = false;
         if (mesh_instance_json.contains("_resetTransform")){
           const auto& r = mesh_instance_json["_resetTransform"];
