@@ -44,8 +44,8 @@ void WhittedIntegrator::render(const Scene& scene, Film& film,
   int width = film.getWidth();
   int height = film.getHeight();
 
+  #pragma omp parallel for
   for (int y = 0; y < height - 1; ++y) {
-    LOG_INFO("Rendering line: " << y + 1 << " / " << height);
     for (int x = 0; x < width; ++x) {
       Ray r = camera.generateRay(static_cast<float>(x), static_cast<float>(y));
       Color pixel_color = Li(r, scene, max_depth_);

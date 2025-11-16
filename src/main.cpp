@@ -67,7 +67,7 @@
   //const std::string input_folder =
   //    "C:/Users/akin/Desktop/hw2/inputs/raven/light_around_david/";
   
-  const std::string filename = "mirror_room";
+  const std::string filename = "marching_dragons";
   const std::string input_folder =
       "C:/Users/akin/Desktop/hw2/inputs/";
   const std::string input_filename = input_folder + filename + ".json";
