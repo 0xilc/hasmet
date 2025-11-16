@@ -1,6 +1,4 @@
-﻿// src/main.cpp
-
-#include <filesystem>
+﻿#include <filesystem>
 #include <memory>
 #include <chrono>
 
@@ -59,16 +57,23 @@
 
  int main() {
 
-  const std::string filename = "dragon_metal";
-  const std::string input_folder = "C:/Users/akin/Desktop/hw2/inputs/";
+  /*const std::string filename = "davids_camera_120";
+  const std::string input_folder = "C:/Users/akin/Desktop/hw2/inputs/raven/camera_around_david/";*/
+  /*const std::string filename = "davids_camera_zoom_356";
+  const std::string input_folder =
+      "C:/Users/akin/Desktop/hw2/inputs/raven/camera_zoom_david/";
+  */
+  const std::string filename = "metal_glass_plates";
+  const std::string input_folder =
+      "C:/Users/akin/Desktop/hw2/inputs/";
   const std::string input_filename = input_folder + filename + ".json";
   const std::string output_folder = "C:/Users/akin/Desktop/whitted2/";
   const std::string output_filename = output_folder + filename + ".png";
 
   LOG_INFO("Reading the scene: " << filename);
-  //Parser::Scene_ parser_scene;
-  //Parser::parseScene(input_filename, parser_scene);
-  //Parser::printScene(parser_scene);
+ /* Parser::Scene_ parser_scene;
+  Parser::parseScene(input_filename, parser_scene);
+  Parser::printScene(parser_scene);*/
   Scene scene = Parser::ParserAdapter::read_scene(input_filename);
 
   WhittedIntegrator integrator(scene.render_config_.max_recursion_depth);

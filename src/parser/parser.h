@@ -37,8 +37,9 @@ typedef struct Camera_ {
     int image_width;
     int image_height;
     std::string image_name;
+    std::vector<Transformation_> transformations;
 } Camera_;
-    
+
 typedef struct PointLight_ {
     int id;
     Vec3f_ position;

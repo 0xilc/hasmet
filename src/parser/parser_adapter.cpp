@@ -119,9 +119,11 @@ PinholeCamera create_pinhole_camera(const Parser::Camera_& camera_) {
       2.0f * atan((top - bottom) * 0.5f / camera_.near_distance);
   float vertical_fov_degrees = glm::degrees(vertical_fov_radians);
 
+  // Apply transformations
+  glm::mat4 transform = create_transformation_matrix(camera_.transformations);
   return PinholeCamera(position, look_at, up, vertical_fov_degrees,
                        camera_.image_width, camera_.image_height,
-                       camera_.image_name);
+                       camera_.image_name, transform);
 }
 
 Scene read_scene(std::string filename) {

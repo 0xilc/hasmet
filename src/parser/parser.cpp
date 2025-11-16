@@ -418,91 +418,6 @@ void parseScene(const std::string& filename, Scene_& scene) {
     else
         scene.max_recursion_depth = 6;
 
-    // --- Cameras ---
-    const auto& cameras_json = scene_json["Cameras"]["Camera"];
-    auto parse_camera = [&](const json& cam_json) {
-      Camera_ cam;
-      // --- Common properties parsed first ---
-      cam.id = std::stoi(cam_json["_id"].get<std::string>());
-      cam.position = parseVec3f(cam_json["Position"]);
-      cam.up = parseVec3f(cam_json["Up"]);
-      cam.near_distance = std::stof(cam_json["NearDistance"].get<std::string>());
-      std::stringstream res_ss(cam_json["ImageResolution"].get<std::string>());
-      res_ss >> cam.image_width >> cam.image_height;
-      cam.image_name = cam_json["ImageName"];
-
-      // --- Conditional parsing based on camera type ---
-      // Check if the camera is defined by Gaze (direction) or GazePoint (target)
-      if (cam_json.contains("GazePoint"))
-      {
-        // --- TYPE 1: "lookAt" camera with GazePoint and FovY ---
-
-        // 1. Calculate the 'gaze' direction vector
-        // gaze = normalize(GazePoint - Position)
-        Vec3f_ gaze_point = parseVec3f(cam_json["GazePoint"]);
-        Vec3f_ gaze_vec = {
-            gaze_point.x - cam.position.x,
-            gaze_point.y - cam.position.y,
-            gaze_point.z - cam.position.z
-        };
-        float len = std::sqrt(gaze_vec.x * gaze_vec.x + gaze_vec.y * gaze_vec.y + gaze_vec.z * gaze_vec.z);
-        if (len > 0)
-        { // Avoid division by zero
-          gaze_vec.x /= len;
-          gaze_vec.y /= len;
-          gaze_vec.z /= len;
-        }
-        cam.gaze = gaze_vec;
-
-        // 2. Calculate 'near_plane' extents from FovY
-        float fov_y_degrees = std::stof(cam_json["FovY"].get<std::string>());
-        float aspect_ratio = (float)cam.image_width / (float)cam.image_height;
-
-        // Formula: top = near_distance * tan(fov_y / 2)
-        float fov_y_radians = fov_y_degrees * (M_PI / 180.0);
-        float t = cam.near_distance * std::tan(fov_y_radians / 2.0f);
-        float r = t * aspect_ratio;
-
-        cam.near_plane.l = -r;
-        cam.near_plane.r = r;
-        cam.near_plane.b = -t;
-        cam.near_plane.t = t;
-      }
-      else
-      {
-        // --- TYPE 2: Your original camera format ---
-        cam.gaze = parseVec3f(cam_json["Gaze"]);
-        cam.near_plane = parseVec4f(cam_json["NearPlane"]);
-      }
-
-      scene.cameras.push_back(cam);
-      };
-
-    if (cameras_json.is_array())
-    {
-      for (const auto& cam_json : cameras_json) parse_camera(cam_json);
-    }
-    else
-    {
-      parse_camera(cameras_json);
-    }
-
-    // --- Lights ---
-    scene.ambient_light = parseVec3f(scene_json["Lights"]["AmbientLight"]);
-    const auto& point_lights_json = scene_json["Lights"]["PointLight"];
-    auto parse_point_light = [&](const json& pl_json) {
-        PointLight_ pl;
-        pl.id = std::stoi(pl_json["_id"].get<std::string>());
-        pl.position = parseVec3f(pl_json["Position"]);
-        pl.intensity = parseVec3f(pl_json["Intensity"]);
-        scene.point_lights.push_back(pl);
-    };
-    if (point_lights_json.is_array()) {
-        for (const auto& pl_json : point_lights_json) parse_point_light(pl_json);
-    } else {
-        parse_point_light(point_lights_json);
-    }
-
     // --- Transformations ---
     scene.transformations.clear();
     if (scene_json.contains("Transformations")) {
@@ -581,6 +496,105 @@ void parseScene(const std::string& filename, Scene_& scene) {
       }
     };
 
+    auto parse_transform_refs = [&](const std::string& refString,
+                                    std::vector<Transformation_>& target) {
+      std::stringstream ss(refString);
+      std::string token;
+      while (ss >> token) {
+        auto it = transform_table.find(token);
+        if (it == transform_table.end()) {
+          throw std::runtime_error("Unknown transformation reference: '" +
+                                   token + "'");
+        }
+        target.push_back(*it->second);
+      }
+    };
+
+    // --- Cameras ---
+    const auto& cameras_json = scene_json["Cameras"]["Camera"];
+    auto parse_camera = [&](const json& cam_json) {
+      Camera_ cam;
+      // --- Common properties parsed first ---
+      cam.id = std::stoi(cam_json["_id"].get<std::string>());
+      cam.position = parseVec3f(cam_json["Position"]);
+      cam.up = parseVec3f(cam_json["Up"]);
+      cam.near_distance =
+          std::stof(cam_json["NearDistance"].get<std::string>());
+      std::stringstream res_ss(cam_json["ImageResolution"].get<std::string>());
+      res_ss >> cam.image_width >> cam.image_height;
+      cam.image_name = cam_json["ImageName"];
+
+      // --- Conditional parsing based on camera type ---
+      // Check if the camera is defined by Gaze (direction) or GazePoint
+      // (target)
+      if (cam_json.contains("GazePoint")) {
+        // --- TYPE 1: "lookAt" camera with GazePoint and FovY ---
+
+        // 1. Calculate the 'gaze' direction vector
+        // gaze = normalize(GazePoint - Position)
+        Vec3f_ gaze_point = parseVec3f(cam_json["GazePoint"]);
+        Vec3f_ gaze_vec = {gaze_point.x - cam.position.x,
+                           gaze_point.y - cam.position.y,
+                           gaze_point.z - cam.position.z};
+        float len =
+            std::sqrt(gaze_vec.x * gaze_vec.x + gaze_vec.y * gaze_vec.y +
+                      gaze_vec.z * gaze_vec.z);
+        if (len > 0) {  // Avoid division by zero
+          gaze_vec.x /= len;
+          gaze_vec.y /= len;
+          gaze_vec.z /= len;
+        }
+        cam.gaze = gaze_vec;
+
+        // 2. Calculate 'near_plane' extents from FovY
+        float fov_y_degrees = std::stof(cam_json["FovY"].get<std::string>());
+        float aspect_ratio = (float)cam.image_width / (float)cam.image_height;
+
+        // Formula: top = near_distance * tan(fov_y / 2)
+        float fov_y_radians = fov_y_degrees * (M_PI / 180.0);
+        float t = cam.near_distance * std::tan(fov_y_radians / 2.0f);
+        float r = t * aspect_ratio;
+
+        cam.near_plane.l = -r;
+        cam.near_plane.r = r;
+        cam.near_plane.b = -t;
+        cam.near_plane.t = t;
+      } else {
+        // --- TYPE 2: Your original camera format ---
+        cam.gaze = parseVec3f(cam_json["Gaze"]);
+        cam.near_plane = parseVec4f(cam_json["NearPlane"]);
+      }
+
+      if (cam_json.contains("Transformations")) {
+        parse_transform_refs(cam_json["Transformations"].get<std::string>(),
+                             cam.transformations);
+      }
+
+      scene.cameras.push_back(cam);
+    };
+
+    if (cameras_json.is_array()) {
+      for (const auto& cam_json : cameras_json) parse_camera(cam_json);
+    } else {
+      parse_camera(cameras_json);
+    }
+
+    // --- Lights ---
+    scene.ambient_light = parseVec3f(scene_json["Lights"]["AmbientLight"]);
+    const auto& point_lights_json = scene_json["Lights"]["PointLight"];
+    auto parse_point_light = [&](const json& pl_json) {
+      PointLight_ pl;
+      pl.id = std::stoi(pl_json["_id"].get<std::string>());
+      pl.position = parseVec3f(pl_json["Position"]);
+      pl.intensity = parseVec3f(pl_json["Intensity"]);
+      scene.point_lights.push_back(pl);
+    };
+    if (point_lights_json.is_array()) {
+      for (const auto& pl_json : point_lights_json) parse_point_light(pl_json);
+    } else {
+      parse_point_light(point_lights_json);
+    }
+
     // --- Materials ---
     const auto& materials_json = scene_json["Materials"]["Material"];
     auto parse_material = [&](const json& mat_json) {
@@ -622,19 +636,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
     // --- Objects ---
     const auto& objects_json = scene_json["Objects"];
 
-    auto parse_transform_refs = [&](const std::string& refString,
-                                    std::vector<Transformation_>& target) {
-      std::stringstream ss(refString);
-      std::string token;
-      while (ss >> token) {
-        auto it = transform_table.find(token);
-        if (it == transform_table.end()) {
-          throw std::runtime_error("Unknown transformation reference: '" +
-                                   token + "'");
-        }
-        target.push_back(*it->second);
-      }
-    };
+    
 
     std::unordered_map<int, Mesh_*> mesh_id_map;
 
@@ -864,6 +866,11 @@ void printScene(const Scene_& scene) {
         std::cout << "    Near Plane: " << cam.near_plane << std::endl;
         std::cout << "    Near Distance: " << cam.near_distance << std::endl;
         std::cout << "    Resolution: " << cam.image_width << "x" << cam.image_height << std::endl;
+        std::cout << "    Transformations:";
+        for (const auto& tf : cam.transformations) {
+          std::cout << " " << tf.id;
+        }
+        std::cout << std::endl;
     }
 
     // --- Materials ---
