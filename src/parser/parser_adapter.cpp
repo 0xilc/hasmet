@@ -274,8 +274,14 @@ Scene read_scene(std::string filename) {
     glm::vec3 point =
         create_vec3(parsed_scene.vertex_data[plane_.point_vertex_id]);
     glm::vec3 normal = create_vec3(plane_.normal);
-    scene.objects_.push_back(
-        std::make_unique<Plane>(point, normal, plane_.material_id));
+
+    std::shared_ptr plane =
+        std::make_unique<Plane>(point, normal, plane_.material_id);
+    
+    glm::mat4 transform = create_transformation_matrix(plane_.transformations);
+    plane->set_transform(transform);
+
+    scene.objects_.push_back(std::move(plane));
   }
 
   scene.build_bvh();

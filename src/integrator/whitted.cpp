@@ -47,9 +47,6 @@ void WhittedIntegrator::render(const Scene& scene, Film& film,
   for (int y = 0; y < height - 1; ++y) {
     LOG_INFO("Rendering line: " << y + 1 << " / " << height);
     for (int x = 0; x < width; ++x) {
-      if (x == 446 && y == 518) {
-        int debug = 0;
-      }
       Ray r = camera.generateRay(static_cast<float>(x), static_cast<float>(y));
       Color pixel_color = Li(r, scene, max_depth_);
       film.addSample(x, y, pixel_color);
