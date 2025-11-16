@@ -66,22 +66,22 @@
   const std::string output_filename = output_folder + filename + ".png";
 
   LOG_INFO("Reading the scene: " << filename);
-  Parser::Scene_ scene;
-  Parser::parseScene(input_filename, scene);
-  Parser::printScene(scene);
+  /*Parser::Scene_ parser_scene;
+  Parser::parseScene(input_filename, parser_scene);
+  Parser::printScene(parser_scene);*/
+  Scene scene = Parser::ParserAdapter::read_scene(input_filename);
 
-  //Scene scene = Parser::ParserAdapter::read_scene(input_filename);
-  //WhittedIntegrator integrator(scene.render_config_.max_recursion_depth);
-  //
-  //for (const std::unique_ptr<PinholeCamera>& camera : scene.cameras_) {
-  //  Film image(camera->film_width_, camera->film_height_, output_filename);
-  //  auto start = std::chrono::high_resolution_clock::now();
-  //  integrator.render(scene, image, *camera);
-  //  auto end = std::chrono::high_resolution_clock::now();
-  //  std::chrono::duration<double> elapsed = end - start;
-  //  LOG_INFO(elapsed.count() << " seconds.");
-  //  image.write();
-  //}
+  WhittedIntegrator integrator(scene.render_config_.max_recursion_depth);
+  
+  for (const std::unique_ptr<PinholeCamera>& camera : scene.cameras_) {
+    Film image(camera->film_width_, camera->film_height_, output_filename);
+    auto start = std::chrono::high_resolution_clock::now();
+    integrator.render(scene, image, *camera);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
+    LOG_INFO(elapsed.count() << " seconds.");
+    image.write();
+  }
 
   LOG_INFO("Program terminated.");
   return 0;

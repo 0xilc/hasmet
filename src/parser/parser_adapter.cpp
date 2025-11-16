@@ -162,6 +162,8 @@ Scene read_scene(std::string filename) {
         create_triangle(triangle_, parsed_scene.vertex_data)));
   }
 
+  std::unordered_map<int, Mesh*> mesh_map;
+  
   for (const Parser::Mesh_& mesh_ : parsed_scene.meshes) {
     std::vector<std::shared_ptr<Triangle>> mesh_faces;
     if (mesh_.smooth_shading) {
@@ -217,10 +219,27 @@ Scene read_scene(std::string filename) {
       }
     }
 
-    scene.objects_.push_back(
-        std::make_unique<Mesh>(mesh_faces, mesh_.material_id));
+    std::shared_ptr<Mesh> mesh = std::make_unique<Mesh>(mesh_faces, mesh_.material_id);
+    scene.objects_.push_back(std::move(mesh));
+    mesh_map[mesh_.id] = static_cast<Mesh*>(scene.objects_.back().get());
   }
 
+  for (const Parser::MeshInstance_ mi_ : parsed_scene.mesh_instances) {
+    // TODO: Fix ordering issue here. if the base mesh is not defined before
+    // the instance, it will cause error.
+    const Mesh* base_mesh_ = mesh_map[mi_.base_mesh_id];
+    if (base_mesh_ == nullptr) {
+      std::cerr << "Error: Base mesh with ID " << mi_.base_mesh_id
+                << " not found for mesh instance " << mi_.id << std::endl;
+      continue;
+    }
+    std::shared_ptr<BvhNode> blas = base_mesh_->blas_;
+    std::shared_ptr<Mesh> mesh_instance =
+        std::make_shared<Mesh>(blas, mi_.material_id);
+    scene.objects_.push_back(std::move(mesh_instance));
+    mesh_map[mi_.id] = static_cast<Mesh*>(scene.objects_.back().get());
+  }
+  
   for (const Parser::Plane_& plane_ : parsed_scene.planes) {
     glm::vec3 point =
         create_vec3(parsed_scene.vertex_data[plane_.point_vertex_id]);
