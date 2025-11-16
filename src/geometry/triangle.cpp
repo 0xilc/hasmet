@@ -22,7 +22,7 @@ Triangle::Triangle(const glm::vec3& p1, const glm::vec3& p2,
   aabb_ = AABB(min_v, max_v);
 }
 
-bool Triangle::intersect(Ray& ray, HitRecord& rec) const {
+bool Triangle::local_intersect(Ray& ray, HitRecord& rec) const {
   glm::vec3 c1 = indices_[0] - indices_[1];
   glm::vec3 c2 = indices_[0] - indices_[2];
   glm::vec3 c3 = ray.direction;

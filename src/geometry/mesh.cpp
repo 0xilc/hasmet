@@ -4,9 +4,10 @@ Mesh::Mesh(std::vector<std::shared_ptr<Triangle>>& faces, int material_id)
     : material_id_(material_id) {
   blas_ = std::make_shared<BvhNode>(faces.begin(), faces.end());
   aabb_ = blas_->getAABB();
+  aabb_.apply_transformation(this->transform_);
 }
 
-bool Mesh::intersect(Ray& ray, HitRecord& rec) const {
+bool Mesh::local_intersect(Ray& ray, HitRecord& rec) const {
   return blas_->intersect(ray, rec);
 }
 

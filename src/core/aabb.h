@@ -36,6 +36,29 @@ class AABB {
       return z;
   }
 
+  void apply_transformation(const glm::mat4& trns) {
+    glm::vec3 corners[8];
+    corners[0] = glm::vec3(x.min, y.min, z.min);
+    corners[1] = glm::vec3(x.min, y.min, z.max);
+    corners[2] = glm::vec3(x.min, y.max, z.min);
+    corners[3] = glm::vec3(x.min, y.max, z.max);
+    corners[4] = glm::vec3(x.max, y.min, z.min);
+    corners[5] = glm::vec3(x.max, y.min, z.max);
+    corners[6] = glm::vec3(x.max, y.max, z.min);
+    corners[7] = glm::vec3(x.max, y.max, z.max);
+    glm::vec3 new_min(FLT_MAX);
+    glm::vec3 new_max(-FLT_MAX);
+    for (int i = 0; i < 8; i++) {
+      glm::vec4 transformed = trns * glm::vec4(corners[i], 1.0f);
+      glm::vec3 pt = glm::vec3(transformed) / transformed.w;
+      new_min = glm::min(new_min, pt);
+      new_max = glm::max(new_max, pt);
+    }
+    x = Interval(new_min.x, new_max.x);
+    y = Interval(new_min.y, new_max.y);
+    z = Interval(new_min.z, new_max.z);
+  }
+
   bool intersect(Ray& ray) const {
     Interval tmp_interval = ray.interval_;
     for (int i = 0; i < 3; i++) {

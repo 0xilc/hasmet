@@ -15,7 +15,7 @@ class BvhNode : public Hittable {
   template <typename Iterator>
   BvhNode(Iterator begin, Iterator end);
 
-  bool intersect(Ray& ray, HitRecord& rec) const override;
+  bool local_intersect(Ray& ray, HitRecord& rec) const override;
   AABB getAABB() const override;
 
  private:

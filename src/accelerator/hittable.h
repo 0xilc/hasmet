@@ -9,17 +9,16 @@ class Hittable {
  public:
   virtual ~Hittable() = default;
 
-  virtual bool intersect(Ray& ray, HitRecord& rec) const = 0;
+  bool intersect(Ray& ray, HitRecord& rec) const;
+ 
   virtual AABB getAABB() const = 0;
 
-  void setTransform(const glm::mat4& m) {
-    transform_ = m;
-    inverse_transform_ = glm::inverse(m);
-    inverse_transpose_transform_ = glm::transpose(inverse_transform_);
-  }
+  void set_transform(const glm::mat4& m);
 
  protected:
+  virtual bool local_intersect(Ray& ray, HitRecord& rec) const = 0;
   glm::mat4 transform_{1.0f};
   glm::mat4 inverse_transform_{1.0f};
   glm::mat4 inverse_transpose_transform_{1.0f};
+  AABB aabb_;
 };

@@ -2,7 +2,7 @@
 
 AABB BvhNode::getAABB() const { return bounding_box_; }
 
-bool BvhNode::intersect(Ray& ray, HitRecord& rec) const {
+bool BvhNode::local_intersect(Ray& ray, HitRecord& rec) const {
   if (!bounding_box_.intersect(ray)) {
     return false;
   }

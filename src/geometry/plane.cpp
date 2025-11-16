@@ -3,9 +3,10 @@
 Plane::Plane(const glm::vec3& center, const glm::vec3& normal, int material_id)
     : center_(center), normal_(normal), material_id_(material_id) {
   aabb_ = AABB(glm::vec3(-INFINITY), glm::vec3(INFINITY));
+  aabb_.apply_transformation(transform_);
 }
 
-bool Plane::intersect(Ray& ray, HitRecord& rec) const {
+bool Plane::local_intersect(Ray& ray, HitRecord& rec) const {
   float denom = glm::dot(normal_, ray.direction);
   if (std::abs(denom) > 1e-6f) {
     glm::vec3 p0l0 = center_ - ray.origin;

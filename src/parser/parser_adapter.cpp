@@ -147,6 +147,10 @@ Scene read_scene(std::string filename) {
   for (const Parser::Sphere_& sphere_ : parsed_scene.spheres) {
     auto sphere_obj = std::make_unique<Sphere>(
         create_sphere(sphere_, parsed_scene.vertex_data));
+
+    glm::mat4 transform = create_transformation_matrix(sphere_.transformations);
+    sphere_obj->set_transform(transform);
+    scene.objects_.push_back(std::move(sphere_obj));
   }
 
   for (const Parser::PointLight_& light_ : parsed_scene.point_lights) {
@@ -158,12 +162,17 @@ Scene read_scene(std::string filename) {
       std::make_unique<AmbientLight>(create_color(parsed_scene.ambient_light));
 
   for (const Parser::Triangle_& triangle_ : parsed_scene.triangles) {
-    scene.objects_.push_back(std::make_unique<Triangle>(
-        create_triangle(triangle_, parsed_scene.vertex_data)));
+    auto triangle_obj = std::make_unique<Triangle>(
+        create_triangle(triangle_, parsed_scene.vertex_data));
+
+    glm::mat4 transform =
+        create_transformation_matrix(triangle_.transformations);
+    triangle_obj->set_transform(transform);
+    scene.objects_.push_back(std::move(triangle_obj));
   }
 
   std::unordered_map<int, Mesh*> mesh_map;
-  
+
   for (const Parser::Mesh_& mesh_ : parsed_scene.meshes) {
     std::vector<std::shared_ptr<Triangle>> mesh_faces;
     if (mesh_.smooth_shading) {
@@ -219,9 +228,15 @@ Scene read_scene(std::string filename) {
       }
     }
 
-    std::shared_ptr<Mesh> mesh = std::make_unique<Mesh>(mesh_faces, mesh_.material_id);
+    std::shared_ptr<Mesh> mesh =
+        std::make_unique<Mesh>(mesh_faces, mesh_.material_id);
+    
+    glm::mat4 transform =
+        create_transformation_matrix(mesh_.transformations);
+    mesh->set_transform(transform);
     scene.objects_.push_back(std::move(mesh));
     mesh_map[mesh_.id] = static_cast<Mesh*>(scene.objects_.back().get());
+
   }
 
   for (const Parser::MeshInstance_ mi_ : parsed_scene.mesh_instances) {
@@ -236,10 +251,12 @@ Scene read_scene(std::string filename) {
     std::shared_ptr<BvhNode> blas = base_mesh_->blas_;
     std::shared_ptr<Mesh> mesh_instance =
         std::make_shared<Mesh>(blas, mi_.material_id);
+    glm::mat4 transform = create_transformation_matrix(mi_.transformations);
+    mesh_instance->set_transform(transform);
     scene.objects_.push_back(std::move(mesh_instance));
     mesh_map[mi_.id] = static_cast<Mesh*>(scene.objects_.back().get());
   }
-  
+
   for (const Parser::Plane_& plane_ : parsed_scene.planes) {
     glm::vec3 point =
         create_vec3(parsed_scene.vertex_data[plane_.point_vertex_id]);

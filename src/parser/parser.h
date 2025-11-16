@@ -25,7 +25,7 @@ typedef struct Transformation_ {
   std::string id;
   TransformationType type;
   std::vector<float> data;
-};
+} Transformation_;
 
 typedef struct Camera_ {
     int id;
@@ -78,7 +78,7 @@ typedef struct MeshInstance_ {
     int material_id;
     bool reset_transform;
     std::vector<Transformation_> transformations;
-};
+} MeshInstance_;
 
 typedef struct Sphere_ {
     int id;

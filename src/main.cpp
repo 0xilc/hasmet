@@ -59,16 +59,16 @@
 
  int main() {
 
-  const std::string filename = "marching_dragons";
-  const std::string input_folder = "C:/Users/akin/Desktop/hw2/inputs/";
+  const std::string filename = "two_berserkers";
+  const std::string input_folder = "C:/Users/akin/Desktop/hw2/inputs/akif_uslu/berserker/";
   const std::string input_filename = input_folder + filename + ".json";
-  const std::string output_folder = "C:/Users/akin/Desktop/whitted/";
+  const std::string output_folder = "C:/Users/akin/Desktop/whitted2/";
   const std::string output_filename = output_folder + filename + ".png";
 
   LOG_INFO("Reading the scene: " << filename);
-  /*Parser::Scene_ parser_scene;
+  Parser::Scene_ parser_scene;
   Parser::parseScene(input_filename, parser_scene);
-  Parser::printScene(parser_scene);*/
+  Parser::printScene(parser_scene);
   Scene scene = Parser::ParserAdapter::read_scene(input_filename);
 
   WhittedIntegrator integrator(scene.render_config_.max_recursion_depth);
