@@ -72,6 +72,14 @@ typedef struct Mesh_ {
     std::vector<Transformation_> transformations;
 } Mesh_;
 
+typedef struct MeshInstance_ {
+    int id;
+    int base_mesh_id;
+    int material_id;
+    bool reset_transform;
+    std::vector<Transformation_> transformations;
+};
+
 typedef struct Sphere_ {
     int id;
     int material_id;
@@ -99,6 +107,7 @@ typedef struct Scene_ {
     std::vector<Material_> materials;
     std::vector<Vec3f_> vertex_data;
     std::vector<Mesh_> meshes;
+    std::vector<MeshInstance_> mesh_instances;
     std::vector<Triangle_> triangles;
     std::vector<Sphere_> spheres;
     std::vector<Plane_> planes;

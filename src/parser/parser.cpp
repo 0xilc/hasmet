@@ -635,7 +635,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
         target.push_back(*it->second);
       }
     };
-    
+
     // Parse Meshes
     if (objects_json.contains("Mesh"))
     {
@@ -692,6 +692,43 @@ void parseScene(const std::string& filename, Scene_& scene) {
       else
       {
         parse_mesh(meshes_json);
+      }
+    }
+
+    // Parse MeshInstances
+    if (objects_json.contains("MeshInstance")) {
+      const auto& mesh_instances_json = objects_json["MeshInstance"];
+      auto parse_mesh_instance = [&](const json& mesh_instance_json) {
+        MeshInstance_ inst;
+
+        inst.id = std::stoi(mesh_instance_json["_id"].get<std::string>());
+        inst.base_mesh_id = std::stoi(mesh_instance_json["_baseMeshId"].get<std::string>());
+        inst.material_id =
+            std::stoi(mesh_instance_json["Material"].get<std::string>());
+
+        inst.reset_transform = false;
+        if (mesh_instance_json.contains("_resetTransform")){
+          const auto& r = mesh_instance_json["_resetTransform"];
+          if (r.is_boolean())
+            inst.reset_transform = r.get<bool>();
+          else if (r.is_string())
+            inst.reset_transform = (r.get<std::string>() == "true");
+        }
+
+        if (mesh_instance_json.contains("Transformations")) {
+          parse_transform_refs(
+              mesh_instance_json["Transformations"].get<std::string>(),
+              inst.transformations);
+        }
+         
+        scene.mesh_instances.push_back(inst);
+      };
+
+      if (mesh_instances_json.is_array()) {
+        for (const auto& mesh_json : mesh_instances_json)
+          parse_mesh_instance(mesh_json);
+      } else {
+        parse_mesh_instance(mesh_instances_json);
       }
     }
 
@@ -828,14 +865,17 @@ void printScene(const Scene_& scene) {
     }
 
     // --- Vertex Data ---
-    std::cout << "\n[VERTEX DATA (" << scene.vertex_data.size() << " vertices)]" << std::endl;
+    /*std::cout << "\n[VERTEX DATA (" << scene.vertex_data.size() << " vertices)]" << std::endl;
 
     int vertices_to_print = (int)scene.vertex_data.size();
     for (int i = 0; i < vertices_to_print; ++i) {
         std::cout << "  Vertex " << i + 1 << ": " << scene.vertex_data[i] << std::endl;
-    }
+    }*/
+
     //// --- Objects ---
     std::cout << "\n[OBJECTS]" << std::endl;
+
+    // Print meshes
     for (const auto& mesh : scene.meshes) {
         std::cout << "  Mesh ID " << mesh.id << ":" << std::endl;
         std::cout << "    Material ID: " << mesh.material_id << std::endl;
@@ -851,6 +891,22 @@ void printScene(const Scene_& scene) {
         }
         std::cout << std::endl;
     }
+
+    // Print mesh instances
+    for (const auto& inst : scene.mesh_instances) {
+      std::cout << "  MeshInstance ID " << inst.id << ":" << std::endl;
+      std::cout << "    Base Mesh ID: " << inst.base_mesh_id << std::endl;
+      std::cout << "    Material ID: " << inst.material_id << std::endl;
+      std::cout << "    Reset Transform: "
+                << (inst.reset_transform ? "true" : "false") << std::endl;
+      std::cout << "    Transformations:";
+      for (const auto& tf : inst.transformations) {
+        std::cout << " " << tf.id;
+      }
+      std::cout << std::endl;
+    }
+
+    // Print standalone triangles
     for (const auto& tri : scene.triangles) {
         std::cout << "  Standalone Triangle:" << std::endl;
         std::cout << "    Material ID: " << tri.material_id << std::endl;
@@ -861,6 +917,8 @@ void printScene(const Scene_& scene) {
         }
         std::cout << std::endl;
     }
+    
+    // Print spheres
     for (const auto& sphere : scene.spheres) {
         std::cout << "  Sphere ID " << sphere.id << ":" << std::endl;
         std::cout << "    Material ID: " << sphere.material_id << std::endl;
@@ -872,6 +930,8 @@ void printScene(const Scene_& scene) {
         }
         std::cout << std::endl;
     }
+
+    // Print planes
     for (const auto& plane : scene.planes) {
         std::cout << "  Plane ID " << plane.id << ":" << std::endl;
         std::cout << "    Material ID: " << plane.material_id << std::endl;
