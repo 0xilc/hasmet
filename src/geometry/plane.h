@@ -8,7 +8,7 @@ class Plane : public Hittable {
   Plane(const glm::vec3& center, const glm::vec3& normal, int material_id);
 
   virtual bool local_intersect(Ray& ray, HitRecord& rec) const override;
-  virtual AABB getAABB() const override;
+  virtual AABB get_aabb() const override;
 
  private:
   glm::vec3 center_;

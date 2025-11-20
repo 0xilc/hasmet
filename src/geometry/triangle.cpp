@@ -60,4 +60,4 @@ bool Triangle::local_intersect(Ray& ray, HitRecord& rec) const {
   return false;
 }
 
-AABB Triangle::getAABB() const { return aabb_; }
+AABB Triangle::get_aabb() const { return aabb_; }

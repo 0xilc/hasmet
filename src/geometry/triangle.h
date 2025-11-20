@@ -10,7 +10,7 @@ class Triangle : public Hittable {
            bool smooth_shading = false);
 
   virtual bool local_intersect(Ray& ray, HitRecord& rec) const override;
-  virtual AABB getAABB() const override;
+  virtual AABB get_aabb() const override;
 
  private:
   glm::vec3 indices_[3];

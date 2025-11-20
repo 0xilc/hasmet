@@ -41,4 +41,4 @@ bool Sphere::local_intersect(Ray& r, HitRecord& rec) const {
   return true;
 }
 
-AABB Sphere::getAABB() const { return aabb_; }
+AABB Sphere::get_aabb() const { return aabb_; }

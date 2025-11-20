@@ -23,4 +23,4 @@ bool Plane::local_intersect(Ray& ray, HitRecord& rec) const {
   return false;
 }
 
-AABB Plane::getAABB() const { return aabb_; }
+AABB Plane::get_aabb() const { return aabb_; }

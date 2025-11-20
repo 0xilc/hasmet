@@ -44,7 +44,7 @@ void WhittedIntegrator::render(const Scene& scene, Film& film,
   int width = film.getWidth();
   int height = film.getHeight();
 
-  #pragma omp parallel for
+  #pragma omp parallel for schedule(dynamic, 10)
   for (int y = 0; y < height - 1; ++y) {
     for (int x = 0; x < width; ++x) {
       Ray r = camera.generateRay(static_cast<float>(x), static_cast<float>(y));

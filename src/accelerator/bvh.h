@@ -17,7 +17,7 @@ class BvhNode : public Hittable {
 
   bool local_intersect(Ray& ray, HitRecord& rec) const override;
 
-  AABB getAABB() const override;
+  AABB get_aabb() const override;
 
  private:
   std::shared_ptr<Hittable> left_;
@@ -32,10 +32,9 @@ BvhNode::BvhNode(Iterator begin, Iterator end) {
   size_t object_span = objects.size();
   AABB centroid_box;
   for (const auto& obj : objects) {
-    centroid_box.expand(obj->getAABB().centroid());
+    centroid_box.expand(obj->get_aabb().centroid());
   }
   int axis = centroid_box.longest_axis();
-  //int axis = rand() % 3;
 
   if (object_span == 1) {
     left_ = right_ = objects[0];
@@ -47,12 +46,12 @@ BvhNode::BvhNode(Iterator begin, Iterator end) {
     std::nth_element(objects.begin(), objects.begin() + mid, objects.end(),
                      [axis](const std::shared_ptr<Hittable>& a,
                             const std::shared_ptr<Hittable>& b) {
-                       return a->getAABB().axis(axis).min <
-                              b->getAABB().axis(axis).min;
+                       return a->get_aabb().axis(axis).min <
+                              b->get_aabb().axis(axis).min;
                      });
     left_ = std::make_shared<BvhNode>(objects.begin(), objects.begin() + mid);
     right_ = std::make_shared<BvhNode>(objects.begin() + mid, objects.end());
   }
 
-  bounding_box_ = AABB(left_->getAABB(), right_->getAABB());
+  bounding_box_ = AABB(left_->get_aabb(), right_->get_aabb());
 }
