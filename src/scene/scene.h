@@ -22,13 +22,14 @@ class Scene {
   Scene();
 
   bool intersect(Ray& r, HitRecord& rec) const;
-  
+  bool is_occluded(const Ray& r) const;
+
   void add_shape(std::unique_ptr<Hittable> shape);
   void add_point_light(std::unique_ptr<PointLight> light);
   void add_ambient_light(std::unique_ptr<AmbientLight> light);
   void build_bvh();
 
-  std::unique_ptr<BvhNode> bvh_root_;
+  BVH bvh_;
   std::vector<std::shared_ptr<Plane>> planes_;
   std::vector<std::shared_ptr<Hittable>> objects_;
   std::vector<std::unique_ptr<PointLight>> point_lights_;

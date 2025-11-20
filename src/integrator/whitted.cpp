@@ -183,8 +183,8 @@ Color WhittedIntegrator::calculate_blinn_phong(const Ray& ray,
     // Shadow test
     Ray shadow_ray(rec.p + rec.normal * shadow_ray_epsilon, wi);
     shadow_ray.interval_.max = distance_to_light - 1e-4f;
-    HitRecord shadow_rec;
-    if (scene.intersect(shadow_ray, shadow_rec)) {
+    
+    if (scene.is_occluded(shadow_ray)) {
       continue;
     }
 

@@ -1,4 +1,5 @@
 #include "scene.h"
+
 #include "core/logging.h"
 Scene::Scene() {}
 
@@ -16,22 +17,18 @@ void Scene::add_ambient_light(std::unique_ptr<AmbientLight> light) {
 
 bool Scene::intersect(Ray& r, HitRecord& rec) const {
   bool hit = false;
-  float closest = INFINITY;
 
-  if(bvh_root_->intersect(r, rec)) {
+  if (bvh_.intersect(r, rec)) {
     hit = true;
-    closest = rec.t;  
   }
 
-  for (const std::shared_ptr<Plane>& plane : planes_) {
+  for (const auto& plane : planes_) {
     HitRecord temp_rec;
-    Ray temp_ray = r;
-    if (plane->intersect(temp_ray, temp_rec)) {
-      hit = true;
-      if (temp_rec.t < closest) {
-        closest = temp_rec.t;
+    if (plane->intersect(r, temp_rec)) {
+      if (!hit || temp_rec.t < rec.t) {
+        hit = true;
         rec = temp_rec;
-        r = temp_ray;
+        r.interval_.max = rec.t;
       }
     }
   }
@@ -39,6 +36,16 @@ bool Scene::intersect(Ray& r, HitRecord& rec) const {
   return hit;
 }
 
-void Scene::build_bvh() {
-  bvh_root_ = std::make_unique<BvhNode>(objects_.begin(), objects_.end());
+bool Scene::is_occluded(const Ray& r) const {
+  if (bvh_.is_occluded(r)) return true;
+
+  HitRecord temp_rec;
+  Ray shadow_ray = r;
+  for (const auto& plane : planes_) {
+    if (plane->intersect(shadow_ray, temp_rec)) return true;
+  }
+
+  return false;
 }
+
+void Scene::build_bvh() { bvh_.build(objects_); }

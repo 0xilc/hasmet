@@ -248,7 +248,7 @@ Scene read_scene(std::string filename) {
                 << " not found for mesh instance " << mi_.id << std::endl;
       continue;
     }
-    std::shared_ptr<BvhNode> blas = base_mesh_->blas_;
+    std::shared_ptr<BVH> blas = base_mesh_->blas_;
     std::shared_ptr<Mesh> mesh_instance =
         std::make_shared<Mesh>(blas, mi_.material_id);
 
