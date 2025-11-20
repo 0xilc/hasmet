@@ -1,5 +1,5 @@
 #include "scene.h"
-
+#include "core/logging.h"
 Scene::Scene() {}
 
 void Scene::add_shape(std::unique_ptr<Hittable> shape) {
@@ -15,7 +15,28 @@ void Scene::add_ambient_light(std::unique_ptr<AmbientLight> light) {
 }
 
 bool Scene::intersect(Ray& r, HitRecord& rec) const {
-  return bvh_root_->intersect(r, rec);
+  bool hit = false;
+  float closest = INFINITY;
+
+  if(bvh_root_->intersect(r, rec)) {
+    hit = true;
+    closest = rec.t;  
+  }
+
+  for (const std::shared_ptr<Plane>& plane : planes_) {
+    HitRecord temp_rec;
+    Ray temp_ray = r;
+    if (plane->intersect(temp_ray, temp_rec)) {
+      hit = true;
+      if (temp_rec.t < closest) {
+        closest = temp_rec.t;
+        rec = temp_rec;
+        r = temp_ray;
+      }
+    }
+  }
+
+  return hit;
 }
 
 void Scene::build_bvh() {

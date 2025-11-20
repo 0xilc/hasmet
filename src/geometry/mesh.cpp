@@ -16,7 +16,7 @@ bool Mesh::local_intersect(Ray& ray, HitRecord& rec) const {
   return false;
 }
 
-Mesh::Mesh(std::shared_ptr<BvhNode> blas, int material_id)
+Mesh::Mesh(const std::shared_ptr<BvhNode>& blas, int material_id)
     : blas_(blas), material_id_(material_id) {
   aabb_ = blas_->getAABB();
 }

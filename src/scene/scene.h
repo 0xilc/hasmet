@@ -8,6 +8,7 @@
 #include "material/material.h"
 #include "accelerator/bvh.h"
 #include "camera/pinhole.h"
+#include "geometry/plane.h"
 
 struct RenderConfig{
   Color background_color;
@@ -28,6 +29,7 @@ class Scene {
   void build_bvh();
 
   std::unique_ptr<BvhNode> bvh_root_;
+  std::vector<std::shared_ptr<Plane>> planes_;
   std::vector<std::shared_ptr<Hittable>> objects_;
   std::vector<std::unique_ptr<PointLight>> point_lights_;
   std::vector<std::unique_ptr<PinholeCamera>> cameras_;

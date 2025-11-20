@@ -16,6 +16,7 @@ class BvhNode : public Hittable {
   BvhNode(Iterator begin, Iterator end);
 
   bool local_intersect(Ray& ray, HitRecord& rec) const override;
+
   AABB getAABB() const override;
 
  private:
@@ -29,7 +30,12 @@ BvhNode::BvhNode(Iterator begin, Iterator end) {
   std::vector<std::shared_ptr<Hittable>> objects(begin, end);
 
   size_t object_span = objects.size();
-  int axis = rand() % 3;
+  AABB centroid_box;
+  for (const auto& obj : objects) {
+    centroid_box.expand(obj->getAABB().centroid());
+  }
+  int axis = centroid_box.longest_axis();
+  //int axis = rand() % 3;
 
   if (object_span == 1) {
     left_ = right_ = objects[0];

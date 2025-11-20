@@ -64,13 +64,13 @@
 
   //const std::string filename = "davids_070";
   //const std::string input_folder =
-  //    "C:/Users/akin/Desktop/hw2/inputs/raven/light_around_david/";
+  //    "C:/Users/akin/Desktop/hw2/inputs/raven/light_around_david/";6.15
   
-  const std::string filename = "mirror_room";
+  const std::string filename = "marching_dragons";
   const std::string input_folder =
       "C:/Users/akin/Desktop/hw2/inputs/";
   const std::string input_filename = input_folder + filename + ".json";
-  const std::string output_folder = "C:/Users/akin/Desktop/whitted2/";
+  const std::string output_folder = "C:/Users/akin/Desktop/whitted/";
   const std::string output_filename = output_folder + filename + ".png";
 
   LOG_INFO("Reading the scene: " << filename);

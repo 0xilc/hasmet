@@ -1,13 +1,13 @@
 #pragma once
 
-#include <unordered_map>
+#include <map>
 #include <memory>
 #include "material.h"
 
 class MaterialManager {
  private:
   MaterialManager() {};
-  std::unordered_map<int, std::unique_ptr<Material>> materials_;
+  std::map<int, std::unique_ptr<Material>> materials_;
   static MaterialManager* instance_ptr_;
 
  public:
