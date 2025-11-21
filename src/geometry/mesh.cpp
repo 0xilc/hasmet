@@ -15,7 +15,10 @@ Mesh::Mesh(std::vector<std::shared_ptr<Triangle>>& faces, int material_id)
 }
 
 bool Mesh::local_intersect(Ray& ray, HitRecord& rec) const {
-    return blas_->intersect(ray, rec);
+  if (blas_->intersect(ray, rec)) {
+    rec.material_id = material_id_;
+    return true;
+  }
 }
 
 Mesh::Mesh(const std::shared_ptr<BVH>& blas, int material_id)

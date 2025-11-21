@@ -14,6 +14,7 @@ bool Hittable::intersect(Ray& ray, HitRecord& rec) const {
   if (!local_intersect(local_ray, rec)) {
     return false;
   }
+
   rec.p = transform_ * glm::vec4(rec.p, 1.0f);
   rec.normal = glm::normalize(
       glm::vec3(inverse_transpose_transform_ * glm::vec4(rec.normal, 0.0f)));
