@@ -614,8 +614,32 @@ void parseScene(const std::string& filename, Scene_& scene) {
       if (point_lights_json.is_array()) {
         for (const auto& pl_json : point_lights_json) parse_point_light(pl_json);
       } else {
-    parse_point_light(point_lights_json);
+        parse_point_light(point_lights_json);
+      }
   }
+
+  // --> read area lights
+  if (scene_json["Lights"].contains("AreaLight")) {
+    const auto& area_lights_json = scene_json["Lights"]["AreaLight"];
+    auto parse_area_light = [&](const json& al_json) {
+      AreaLight_ al;
+      al.id = std::stoi(al_json["_id"].get<std::string>());
+      al.position = parseVec3f(al_json["Position"]);
+      al.normal = parseVec3f(al_json["Normal"]);
+      al.radiance = parseVec3f(al_json["Radiance"]);
+      al.size = std::stoi(al_json["Size"].get<std::string>());
+      if (al_json.contains("Transformations")) {
+        parse_transform_refs(al_json["Transformations"].get<std::string>(),
+                             al.transformations);
+      }
+      scene.area_lights.push_back(al);
+    };
+
+    if (area_lights_json.is_array()) {
+      for (const auto& pl_json : area_lights_json) parse_area_light(pl_json);
+    } else {
+      parse_area_light(area_lights_json);
+    }
   }
 
   // --- Materials ---
@@ -892,6 +916,14 @@ void printScene(const Scene_& scene) {
     std::cout << "  Point Light ID " << light.id << ":" << std::endl;
     std::cout << "    Position: " << light.position << std::endl;
     std::cout << "    Intensity: " << light.intensity << std::endl;
+  }
+
+  for (const auto& light : scene.area_lights) {
+    std::cout << "  Area Light ID " << light.id << ":" << std::endl;
+    std::cout << "    Position: " << light.position << std::endl;
+    std::cout << "    Normal: " << light.normal << std::endl;
+    std::cout << "    Size: " << light.size << std::endl;
+    std::cout << "    Radiance: " << light.radiance << std::endl;
   }
 
   // --- Cameras ---

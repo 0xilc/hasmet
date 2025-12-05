@@ -56,6 +56,7 @@ typedef struct AreaLight_ {
     Vec3f_ normal;
     float size;
     Vec3f_ radiance;
+    std::vector<Transformation_> transformations;
 } AreaLight_;
 
 typedef struct Material_ {
@@ -121,6 +122,7 @@ typedef struct Scene_ {
     std::vector<Camera_> cameras;
     Vec3f_ ambient_light;
     std::vector<PointLight_> point_lights;
+    std::vector<AreaLight_> area_lights;
     std::vector<Material_> materials;
     std::vector<Vec3f_> vertex_data;
     std::vector<Mesh_> meshes;
