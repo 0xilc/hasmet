@@ -687,6 +687,12 @@ void parseScene(const std::string& filename, Scene_& scene) {
           std::stof(mat_json["AbsorptionIndex"].get<std::string>());
     else
       mat.absorption_index = 0.0f;
+    if (mat_json.contains("Roughness")) {
+      mat.roughness = std::stof(mat_json["Roughness"].get<std::string>());
+    } else {
+      mat.roughness = 0.0f;
+    }
+
     scene.materials.push_back(mat);
   };
   
