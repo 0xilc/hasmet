@@ -572,16 +572,22 @@ void parseScene(const std::string& filename, Scene_& scene) {
 
     if (cam_json.contains("NumSamples")) {
       cam.num_samples = std::stoi(cam_json["NumSamples"].get<std::string>());
+    } else {
+      cam.num_samples = 1;
     }
 
     if (cam_json.contains("ApertureSize")) {
       cam.aperture_size =
           std::stof(cam_json["ApertureSize"].get<std::string>());
+    } else {
+      cam.aperture_size = 0;
     }
 
     if (cam_json.contains("FocusDistance")) {
       cam.focus_distance =
           std::stof(cam_json["FocusDistance"].get<std::string>());
+    } else {
+      cam.focus_distance = 0;
     }
 
     scene.cameras.push_back(cam);
@@ -731,6 +737,13 @@ void parseScene(const std::string& filename, Scene_& scene) {
                              mesh.transformations);
       }
 
+      if (mesh_json.contains("MotionBlur")) {
+        mesh.motion_blur =
+            parseVec3f(mesh_json["MotionBlur"].get<std::string>());
+      } else {
+        mesh.motion_blur = Vec3f_(0.f, 0.f, 0.f);
+      }
+
       const auto& faces_json = mesh_json["Faces"];
 
       if (faces_json.contains("_data")) {
@@ -804,6 +817,14 @@ void parseScene(const std::string& filename, Scene_& scene) {
             inst.transformations);
       }
 
+      if (mesh_instance_json.contains("MotionBlur")) {
+        inst.motion_blur =
+            parseVec3f(mesh_instance_json["MotionBlur"].get<std::string>());
+      } else {
+        inst.motion_blur = Vec3f_(0.f, 0.f, 0.f);
+      }
+
+
       scene.mesh_instances.push_back(inst);
     };
 
@@ -850,10 +871,16 @@ void parseScene(const std::string& filename, Scene_& scene) {
       sphere.center_vertex_id =
           std::stoi(sphere_json["Center"].get<std::string>()) - 1;
       sphere.radius = std::stof(sphere_json["Radius"].get<std::string>());
-
+      
       if (sphere_json.contains("Transformations")) {
         parse_transform_refs(sphere_json["Transformations"].get<std::string>(),
                              sphere.transformations);
+      }
+
+      if (sphere_json.contains("MotionBlur")){
+        sphere.motion_blur = parseVec3f(sphere_json["MotionBlur"].get<std::string>());
+      } else {
+        sphere.motion_blur = Vec3f_(0.f, 0.f, 0.f);
       }
       scene.spheres.push_back(sphere);
     };
@@ -967,6 +994,7 @@ void printScene(const Scene_& scene) {
     std::cout << "    Diffuse: " << mat.diffuse_reflectance << std::endl;
     std::cout << "    Specular: " << mat.specular_reflectance
               << " (exp: " << mat.phong_exponent << ")" << std::endl;
+    std::cout << "    Roughness: " << mat.roughness << std::endl;
     // Add more material properties if you parse them (mirror, refraction, etc.)
   }
 
@@ -999,6 +1027,7 @@ void printScene(const Scene_& scene) {
       std::cout << " " << tf.id;
     }
     std::cout << std::endl;
+    std::cout << "    Motion Blur: " << mesh.motion_blur << std::endl;
   }
 
   // Print mesh instances
@@ -1013,6 +1042,9 @@ void printScene(const Scene_& scene) {
       std::cout << " " << tf.id;
     }
     std::cout << std::endl;
+    std::cout << "    Motion Blur: " << inst.motion_blur << std::endl;
+
+
   }
 
   // Print standalone triangles
@@ -1040,6 +1072,7 @@ void printScene(const Scene_& scene) {
       std::cout << " " << tf.id;
     }
     std::cout << std::endl;
+    std::cout << "    Motion Blur: " << sphere.motion_blur << std::endl;
   }
 
   // Print planes

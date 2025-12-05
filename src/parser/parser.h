@@ -7,6 +7,8 @@
 namespace Parser{
 
 typedef struct Vec3f_ {
+    Vec3f_() {};
+    Vec3f_(float x, float y, float z) : x(x), y(y), z(z) {};
     float x, y, z;
 } Vec3f_;
 

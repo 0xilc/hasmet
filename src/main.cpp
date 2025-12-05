@@ -66,9 +66,10 @@
   //const std::string input_folder =
   //    "C:/Users/akin/Desktop/hw2/inputs/raven/light_around_david/";6.15
   
-  const std::string filename = "chessboard_arealight_dof";
+  /*const std::string filename = "chessboard_arealight_dof";*/
+  const std::string filename = "cornellbox_boxes_dynamic";
   const std::string input_folder =
-      "C:/Users/akin/Desktop/hw3/inputs/ramazan_tokay/";
+      "C:/Users/akin/Desktop/hw3/inputs/";
   const std::string input_filename = input_folder + filename + ".json";
   const std::string output_folder = "C:/Users/akin/Desktop/whitted/";
   const std::string output_filename = output_folder + filename + ".png";
@@ -77,6 +78,7 @@
   Parser::Scene_ parser_scene;
   Parser::parseScene(input_filename, parser_scene);
   Parser::printScene(parser_scene);
+
   //Scene scene = Parser::ParserAdapter::read_scene(input_filename);
   //WhittedIntegrator integrator(scene.render_config_.max_recursion_depth);
   //
