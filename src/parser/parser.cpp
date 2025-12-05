@@ -576,7 +576,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
 
     if (cam_json.contains("ApertureSize")) {
       cam.aperture_size =
-          std::stoi(cam_json["ApertureSize"].get<std::string>());
+          std::stof(cam_json["ApertureSize"].get<std::string>());
     }
 
     if (cam_json.contains("FocusDistance")) {
@@ -595,23 +595,27 @@ void parseScene(const std::string& filename, Scene_& scene) {
 
   // --- Lights ---
   scene.ambient_light = parseVec3f(scene_json["Lights"]["AmbientLight"]);
-  const auto& point_lights_json = scene_json["Lights"]["PointLight"];
-  auto parse_point_light = [&](const json& pl_json) {
-    PointLight_ pl;
-    pl.id = std::stoi(pl_json["_id"].get<std::string>());
-    pl.position = parseVec3f(pl_json["Position"]);
-    pl.intensity = parseVec3f(pl_json["Intensity"]);
-    if (pl_json.contains("Transformations")) {
-      parse_transform_refs(pl_json["Transformations"].get<std::string>(),
-                           pl.transformations);
-    }
-    scene.point_lights.push_back(pl);
-  };
+  
+  // --> read point lights
+  if (scene_json["Lights"].contains("PointLight")) {
+      const auto& point_lights_json = scene_json["Lights"]["PointLight"];
+      auto parse_point_light = [&](const json& pl_json) {
+        PointLight_ pl;
+        pl.id = std::stoi(pl_json["_id"].get<std::string>());
+        pl.position = parseVec3f(pl_json["Position"]);
+        pl.intensity = parseVec3f(pl_json["Intensity"]);
+        if (pl_json.contains("Transformations")) {
+          parse_transform_refs(pl_json["Transformations"].get<std::string>(),
+                               pl.transformations);
+        }
+        scene.point_lights.push_back(pl);
+      };
 
-  if (point_lights_json.is_array()) {
-    for (const auto& pl_json : point_lights_json) parse_point_light(pl_json);
-  } else {
+      if (point_lights_json.is_array()) {
+        for (const auto& pl_json : point_lights_json) parse_point_light(pl_json);
+      } else {
     parse_point_light(point_lights_json);
+  }
   }
 
   // --- Materials ---
@@ -906,6 +910,11 @@ void printScene(const Scene_& scene) {
     for (const auto& tf : cam.transformations) {
       std::cout << " " << tf.id;
     }
+    std::cout << std::endl;
+
+    std::cout << "    Num Samples: " << cam.num_samples << std::endl;
+    std::cout << "    Aperture Size: " << cam.aperture_size << std::endl;
+    std::cout << "    Focus Distance: " << cam.focus_distance << std::endl;
     std::cout << std::endl;
   }
 
