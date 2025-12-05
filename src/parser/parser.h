@@ -38,6 +38,9 @@ typedef struct Camera_ {
     int image_height;
     std::string image_name;
     std::vector<Transformation_> transformations;
+    int num_samples;
+    float aperture_size;
+    float focus_distance;
 } Camera_;
 
 typedef struct PointLight_ {
@@ -46,6 +49,14 @@ typedef struct PointLight_ {
     Vec3f_ intensity;
     std::vector<Transformation_> transformations;
 } PointLight_;
+
+typedef struct AreaLight_ {
+    int id;
+    Vec3f_ position;
+    Vec3f_ normal;
+    float size;
+    Vec3f_ radiance;
+} AreaLight_;
 
 typedef struct Material_ {
     int id;
@@ -58,6 +69,7 @@ typedef struct Material_ {
     float refraction_index;
     Vec3f_ absorption_coefficient;
     float absorption_index;
+    float roughness;
 } Material_;
 
 typedef struct Triangle_ {
@@ -72,6 +84,7 @@ typedef struct Mesh_ {
     std::vector<Triangle_> faces;
     bool smooth_shading;
     std::vector<Transformation_> transformations;
+    Vec3f_ motion_blur;
 } Mesh_;
 
 typedef struct MeshInstance_ {
@@ -80,6 +93,7 @@ typedef struct MeshInstance_ {
     int material_id;
     bool reset_transform;
     std::vector<Transformation_> transformations;
+    Vec3f_ motion_blur;
 } MeshInstance_;
 
 typedef struct Sphere_ {
@@ -88,6 +102,7 @@ typedef struct Sphere_ {
     int center_vertex_id;
     float radius;
     std::vector<Transformation_> transformations;
+    Vec3f_ motion_blur;
 } Sphere_;
 
 typedef struct Plane_ {
