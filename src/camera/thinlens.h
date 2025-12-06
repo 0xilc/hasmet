@@ -19,7 +19,7 @@ class ThinLensCamera : public Camera {
                  float aperture_size = 0,
                  float focus_distance = 0);
 
-  Ray generateRay(float px, float py) const override;
+  std::vector<Ray> generateRays(float px, float py) const override;
 
   int film_width_;
   int film_height_;
@@ -39,4 +39,8 @@ class ThinLensCamera : public Camera {
   float aperture_size_;
   float focus_distance_;
   int num_samples_;
+
+  // Sampling utils
+  void generate_pixel_samples(int px, int py, std::vector<glm::vec3>& out) const;
+  void generate_aperture_samples(std::vector<glm::vec3>& out) const;
 };

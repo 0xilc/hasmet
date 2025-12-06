@@ -55,10 +55,10 @@ PinholeCamera::PinholeCamera(const glm::vec3& position,
       (-2.0f * half_height * v) / static_cast<float>(film_height);
 }
 
-Ray PinholeCamera::generateRay(float px, float py) const {
+std::vector<Ray> PinholeCamera::generateRays(float px, float py) const {
   glm::vec3 point_on_plane =
       top_left_corner_ + px * horizontal_spacing_ + py * vertical_spacing_;
   glm::vec3 ray_direction = normalize(point_on_plane - position_);
 
-  return Ray(position_, ray_direction);
+  return {Ray(position_, ray_direction)};
 }

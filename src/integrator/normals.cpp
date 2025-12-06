@@ -20,8 +20,15 @@ void Normals::render(const Scene& scene, Film& film,
 #pragma omp parallel for
   for (int y = 0; y < height - 1; ++y) {
     for (int x = 0; x < width; ++x) {
-      Ray r = camera.generateRay(static_cast<float>(x), static_cast<float>(y));
-      Color pixel_color = Li(r, scene, max_depth_);
+      Color pixel_color;
+      std::vector<Ray> rays =
+          camera.generateRays(static_cast<float>(x), static_cast<float>(y));
+
+      for (auto& ray : rays) {
+        pixel_color += Li(ray, scene, max_depth_);
+      }
+
+      pixel_color /= rays.size();
       film.addSample(x, y, pixel_color);
     }
   }

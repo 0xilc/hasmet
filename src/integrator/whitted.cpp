@@ -44,11 +44,17 @@ void WhittedIntegrator::render(const Scene& scene, Film& film,
   int width = film.getWidth();
   int height = film.getHeight();
 
-  #pragma omp parallel for schedule(dynamic, 10)
+#pragma omp parallel for schedule(dynamic, 10)
   for (int y = 0; y < height - 1; ++y) {
     for (int x = 0; x < width; ++x) {
-      Ray r = camera.generateRay(static_cast<float>(x), static_cast<float>(y));
-      Color pixel_color = Li(r, scene, max_depth_);
+      Color pixel_color;
+      std::vector<Ray> rays = camera.generateRays(static_cast<float>(x), static_cast<float>(y));
+      
+      for (auto& ray : rays){
+        pixel_color += Li(ray, scene, max_depth_);
+      }
+      
+      pixel_color /= rays.size();
       film.addSample(x, y, pixel_color);
     }
   }
@@ -96,8 +102,8 @@ Color WhittedIntegrator::Li(Ray& ray, const Scene& scene, int depth) const {
 
       Color reflect_color(0.0f);
       Color refract_color(0.0f);
-      
-      if (entering){
+
+      if (entering) {
         final_color += calculate_blinn_phong(ray, rec, scene);
       }
 
@@ -183,7 +189,7 @@ Color WhittedIntegrator::calculate_blinn_phong(const Ray& ray,
     // Shadow test
     Ray shadow_ray(rec.p + rec.normal * shadow_ray_epsilon, wi);
     shadow_ray.interval_.max = distance_to_light - 1e-4f;
-    
+
     if (scene.is_occluded(shadow_ray)) {
       continue;
     }

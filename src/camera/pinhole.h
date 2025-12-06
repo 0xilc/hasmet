@@ -12,7 +12,7 @@ class PinholeCamera : public Camera {
                 int film_height, std::string image_name,
                 const glm::mat4& transform = glm::mat4(1.0f));
 
-  Ray generateRay(float px, float py) const override;
+  std::vector<Ray> generateRays(float px, float py) const override;
 
   int film_width_;
   int film_height_;
