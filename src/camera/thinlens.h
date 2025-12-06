@@ -7,14 +7,17 @@
 
 class ThinLensCamera : public Camera {
  public:
-  ThinLensCamera(const glm::vec3& position, 
+  ThinLensCamera(const glm::vec3& position,
                  const glm::vec3& look_at,
                  const glm::vec3& up,
-                 float vertical_fov_degrees,
-                 int film_width, 
-                 int film_height, 
-                 std::string image_name,
-                 const glm::mat4& transform = glm::mat4(1.0f));
+                 float vertical_fov_degrees = 90.f,
+                 int film_width = 100,
+                 int film_height = 100,
+                 std::string image_name = "thinlens_output",
+                 const glm::mat4& transform = glm::mat4(1.0f),
+                 int num_samples = 1,
+                 float aperture_size = 0,
+                 float focus_distance = 0);
 
   Ray generateRay(float px, float py) const override;
 
@@ -23,23 +26,17 @@ class ThinLensCamera : public Camera {
   std::string image_name_;
 
  private:
-  // Camera basis
   glm::vec3 position_;
-  glm::vec3 forward_;
-  glm::vec3 right_;
-  glm::vec3 up_;
+  glm::vec3 top_left_corner_;
+  glm::vec3 horizontal_spacing_;
+  glm::vec3 vertical_spacing_;
+  glm::vec3 lens_center_;
+  glm::vec3 u_;
+  glm::vec3 v_;
+  glm::vec3 w_;
 
   // Lens parameters
-  float focus_distance_;
   float aperture_size_;
-
-  // Projection
-  float near_plane_left_;
-  float near_plane_right_;
-  float near_plane_bottom_;
-  float near_plane_top_;
-  float near_distance_;
-
-  // Sampling
+  float focus_distance_;
   int num_samples_;
 };

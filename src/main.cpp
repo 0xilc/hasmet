@@ -3,6 +3,7 @@
 #include <chrono>
 
 #include "camera/pinhole.h"
+#include "camera/thinlens.h"
 #include "core/logging.h"
 #include "film/film.h"
 #include "geometry/sphere.h"
@@ -67,7 +68,7 @@
   //    "C:/Users/akin/Desktop/hw2/inputs/raven/light_around_david/";6.15
   
   /*const std::string filename = "chessboard_arealight_dof";*/
-  const std::string filename = "cornellbox_area";
+  const std::string filename = "focusing_dragons";
   const std::string input_folder =
       "C:/Users/akin/Desktop/hw3/inputs/";
   const std::string input_filename = input_folder + filename + ".json";
@@ -82,7 +83,7 @@
   Scene scene = Parser::ParserAdapter::read_scene(input_filename);
   WhittedIntegrator integrator(scene.render_config_.max_recursion_depth);
   
-  for (const std::unique_ptr<PinholeCamera>& camera : scene.cameras_) {
+  for (const std::unique_ptr<ThinLensCamera>& camera : scene.cameras_) {
     Film image(camera->film_width_, camera->film_height_, output_filename);
     auto start = std::chrono::high_resolution_clock::now();
     integrator.render(scene, image, *camera);

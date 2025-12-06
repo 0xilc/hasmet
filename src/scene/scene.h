@@ -10,7 +10,7 @@
 #include "accelerator/bvh.h"
 #include "camera/pinhole.h"
 #include "geometry/plane.h"
-
+#include "camera/thinlens.h"
 
 struct RenderConfig{
   Color background_color;
@@ -36,7 +36,7 @@ class Scene {
   std::vector<std::shared_ptr<Hittable>> objects_;
   std::vector<std::unique_ptr<PointLight>> point_lights_;
   std::vector<std::unique_ptr<AreaLight>> area_lights_;
-  std::vector<std::unique_ptr<PinholeCamera>> cameras_;
+  std::vector<std::unique_ptr<ThinLensCamera>> cameras_;
   std::unique_ptr<AmbientLight> ambient_light_;
   RenderConfig render_config_;
 };
