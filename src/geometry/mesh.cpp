@@ -1,7 +1,8 @@
 #include "mesh.h"
 
-Mesh::Mesh(std::vector<std::shared_ptr<Triangle>>& faces, int material_id)
-    : material_id_(material_id) {
+Mesh::Mesh(std::vector<std::shared_ptr<Triangle>>& faces, int material_id,
+           glm::vec3 motion_blur = glm::vec3(0))
+    : material_id_(material_id), motion_blur_(motion_blur) {
   std::vector<std::shared_ptr<Hittable>> hittable_faces;
   hittable_faces.reserve(faces.size());
 
@@ -21,8 +22,9 @@ bool Mesh::local_intersect(Ray& ray, HitRecord& rec) const {
   }
 }
 
-Mesh::Mesh(const std::shared_ptr<BVH>& blas, int material_id)
-    : blas_(blas), material_id_(material_id) {
+Mesh::Mesh(const std::shared_ptr<BVH>& blas, int material_id,
+           glm::vec3 motion_blur = glm::vec3(0))
+    : blas_(blas), material_id_(material_id), motion_blur_(motion_blur) {
   aabb_ = blas_->get_root_aabb();
 }
 

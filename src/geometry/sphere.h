@@ -7,7 +7,7 @@
 
 class Sphere : public Hittable {
  public:
-  Sphere(const glm::vec3& center, float radius, int material_id);
+  Sphere(const glm::vec3& center, float radius, int material_id, glm::vec3 motion_blur);
 
   virtual bool local_intersect(Ray& r, HitRecord& rec) const override;
   virtual AABB get_aabb() const override;
@@ -16,4 +16,5 @@ class Sphere : public Hittable {
   glm::vec3 center_;
   float radius_;
   int material_id_;
+  glm::vec3 motion_blur_;
 };

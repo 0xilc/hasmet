@@ -10,6 +10,7 @@
 #include "material/material_manager.h"
 #include "parser/parser.h"
 #include "scene/scene.h"
+#include "light/area_light.h"
 
 namespace Parser::ParserAdapter {
 
@@ -57,7 +58,7 @@ glm::vec3 create_vec3(const Parser::Vec3f_& v_) {
 Sphere create_sphere(const Parser::Sphere_& sphere_,
                      const std::vector<Parser::Vec3f_>& vertex_data_) {
   return Sphere(create_vec3(vertex_data_[sphere_.center_vertex_id]),
-                sphere_.radius, sphere_.material_id);
+                sphere_.radius, sphere_.material_id, create_vec3(sphere_.motion_blur));
 }
 
 Triangle create_triangle(const Parser::Triangle_& triangle_,
@@ -75,6 +76,13 @@ PointLight create_point_light(const Parser::PointLight_ light_) {
   glm::vec3 position = transform * glm::vec4(create_vec3(light_.position), 1.0f);
   return PointLight{position,
                     create_color(light_.intensity)};
+}
+
+AreaLight create_area_light(const Parser::AreaLight_ light_) {
+  glm::mat4 transform = create_transformation_matrix(light_.transformations);
+  glm::vec3 position =
+      transform * glm::vec4(create_vec3(light_.position), 1.0f);
+  return AreaLight{position, create_vec3(light_.normal), light_.size, create_color(light_.radiance)};
 }
 
 Material create_material(const Parser::Material_& material_) {
@@ -100,6 +108,7 @@ Material create_material(const Parser::Material_& material_) {
   mat.absorption_index = material_.absorption_index;
   mat.phong_exponent = material_.phong_exponent;
   mat.refraction_index = material_.refraction_index;
+  mat.roughness = material_.roughness;
 
   return mat;
 }
@@ -155,13 +164,18 @@ Scene read_scene(std::string filename) {
     scene.objects_.push_back(std::move(sphere_obj));
   }
 
+  scene.ambient_light_ =
+      std::make_unique<AmbientLight>(create_color(parsed_scene.ambient_light));
+
   for (const Parser::PointLight_& light_ : parsed_scene.point_lights) {
     scene.point_lights_.push_back(
         std::make_unique<PointLight>(create_point_light(light_)));
   }
 
-  scene.ambient_light_ =
-      std::make_unique<AmbientLight>(create_color(parsed_scene.ambient_light));
+  for (const Parser::AreaLight_& light_ : parsed_scene.area_lights) {
+    scene.area_lights_.push_back(
+        std::make_unique<AreaLight>(create_area_light(light_)));
+  }
 
   for (const Parser::Triangle_& triangle_ : parsed_scene.triangles) {
     auto triangle_obj = std::make_unique<Triangle>(
@@ -231,7 +245,7 @@ Scene read_scene(std::string filename) {
     }
 
     std::shared_ptr<Mesh> mesh =
-        std::make_unique<Mesh>(mesh_faces, mesh_.material_id);
+        std::make_unique<Mesh>(mesh_faces, mesh_.material_id, create_vec3(mesh_.motion_blur));
 
     glm::mat4 transform = create_transformation_matrix(mesh_.transformations);
     mesh->set_transform(transform);
@@ -250,7 +264,7 @@ Scene read_scene(std::string filename) {
     }
     std::shared_ptr<BVH> blas = base_mesh_->blas_;
     std::shared_ptr<Mesh> mesh_instance =
-        std::make_shared<Mesh>(blas, mi_.material_id);
+        std::make_shared<Mesh>(blas, mi_.material_id, create_vec3(mi_.motion_blur));
 
     glm::mat4 transform;
     if (mi_.reset_transform) {
