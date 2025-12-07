@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
     Scene scene = Parser::ParserAdapter::read_scene(scene_path.string());
     WhittedIntegrator integrator(scene.render_config_.max_recursion_depth);
 
-    for (const std::unique_ptr<PinholeCamera>& camera : scene.cameras_) {
+    for (const std::unique_ptr<Camera>& camera : scene.cameras_) {
       std::string output_name = camera->image_name_;
       std::filesystem::path output_path(output_name);
 

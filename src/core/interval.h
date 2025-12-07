@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <cmath>
 
 class Interval {
  public:
@@ -16,7 +17,7 @@ class Interval {
   }
 
   inline Interval merge(const Interval& _other) const {
-    return Interval(std::min(min, _other.min), std::min(max, _other.max));
+    return Interval(std::min(min, _other.min), std::max(max, _other.max));
   }
 
   inline bool overlap(const Interval& _other) const {
