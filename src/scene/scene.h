@@ -36,7 +36,7 @@ class Scene {
   std::vector<std::shared_ptr<Hittable>> objects_;
   std::vector<std::unique_ptr<PointLight>> point_lights_;
   std::vector<std::unique_ptr<AreaLight>> area_lights_;
-  std::vector<std::unique_ptr<ThinLensCamera>> cameras_;
+  std::vector<std::unique_ptr<Camera>> cameras_;
   std::unique_ptr<AmbientLight> ambient_light_;
   RenderConfig render_config_;
 };

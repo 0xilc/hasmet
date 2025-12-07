@@ -16,5 +16,4 @@ class Sphere : public Hittable {
   glm::vec3 center_;
   float radius_;
   int material_id_;
-  glm::vec3 motion_blur_;
 };

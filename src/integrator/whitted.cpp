@@ -5,6 +5,7 @@
 #include <cmath>
 #include <iostream>
 
+#include "core/sampling.h"
 #include "camera/pinhole.h"
 #include "core/logging.h"
 #include "film/film.h"
@@ -37,6 +38,41 @@ inline double fresnel_conductor(double cos_theta, double n, double k) {
 }
 }  // namespace
 
+namespace {
+void generate_area_light_samples(const AreaLight& light, int num_samples,
+                                 std::vector<glm::vec3>& out) {
+  out.clear();
+
+  const auto& jittered_samples =
+      Sampling::generate_jittered_samples(num_samples);
+
+  for (const auto& [dx, dy] : jittered_samples) {
+    glm::vec3 sample_point =
+        light.position +
+        (light.u * (dx - 0.5f) + light.v * (dy - 0.5f)) * light.size;
+
+    out.emplace_back(sample_point);
+  }
+}
+
+void perturb_ray(Ray& ray, float roughness) {
+  glm::vec3 w = glm::normalize(ray.direction);
+
+  glm::vec3 tmp = (std::abs(w.x) > 0.9f) ? glm::vec3(0.0f, 1.0f, 0.0f)
+                                         : glm::vec3(1.0f, 0.0f, 0.0f);
+  glm::vec3 u = glm::normalize(glm::cross(tmp, w));
+  glm::vec3 v = glm::cross(w, u);
+
+  float r1 = Sampling::_generate_random_float(0.0f, 1.0f) - 0.5;
+  float r2 = Sampling::_generate_random_float(0.0f, 1.0f) - 0.5;
+
+
+  ray.direction += (u * r1 + v * r2) * roughness;
+  ray.direction = glm::normalize(ray.direction);
+}
+
+}  // namespace
+
 WhittedIntegrator::WhittedIntegrator(int max_depth) : max_depth_(max_depth) {}
 
 void WhittedIntegrator::render(const Scene& scene, Film& film,
@@ -44,16 +80,38 @@ void WhittedIntegrator::render(const Scene& scene, Film& film,
   int width = film.getWidth();
   int height = film.getHeight();
 
-#pragma omp parallel for schedule(dynamic, 10)
+//#pragma omp parallel for schedule(dynamic, 10)
   for (int y = 0; y < height - 1; ++y) {
     for (int x = 0; x < width; ++x) {
+      if(x == 222 && y == 146) {
+        printf("bom");
+      }
+      std::vector<std::vector<std::vector<glm::vec3>>> area_lights_samples;
+      area_lights_samples.resize(scene.render_config_.max_recursion_depth + 1);
+      for (auto& als : area_lights_samples) {
+        als.resize(scene.area_lights_.size());
+        for (auto& alsi : als) {
+          alsi.reserve(camera.num_samples_);
+        }
+      }
+
+      for (auto& als : area_lights_samples) {
+        for (int i = 0; i < als.size(); i++) {
+          generate_area_light_samples(*scene.area_lights_[i],
+                                      camera.num_samples_, als[i]);
+        }
+      }
+
       Color pixel_color;
-      std::vector<Ray> rays = camera.generateRays(static_cast<float>(x), static_cast<float>(y));
-      
-      for (auto& ray : rays){
+      std::vector<Ray> rays =
+          camera.generateRays(static_cast<float>(x), static_cast<float>(y));
+
+      for (int i = 0; i < rays.size(); i++) {
+        Ray& ray = rays[i];
+        ray.sampling_info = {i, &area_lights_samples, Sampling::_generate_random_float(0,1)};
         pixel_color += Li(ray, scene, max_depth_);
       }
-      
+
       pixel_color /= rays.size();
       film.addSample(x, y, pixel_color);
     }
@@ -72,15 +130,19 @@ Color WhittedIntegrator::Li(Ray& ray, const Scene& scene, int depth) const {
 
   float intersection_test_epsilon =
       scene.render_config_.intersection_test_epsilon;
-
+  
   switch (mat.type) {
     case MaterialType::Mirror: {
-      final_color += calculate_blinn_phong(ray, rec, scene);
+      final_color += calculate_blinn_phong(ray, rec, scene, depth);
       glm::vec3 wo = glm::normalize(ray.origin - rec.p);
       glm::vec3 wr = glm::normalize(glm::reflect(-wo, rec.normal));
 
       Ray reflected_ray =
           Ray(rec.p + rec.normal * intersection_test_epsilon, wr);
+      reflected_ray.sampling_info = ray.sampling_info;
+      if (mat.roughness) {
+        perturb_ray(reflected_ray, mat.roughness);
+      }
 
       final_color +=
           Li(reflected_ray, scene, depth - 1) * mat.mirror_reflectance;
@@ -104,13 +166,18 @@ Color WhittedIntegrator::Li(Ray& ray, const Scene& scene, int depth) const {
       Color refract_color(0.0f);
 
       if (entering) {
-        final_color += calculate_blinn_phong(ray, rec, scene);
+        final_color += calculate_blinn_phong(ray, rec, scene, depth);
       }
 
       // Total internal reflection
       if (sin2ThetaT >= 1.0f) {
         glm::vec3 wr = glm::reflect(-wo, normal);
         Ray reflected_ray(rec.p + normal * intersection_test_epsilon, wr);
+        reflected_ray.sampling_info = ray.sampling_info;
+        if (mat.roughness) {
+          perturb_ray(reflected_ray, mat.roughness);
+        }
+
         reflect_color = Li(reflected_ray, scene, depth - 1);
         final_color += reflect_color;
         break;
@@ -123,12 +190,22 @@ Color WhittedIntegrator::Li(Ray& ray, const Scene& scene, int depth) const {
       // Reflection
       glm::vec3 wr = glm::reflect(-wo, normal);
       Ray reflected_ray(rec.p + normal * intersection_test_epsilon, wr);
+      reflected_ray.sampling_info = ray.sampling_info;
+      if (mat.roughness) {
+        perturb_ray(reflected_ray, mat.roughness);
+      }
+      
       reflect_color = Li(reflected_ray, scene, depth - 1);
 
       // Refraction
       glm::vec3 wt = eta * -wo + (eta * cosThetaI - cosThetaT) * normal;
       Ray refracted_ray(rec.p - normal * intersection_test_epsilon,
                         glm::normalize(wt));
+      refracted_ray.sampling_info = ray.sampling_info;
+      if (mat.roughness) {
+        perturb_ray(refracted_ray, mat.roughness);
+      }
+      
       refract_color = Li(refracted_ray, scene, depth - 1);
 
       Color L0 = Fr * reflect_color + (1.0f - Fr) * refract_color;
@@ -149,19 +226,29 @@ Color WhittedIntegrator::Li(Ray& ray, const Scene& scene, int depth) const {
 
       Ray reflected_ray =
           Ray(rec.p + rec.normal * intersection_test_epsilon, wr);
+      if (mat.roughness) {
+        perturb_ray(reflected_ray, mat.roughness);
+      }
+      
+      float NdotR = glm::dot(reflected_ray.direction, rec.normal);
+      if (NdotR < 0.0f) {
+        reflected_ray.direction =
+            reflected_ray.direction - 2.0f * NdotR * rec.normal;
+      }
 
       double cos_theta = glm::dot(rec.normal, wr);
       double k = mat.absorption_index;
       double n = mat.refraction_index;
       double Fr = fresnel_conductor(cos_theta, n, k);
-      final_color += calculate_blinn_phong(ray, rec, scene);
+      final_color += calculate_blinn_phong(ray, rec, scene, depth);
+
       final_color +=
           Fr * Li(reflected_ray, scene, depth - 1) * mat.mirror_reflectance;
       break;
     }
 
     case MaterialType::BlinnPhong: {
-      final_color += calculate_blinn_phong(ray, rec, scene);
+      final_color += calculate_blinn_phong(ray, rec, scene, depth);
       break;
     }
 
@@ -174,13 +261,17 @@ Color WhittedIntegrator::Li(Ray& ray, const Scene& scene, int depth) const {
 
 Color WhittedIntegrator::calculate_blinn_phong(const Ray& ray,
                                                const HitRecord& rec,
-                                               const Scene& scene) const {
+                                               const Scene& scene,
+                                               int depth) const {
   Color color(0.0f);
   MaterialManager* material_manager = MaterialManager::get_instance();
   const Material& material = material_manager->get(rec.material_id);
   float shadow_ray_epsilon = scene.render_config_.shadow_ray_epsilon;
+  
   // Add ambient light
   color += material.ambient_reflectance * Color(scene.ambient_light_->radiance);
+
+  // Point Lights
   for (const std::unique_ptr<PointLight>& light : scene.point_lights_) {
     glm::vec3 wi = light->position - rec.p;
     float distance_to_light = glm::length(wi);
@@ -206,6 +297,41 @@ Color WhittedIntegrator::calculate_blinn_phong(const Ray& ray,
     color += Color(material.specular_reflectance) * Color(light->intensity) *
              (std::pow(cos_alpha, material.phong_exponent) /
               (distance_to_light * distance_to_light));
+  }
+
+  // Area Lights
+  for (int i = 0; i < scene.area_lights_.size(); i++) {
+    auto& light = scene.area_lights_[i];
+    auto& sampler = *ray.sampling_info.area_lights_sampler_;
+    glm::vec3 sampled_light_point = sampler[depth - 1][i][ray.sampling_info.sampling_index_];
+    
+    glm::vec3 wi = sampled_light_point - rec.p;
+    float distance_to_light = glm::length(wi);
+    wi = glm::normalize(wi);
+
+    // Shadow test
+    Ray shadow_ray(rec.p + rec.normal * shadow_ray_epsilon, wi);
+    shadow_ray.interval_.max = distance_to_light - 1e-4f;
+
+    if (scene.is_occluded(shadow_ray)) {
+      continue;
+    }
+
+    float area_of_light = light->size * light->size;
+    float cos_alpha_light = std::abs(glm::dot(-wi, light->normal));
+    float dist2 = distance_to_light * distance_to_light;
+    float attenuation = area_of_light * cos_alpha_light / dist2;
+
+    // Diffuse component
+    double cos_theta = std::max(0.0f, glm::dot(rec.normal, wi));
+    color += Color(material.diffuse_reflectance) * Color(light->radiance) * cos_theta * attenuation;
+
+    // Specular component
+    glm::vec3 wo = glm::normalize(ray.origin - rec.p);
+    glm::vec3 h = glm::normalize(wi + wo);
+    double cos_alpha = std::max(0.0f, glm::dot(rec.normal, h));
+    color += Color(material.specular_reflectance) * Color(light->radiance) *
+             (std::pow(cos_alpha, material.phong_exponent) * attenuation);
   }
 
   return color;

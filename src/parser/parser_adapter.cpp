@@ -135,7 +135,7 @@ PinholeCamera create_pinhole_camera(const Parser::Camera_& camera_) {
   glm::mat4 transform = create_transformation_matrix(camera_.transformations);
   return PinholeCamera(position, look_at, up, vertical_fov_degrees,
                        camera_.image_width, camera_.image_height,
-                       camera_.image_name, transform);
+                       camera_.image_name, camera_.num_samples, transform);
 }
 
 ThinLensCamera create_thinlens_camera(const Parser::Camera_& camera_) {
@@ -170,15 +170,13 @@ Scene read_scene(std::string filename) {
       parsed_scene.max_recursion_depth};
 
   for (const Parser::Camera_& camera_ : parsed_scene.cameras) {
-    scene.cameras_.push_back(
-        std::make_unique<ThinLensCamera>(create_thinlens_camera(camera_)));
-    /*if (camera_.aperture_size > 0){
+    if (camera_.aperture_size > 0){
       scene.cameras_.push_back(
           std::make_unique<ThinLensCamera>(create_thinlens_camera(camera_)));
     } else {
       scene.cameras_.push_back(
           std::make_unique<PinholeCamera>(create_pinhole_camera(camera_)));
-    }*/
+    }
   }
 
   MaterialManager* material_manager = MaterialManager::get_instance();

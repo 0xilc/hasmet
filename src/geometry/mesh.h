@@ -19,5 +19,4 @@ class Mesh : public Hittable {
 
  private:
   int material_id_;
-  glm::vec3 motion_blur_;
 };

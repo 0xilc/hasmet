@@ -20,6 +20,8 @@ class Hittable {
   glm::mat4 transform_{1.0f};
   glm::mat4 inverse_transform_{1.0f};
   glm::mat4 inverse_transpose_transform_{1.0f};
+  glm::vec3 motion_blur_;
   AABB aabb_;
   bool is_identity_transform_ = true;
+  bool has_motion_blur_ = false;
 };

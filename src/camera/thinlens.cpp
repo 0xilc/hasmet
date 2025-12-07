@@ -15,12 +15,12 @@ ThinLensCamera::ThinLensCamera(const glm::vec3& position,
                                int film_height, std::string image_name,
                                const glm::mat4& transform, int num_samples,
                                float aperture_size, float focus_distance)
-    : film_width_(film_width),
-      film_height_(film_height),
-      image_name_(image_name),
-      aperture_size_(aperture_size),
-      focus_distance_(focus_distance),
-      num_samples_(num_samples) {
+    : aperture_size_(aperture_size),
+      focus_distance_(focus_distance) {
+  num_samples_ = num_samples;
+  film_width_ = film_width;
+  film_height_ = film_height;
+  image_name_ = image_name;
   const glm::vec3 initial_gaze = glm::normalize(look_at - position);
   const glm::vec3 final_position = transform * glm::vec4(position, 1.0f);
   const glm::vec3 final_up = transform * glm::vec4(up, 0.0f);
@@ -63,6 +63,8 @@ std::vector<Ray> ThinLensCamera::generateRays(float px, float py) const {
 
   std::vector<glm::vec3> pixel_samples;
   std::vector<glm::vec3> aperture_samples;
+  pixel_samples.reserve(num_samples_);
+  aperture_samples.reserve(num_samples_);
 
   generate_pixel_samples(px, py, pixel_samples);
   generate_aperture_samples(aperture_samples);
@@ -89,7 +91,6 @@ std::vector<Ray> ThinLensCamera::generateRays(float px, float py) const {
 void ThinLensCamera::generate_pixel_samples(int px, int py,
                                             std::vector<glm::vec3>& out) const {
   out.clear();
-  out.reserve(num_samples_);
 
   const auto& jittered_samples =
       Sampling::generate_jittered_samples(num_samples_);
@@ -99,14 +100,13 @@ void ThinLensCamera::generate_pixel_samples(int px, int py,
         top_left_corner_ + (static_cast<float>(px) + dx) * horizontal_spacing_ +
         (static_cast<float>(py) + dy) * vertical_spacing_;
 
-    out.push_back(sample_point);
+    out.emplace_back(sample_point);
   }
 }
 
 void ThinLensCamera::generate_aperture_samples(
     std::vector<glm::vec3>& out) const {
   out.clear();
-  out.reserve(num_samples_);
 
   const auto& jittered_samples =
       Sampling::generate_jittered_samples(num_samples_);
@@ -115,6 +115,6 @@ void ThinLensCamera::generate_aperture_samples(
     glm::vec3 sample_point =
         position_ + (u_ * (dx - 0.5f) + v_ * (dy - 0.5f)) * aperture_size_;
 
-    out.push_back(sample_point);
+    out.emplace_back(sample_point);
   }
 }

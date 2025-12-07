@@ -11,4 +11,8 @@ class Camera {
   // If multi-sampling is open, returns multiple rays.
   virtual std::vector<Ray> generateRays(float px, float py) const = 0;
 
+  int num_samples_;
+  int film_width_;
+  int film_height_;
+  std::string image_name_;
 };
