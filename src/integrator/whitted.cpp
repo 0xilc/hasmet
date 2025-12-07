@@ -80,12 +80,9 @@ void WhittedIntegrator::render(const Scene& scene, Film& film,
   int width = film.getWidth();
   int height = film.getHeight();
 
-//#pragma omp parallel for schedule(dynamic, 10)
+#pragma omp parallel for schedule(dynamic, 10)
   for (int y = 0; y < height - 1; ++y) {
     for (int x = 0; x < width; ++x) {
-      if(x == 222 && y == 146) {
-        printf("bom");
-      }
       std::vector<std::vector<std::vector<glm::vec3>>> area_lights_samples;
       area_lights_samples.resize(scene.render_config_.max_recursion_depth + 1);
       for (auto& als : area_lights_samples) {
@@ -280,7 +277,7 @@ Color WhittedIntegrator::calculate_blinn_phong(const Ray& ray,
     // Shadow test
     Ray shadow_ray(rec.p + rec.normal * shadow_ray_epsilon, wi);
     shadow_ray.interval_.max = distance_to_light - 1e-4f;
-
+    shadow_ray.sampling_info = ray.sampling_info;
     if (scene.is_occluded(shadow_ray)) {
       continue;
     }
@@ -312,6 +309,7 @@ Color WhittedIntegrator::calculate_blinn_phong(const Ray& ray,
     // Shadow test
     Ray shadow_ray(rec.p + rec.normal * shadow_ray_epsilon, wi);
     shadow_ray.interval_.max = distance_to_light - 1e-4f;
+    shadow_ray.sampling_info = ray.sampling_info;
 
     if (scene.is_occluded(shadow_ray)) {
       continue;

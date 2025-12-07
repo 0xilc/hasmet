@@ -68,9 +68,9 @@
   //    "C:/Users/akin/Desktop/hw2/inputs/raven/light_around_david/";6.15
   
   /*const std::string filename = "chessboard_arealight_dof";*/
-  const std::string filename = "dragon_dynamic";
+  const std::string filename = "chessboard_arealight_dof_glass_queen";
   const std::string input_folder =
-      "C:/Users/akin/Desktop/hw3/inputs/";
+      "C:/Users/akin/Desktop/hw3/inputs/ramazan_tokay/";
   const std::string input_filename = input_folder + filename + ".json";
   const std::string output_folder = "C:/Users/akin/Desktop/whitted/";
   const std::string output_filename = output_folder + filename + ".png";
