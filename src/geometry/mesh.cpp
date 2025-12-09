@@ -31,6 +31,7 @@ bool Mesh::local_intersect(Ray& ray, HitRecord& rec) const {
     rec.material_id = material_id_;
     return true;
   }
+  return false;
 }
 
 Mesh::Mesh(const std::shared_ptr<BVH>& blas, int material_id,
