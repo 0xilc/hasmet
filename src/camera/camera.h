@@ -2,6 +2,7 @@
 
 #include "core/ray.h"
 
+namespace hasmet {
 class Camera {
  public:
   virtual ~Camera() = default;
@@ -16,3 +17,4 @@ class Camera {
   int film_height_;
   std::string image_name_;
 };
+} // namespace hasmet

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cmath>
 
+namespace hasmet {
 class Interval {
  public:
   double min, max;
@@ -28,3 +29,4 @@ class Interval {
   }
   inline double getLength() const { return max - min; }
 };
+} // namespace hasmet

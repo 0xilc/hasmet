@@ -3,17 +3,19 @@
 #include "sphere.h"
 
 #include <cmath>
+#include "core/types.h"
 
-Sphere::Sphere(const glm::vec3& center, float radius, int material_id, glm::vec3 motion_blur)
+namespace hasmet {
+Sphere::Sphere(const Vec3& center, float radius, int material_id, Vec3 motion_blur)
     : center_(center), radius_(radius), material_id_(material_id) {
   motion_blur_ = motion_blur;
   has_motion_blur_ = true;
-  aabb_ = AABB(center - glm::vec3(radius, radius, radius),
-               center + glm::vec3(radius, radius, radius));
+  aabb_ = AABB(center - Vec3(radius, radius, radius),
+               center + Vec3(radius, radius, radius));
 }
 
 bool Sphere::local_intersect(Ray& r, HitRecord& rec) const {
-  glm::vec3 oc = r.origin - center_;
+  Vec3 oc = r.origin - center_;
 
   double a = glm::dot(r.direction, r.direction);
   double half_b = glm::dot(oc, r.direction);
@@ -37,10 +39,11 @@ bool Sphere::local_intersect(Ray& r, HitRecord& rec) const {
 
   rec.t = static_cast<float>(root);
   rec.p = r.at(rec.t);
-  glm::vec3 outward_normal = (rec.p - center_) / radius_;
+  Vec3 outward_normal = (rec.p - center_) / radius_;
   rec.set_face_normal(r, outward_normal);
   rec.material_id = material_id_;
   return true;
 }
 
 AABB Sphere::get_aabb() const { return aabb_; }
+} // namespace hasmet

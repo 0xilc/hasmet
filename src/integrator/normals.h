@@ -1,9 +1,10 @@
 #pragma once
-#include "core/color.h"
+
 #include "core/hit_record.h"
 #include "core/ray.h"
 #include "integrator.h"
 
+namespace hasmet {
 class Normals : public Integrator {
  public:
   Normals(int max_depth);
@@ -15,3 +16,4 @@ class Normals : public Integrator {
   Color Li(Ray& ray, const Scene& scene, int depth) const;
   int max_depth_;
 };
+} // namespace hasmet

@@ -8,7 +8,7 @@
 
 #define M_PI 3.14159265358979323846
 
-namespace Parser {
+namespace hasmet::Parser {
 
 // For convenience
 using json = nlohmann::json;
@@ -1091,4 +1091,4 @@ void printScene(const Scene_& scene) {
   std::cout << "\n----------------------------------------" << std::endl;
 }
 
-}  // namespace Parser
+}  // namespace hasmet::Parser

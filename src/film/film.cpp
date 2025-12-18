@@ -4,9 +4,10 @@
 #include <vector>
 
 #include "core/logging.h"
-#include "core/color.h"
 #include "io/image_io.h"
+#include "core/types.h"
 
+namespace hasmet {
 Film::Film(int width, int height, const std::string& filename)
     : width_(width), height_(height), filename_(filename) {
   pixels_.resize(width * height, Color(0.0f));
@@ -33,3 +34,4 @@ void Film::write() const {
     LOG_INFO("Failed to write image to " + filename_);
   }
 }
+} // namespace hasmet

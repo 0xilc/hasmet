@@ -12,8 +12,9 @@
 #include "material/material_manager.h"
 #include "parser/parser.h"
 #include "scene/scene.h"
+#include "core/types.h"
 
-namespace Parser::ParserAdapter {
+namespace hasmet::Parser::ParserAdapter {
 
 glm::mat4 create_transformation_matrix(
     const std::vector<Parser::Transformation_>& transforms) {
@@ -24,15 +25,15 @@ glm::mat4 create_transformation_matrix(
     switch (tf.type) {
       case Parser::TransformationType::TRANSLATION:
         t_matrix = glm::translate(
-            glm::mat4(1.0f), glm::vec3(tf.data[0], tf.data[1], tf.data[2]));
+            glm::mat4(1.0f), Vec3(tf.data[0], tf.data[1], tf.data[2]));
         break;
       case Parser::TransformationType::SCALING:
         t_matrix = glm::scale(glm::mat4(1.0f),
-                              glm::vec3(tf.data[0], tf.data[1], tf.data[2]));
+                              Vec3(tf.data[0], tf.data[1], tf.data[2]));
         break;
       case Parser::TransformationType::ROTATION:
         t_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(tf.data[0]),
-                               glm::vec3(tf.data[1], tf.data[2], tf.data[3]));
+                               Vec3(tf.data[1], tf.data[2], tf.data[3]));
         break;
       case Parser::TransformationType::COMPOSITE:
         t_matrix = glm::transpose(glm::make_mat4(tf.data.data()));
@@ -43,17 +44,17 @@ glm::mat4 create_transformation_matrix(
   return composite_matrix;
 }
 
-float get_triangle_area(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3) {
-  glm::vec3 edge1 = v2 - v1;
-  glm::vec3 edge2 = v3 - v1;
-  glm::vec3 cross_product = glm::cross(edge1, edge2);
+float get_triangle_area(Vec3 v1, Vec3 v2, Vec3 v3) {
+  Vec3 edge1 = v2 - v1;
+  Vec3 edge2 = v3 - v1;
+  Vec3 cross_product = glm::cross(edge1, edge2);
   return 0.5f * glm::length(cross_product);
 }
 
 Color create_color(const Parser::Vec3f_ v_) { return Color(v_.x, v_.y, v_.z); }
 
-glm::vec3 create_vec3(const Parser::Vec3f_& v_) {
-  return glm::vec3(v_.x, v_.y, v_.z);
+Vec3 create_vec3(const Parser::Vec3f_& v_) {
+  return Vec3(v_.x, v_.y, v_.z);
 }
 
 Sphere create_sphere(const Parser::Sphere_& sphere_,
@@ -65,7 +66,7 @@ Sphere create_sphere(const Parser::Sphere_& sphere_,
 
 Triangle create_triangle(const Parser::Triangle_& triangle_,
                          const std::vector<Parser::Vec3f_>& vertex_data_,
-                         const glm::vec3 vertex_normals[3] = nullptr,
+                         const Vec3 vertex_normals[3] = nullptr,
                          bool smooth_shading = false) {
   return Triangle(create_vec3(vertex_data_[triangle_.v0_id]),
                   create_vec3(vertex_data_[triangle_.v1_id]),
@@ -75,14 +76,14 @@ Triangle create_triangle(const Parser::Triangle_& triangle_,
 
 PointLight create_point_light(const Parser::PointLight_ light_) {
   glm::mat4 transform = create_transformation_matrix(light_.transformations);
-  glm::vec3 position =
+  Vec3 position =
       transform * glm::vec4(create_vec3(light_.position), 1.0f);
   return PointLight{position, create_color(light_.intensity)};
 }
 
 AreaLight create_area_light(const Parser::AreaLight_ light_) {
   glm::mat4 transform = create_transformation_matrix(light_.transformations);
-  glm::vec3 position =
+  Vec3 position =
       transform * glm::vec4(create_vec3(light_.position), 1.0f);
   return AreaLight{position, create_vec3(light_.normal), light_.size,
                    create_color(light_.radiance)};
@@ -117,12 +118,12 @@ Material create_material(const Parser::Material_& material_) {
 }
 
 PinholeCamera create_pinhole_camera(const Parser::Camera_& camera_) {
-  glm::vec3 position(camera_.position.x, camera_.position.y,
+  Vec3 position(camera_.position.x, camera_.position.y,
                      camera_.position.z);
-  glm::vec3 gaze(camera_.gaze.x, camera_.gaze.y, camera_.gaze.z);
-  glm::vec3 up(camera_.up.x, camera_.up.y, camera_.up.z);
+  Vec3 gaze(camera_.gaze.x, camera_.gaze.y, camera_.gaze.z);
+  Vec3 up(camera_.up.x, camera_.up.y, camera_.up.z);
 
-  glm::vec3 look_at = position + gaze;
+  Vec3 look_at = position + gaze;
 
   float top = camera_.near_plane.t;
   float bottom = camera_.near_plane.b;
@@ -139,11 +140,11 @@ PinholeCamera create_pinhole_camera(const Parser::Camera_& camera_) {
 }
 
 ThinLensCamera create_thinlens_camera(const Parser::Camera_& camera_) {
-  glm::vec3 position(camera_.position.x, camera_.position.y,
+  Vec3 position(camera_.position.x, camera_.position.y,
                      camera_.position.z);
-  glm::vec3 gaze(camera_.gaze.x, camera_.gaze.y, camera_.gaze.z);
-  glm::vec3 up(camera_.up.x, camera_.up.y, camera_.up.z);
-  glm::vec3 look_at = position + gaze;
+  Vec3 gaze(camera_.gaze.x, camera_.gaze.y, camera_.gaze.z);
+  Vec3 up(camera_.up.x, camera_.up.y, camera_.up.z);
+  Vec3 look_at = position + gaze;
 
   float top = camera_.near_plane.t;
   float bottom = camera_.near_plane.b;
@@ -221,17 +222,17 @@ Scene read_scene(std::string filename) {
   for (const Parser::Mesh_& mesh_ : parsed_scene.meshes) {
     std::vector<std::shared_ptr<Triangle>> mesh_faces;
     if (mesh_.smooth_shading) {
-      std::vector<std::vector<std::pair<glm::vec3, float>>>
+      std::vector<std::vector<std::pair<Vec3, float>>>
           per_vertex_triangles;
       per_vertex_triangles.resize(parsed_scene.vertex_data.size());
       for (const Triangle_& triangle_ : mesh_.faces) {
-        glm::vec3 v0 = create_vec3(parsed_scene.vertex_data[triangle_.v0_id]);
-        glm::vec3 v1 = create_vec3(parsed_scene.vertex_data[triangle_.v1_id]);
-        glm::vec3 v2 = create_vec3(parsed_scene.vertex_data[triangle_.v2_id]);
+        Vec3 v0 = create_vec3(parsed_scene.vertex_data[triangle_.v0_id]);
+        Vec3 v1 = create_vec3(parsed_scene.vertex_data[triangle_.v1_id]);
+        Vec3 v2 = create_vec3(parsed_scene.vertex_data[triangle_.v2_id]);
         float area = get_triangle_area(v0, v1, v2);
-        glm::vec3 edge1 = v1 - v0;
-        glm::vec3 edge2 = v2 - v0;
-        glm::vec3 face_normal = glm::normalize(glm::cross(edge1, edge2));
+        Vec3 edge1 = v1 - v0;
+        Vec3 edge2 = v2 - v0;
+        Vec3 face_normal = glm::normalize(glm::cross(edge1, edge2));
         per_vertex_triangles[triangle_.v0_id].push_back(
             std::make_pair(face_normal, area));
         per_vertex_triangles[triangle_.v1_id].push_back(
@@ -239,9 +240,9 @@ Scene read_scene(std::string filename) {
         per_vertex_triangles[triangle_.v2_id].push_back(
             std::make_pair(face_normal, area));
       }
-      std::vector<glm::vec3> vertex_normals;
+      std::vector<Vec3> vertex_normals;
       for (const auto& v : per_vertex_triangles) {
-        glm::vec3 normal(0.0, 0.0, 0.0);
+        Vec3 normal(0.0, 0.0, 0.0);
         float total_area = 0.0;
         for (const auto& pair : v) {
           normal = normal + pair.first * pair.second;
@@ -253,12 +254,12 @@ Scene read_scene(std::string filename) {
         vertex_normals.push_back(normal);
       }
       for (const Triangle_& triangle_ : mesh_.faces) {
-        glm::vec3 indices[3] = {
+        Vec3 indices[3] = {
             create_vec3(parsed_scene.vertex_data[triangle_.v0_id]),
             create_vec3(parsed_scene.vertex_data[triangle_.v1_id]),
             create_vec3(parsed_scene.vertex_data[triangle_.v2_id])};
 
-        glm::vec3 per_vertex_normals[3] = {vertex_normals[triangle_.v0_id],
+        Vec3 per_vertex_normals[3] = {vertex_normals[triangle_.v0_id],
                                            vertex_normals[triangle_.v1_id],
                                            vertex_normals[triangle_.v2_id]};
 
@@ -312,9 +313,9 @@ Scene read_scene(std::string filename) {
   }
 
   for (const Parser::Plane_& plane_ : parsed_scene.planes) {
-    glm::vec3 point =
+    Vec3 point =
         create_vec3(parsed_scene.vertex_data[plane_.point_vertex_id]);
-    glm::vec3 normal = create_vec3(plane_.normal);
+    Vec3 normal = create_vec3(plane_.normal);
 
     std::shared_ptr plane =
         std::make_unique<Plane>(point, normal, plane_.material_id);
@@ -329,4 +330,4 @@ Scene read_scene(std::string filename) {
   return scene;
 }
 
-}  // namespace Parser::ParserAdapter
+}  // namespace hasmet::Parser::ParserAdapter

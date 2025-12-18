@@ -8,9 +8,11 @@
 
 #include "core/ray.h"
 #include "core/sampling.h"
+#include "core/types.h"
 
-ThinLensCamera::ThinLensCamera(const glm::vec3& position,
-                               const glm::vec3& look_at, const glm::vec3& up,
+namespace hasmet {
+ThinLensCamera::ThinLensCamera(const Vec3& position,
+                               const Vec3& look_at, const Vec3& up,
                                float vertical_fov_degrees, int film_width,
                                int film_height, std::string image_name,
                                const glm::mat4& transform, int num_samples,
@@ -21,17 +23,17 @@ ThinLensCamera::ThinLensCamera(const glm::vec3& position,
   film_width_ = film_width;
   film_height_ = film_height;
   image_name_ = image_name;
-  const glm::vec3 initial_gaze = glm::normalize(look_at - position);
-  const glm::vec3 final_position = transform * glm::vec4(position, 1.0f);
-  const glm::vec3 final_up = transform * glm::vec4(up, 0.0f);
-  const glm::vec3 transformed_gaze = transform * glm::vec4(initial_gaze, 0.0f);
+  const Vec3 initial_gaze = glm::normalize(look_at - position);
+  const Vec3 final_position = transform * glm::vec4(position, 1.0f);
+  const Vec3 final_up = transform * glm::vec4(up, 0.0f);
+  const Vec3 transformed_gaze = transform * glm::vec4(initial_gaze, 0.0f);
 
   float zoom_factor = glm::length(transformed_gaze);
   if (zoom_factor < 1e-6f) {
     zoom_factor = 1.0f;
   }
 
-  const glm::vec3 final_gaze_dir = transformed_gaze / zoom_factor;
+  const Vec3 final_gaze_dir = transformed_gaze / zoom_factor;
 
   // Calculate basis vectors
   w_ = -final_gaze_dir;
@@ -46,7 +48,7 @@ ThinLensCamera::ThinLensCamera(const glm::vec3& position,
   half_height /= zoom_factor;
 
   float half_width = aspect_ratio * half_height;
-  glm::vec3 view_plane_center = final_position - w_;
+  Vec3 view_plane_center = final_position - w_;
 
   position_ = final_position;
   top_left_corner_ = view_plane_center - half_width * u_ + half_height * v_;
@@ -61,8 +63,8 @@ std::vector<Ray> ThinLensCamera::generateRays(float px, float py) const {
   std::vector<Ray> rays;
   rays.reserve(num_samples_);
 
-  std::vector<glm::vec3> pixel_samples;
-  std::vector<glm::vec3> aperture_samples;
+  std::vector<Vec3> pixel_samples;
+  std::vector<Vec3> aperture_samples;
   pixel_samples.reserve(num_samples_);
   aperture_samples.reserve(num_samples_);
 
@@ -72,15 +74,15 @@ std::vector<Ray> ThinLensCamera::generateRays(float px, float py) const {
   static thread_local std::mt19937 generator(std::random_device{}());
   std::shuffle(aperture_samples.begin(), aperture_samples.end(), generator);
 
-  glm::vec3 e = position_;
+  Vec3 e = position_;
 
   for (int i = 0; i < num_samples_; i++) {
-    glm::vec3 s = pixel_samples[i];
-    glm::vec3 a = aperture_samples[i];
-    glm::vec3 dir = s - e;
+    Vec3 s = pixel_samples[i];
+    Vec3 a = aperture_samples[i];
+    Vec3 dir = s - e;
     float t_fp = focus_distance_ / glm::dot(dir, -w_);
-    glm::vec3 p = e + t_fp * dir;
-    glm::vec3 final_direction = glm::normalize(p - a);
+    Vec3 p = e + t_fp * dir;
+    Vec3 final_direction = glm::normalize(p - a);
 
     rays.emplace_back(a, final_direction);
   }
@@ -89,14 +91,14 @@ std::vector<Ray> ThinLensCamera::generateRays(float px, float py) const {
 }
 
 void ThinLensCamera::generate_pixel_samples(int px, int py,
-                                            std::vector<glm::vec3>& out) const {
+                                            std::vector<Vec3>& out) const {
   out.clear();
 
   const auto& jittered_samples =
       Sampling::generate_jittered_samples(num_samples_);
 
   for (const auto& [dx, dy] : jittered_samples) {
-    glm::vec3 sample_point =
+    Vec3 sample_point =
         top_left_corner_ + (static_cast<float>(px) + dx) * horizontal_spacing_ +
         (static_cast<float>(py) + dy) * vertical_spacing_;
 
@@ -105,16 +107,17 @@ void ThinLensCamera::generate_pixel_samples(int px, int py,
 }
 
 void ThinLensCamera::generate_aperture_samples(
-    std::vector<glm::vec3>& out) const {
+    std::vector<Vec3>& out) const {
   out.clear();
 
   const auto& jittered_samples =
       Sampling::generate_jittered_samples(num_samples_);
 
   for (const auto& [dx, dy] : jittered_samples) {
-    glm::vec3 sample_point =
+    Vec3 sample_point =
         position_ + (u_ * (dx - 0.5f) + v_ * (dy - 0.5f)) * aperture_size_;
 
     out.emplace_back(sample_point);
   }
 }
+} // namespace hasmet

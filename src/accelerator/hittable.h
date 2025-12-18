@@ -4,7 +4,9 @@
 #include "core/hit_record.h"
 #include "core/interval.h"
 #include "core/ray.h"
+#include "core/types.h"
 
+namespace hasmet{
 class Hittable {
  public:
   virtual ~Hittable() = default;
@@ -20,8 +22,9 @@ class Hittable {
   glm::mat4 transform_{1.0f};
   glm::mat4 inverse_transform_{1.0f};
   glm::mat4 inverse_transpose_transform_{1.0f};
-  glm::vec3 motion_blur_;
+  Vec3 motion_blur_;
   AABB aabb_;
   bool is_identity_transform_ = true;
   bool has_motion_blur_ = false;
 };
+} // namespace hasmet

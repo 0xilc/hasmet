@@ -1,9 +1,11 @@
 #pragma once
-#include "core/color.h"
+
 #include "core/hit_record.h"
 #include "core/ray.h"
 #include "integrator.h"
+#include "core/types.h"
 
+namespace hasmet {
 class WhittedIntegrator : public Integrator {
  public:
   WhittedIntegrator(int max_depth);
@@ -17,3 +19,4 @@ class WhittedIntegrator : public Integrator {
                               const Scene& scene, int depth) const;
   int max_depth_;
 };
+} // namespace hasmet

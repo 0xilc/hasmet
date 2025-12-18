@@ -1,11 +1,14 @@
 #pragma once
 #include "light.h"
-#include "core/color.h"
 
+#include "core/types.h"
+
+namespace hasmet {
 struct PointLight : public Light {
-  glm::vec3 position;
+  Vec3 position;
   Color intensity;
 
-  PointLight(const glm::vec3& pos, const Color& i)
+  PointLight(const Vec3& pos, const Color& i)
       : position(pos), intensity(i) {}
 };
+} // namespace hasmet

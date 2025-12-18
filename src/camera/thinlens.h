@@ -4,12 +4,14 @@
 
 #include "camera.h"
 #include "core/ray.h"
+#include "core/types.h"
 
+namespace hasmet {
 class ThinLensCamera : public Camera {
  public:
-  ThinLensCamera(const glm::vec3& position,
-                 const glm::vec3& look_at,
-                 const glm::vec3& up,
+  ThinLensCamera(const Vec3& position,
+                 const Vec3& look_at,
+                 const Vec3& up,
                  float vertical_fov_degrees = 90.f,
                  int film_width = 100,
                  int film_height = 100,
@@ -22,21 +24,21 @@ class ThinLensCamera : public Camera {
   std::vector<Ray> generateRays(float px, float py) const override;
 
  private:
-  glm::vec3 position_;
-  glm::vec3 top_left_corner_;
-  glm::vec3 horizontal_spacing_;
-  glm::vec3 vertical_spacing_;
-  glm::vec3 lens_center_;
-  glm::vec3 u_;
-  glm::vec3 v_;
-  glm::vec3 w_;
+  Vec3 position_;
+  Vec3 top_left_corner_;
+  Vec3 horizontal_spacing_;
+  Vec3 vertical_spacing_;
+  Vec3 lens_center_;
+  Vec3 u_;
+  Vec3 v_;
+  Vec3 w_;
 
   // Lens parameters
   float aperture_size_;
   float focus_distance_;
 
   // Sampling utils
-  void generate_pixel_samples(int px, int py, std::vector<glm::vec3>& out) const;
-  void generate_aperture_samples(std::vector<glm::vec3>& out) const;
+  void generate_pixel_samples(int px, int py, std::vector<Vec3>& out) const;
+  void generate_aperture_samples(std::vector<Vec3>& out) const;
 };
-
+} // namespace hasmet

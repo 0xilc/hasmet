@@ -1,5 +1,6 @@
 #pragma once
 
+namespace hasmet {
 class Scene;
 class Film;
 class Camera;
@@ -9,3 +10,4 @@ class Integrator {
   virtual ~Integrator() = default;
   virtual void render(const Scene& scene, Film& film, const Camera& camera) const = 0;
 };
+} // namespace hasmet

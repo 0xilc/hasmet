@@ -1,9 +1,11 @@
 #include "mesh.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include "core/types.h"
 
+namespace hasmet {
 Mesh::Mesh(std::vector<std::shared_ptr<Triangle>>& faces, int material_id,
-           glm::vec3 motion_blur = glm::vec3(0))
+           Vec3 motion_blur = Vec3(0))
     : material_id_(material_id) {
   motion_blur_ = motion_blur;
   has_motion_blur_ = true;
@@ -35,7 +37,7 @@ bool Mesh::local_intersect(Ray& ray, HitRecord& rec) const {
 }
 
 Mesh::Mesh(const std::shared_ptr<BVH>& blas, int material_id,
-           glm::vec3 motion_blur = glm::vec3(0))
+           Vec3 motion_blur = Vec3(0))
     : blas_(blas), material_id_(material_id) {
   motion_blur_ = motion_blur;
   aabb_ = blas_->get_root_aabb();
@@ -49,3 +51,4 @@ Mesh::Mesh(const std::shared_ptr<BVH>& blas, int material_id,
 }
 
 AABB Mesh::get_aabb() const { return aabb_; }
+} // namespace hasmet

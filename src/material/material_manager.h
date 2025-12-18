@@ -4,6 +4,7 @@
 #include <memory>
 #include "material.h"
 
+namespace hasmet {
 class MaterialManager {
  private:
   MaterialManager() {};
@@ -17,5 +18,5 @@ class MaterialManager {
   static MaterialManager* get_instance();
   Material& get(int material_id) const;
   int add(int material_id, const Material& material);
-
 };
+} // namespace hasmet

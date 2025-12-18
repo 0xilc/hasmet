@@ -2,6 +2,7 @@
 
 #include "core/logging.h"
 
+namespace hasmet {
 MaterialManager* MaterialManager::instance_ptr_ = nullptr;
 
 MaterialManager* MaterialManager::get_instance() {
@@ -24,3 +25,4 @@ int MaterialManager::add(int material_id, const Material& material) {
   materials_[material_id] = std::make_unique<Material>(material);
   return material_id;
 }
+} // namespace hasmet

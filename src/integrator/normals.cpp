@@ -9,7 +9,9 @@
 #include "core/logging.h"
 #include "film/film.h"
 #include "scene/scene.h"
+#include "core/types.h"
 
+namespace hasmet {
 Normals::Normals(int max_depth) : max_depth_(max_depth) {}
 
 void Normals::render(const Scene& scene, Film& film,
@@ -38,7 +40,9 @@ Color Normals::Li(Ray& ray, const Scene& scene, int depth) const {
   HitRecord rec;
   if (!scene.intersect(ray, rec)) return scene.render_config_.background_color;
 
-  glm::vec3 color = glm::normalize(rec.normal) * 255.f;
+  Vec3 color = glm::normalize(rec.normal) * 255.f;
 
   return Color(color.x, color.y, color.z);
 }
+
+} // namespace hasmet

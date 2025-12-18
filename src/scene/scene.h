@@ -11,7 +11,9 @@
 #include "camera/pinhole.h"
 #include "geometry/plane.h"
 #include "camera/thinlens.h"
+#include "core/types.h"
 
+namespace hasmet {
 struct RenderConfig{
   Color background_color;
   float shadow_ray_epsilon;
@@ -40,3 +42,5 @@ class Scene {
   std::unique_ptr<AmbientLight> ambient_light_;
   RenderConfig render_config_;
 };
+
+} // namespace hasmet

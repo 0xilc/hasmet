@@ -1,15 +1,17 @@
 #include "plane.h"
+#include "core/types.h"
 
-Plane::Plane(const glm::vec3& center, const glm::vec3& normal, int material_id)
+namespace hasmet {
+Plane::Plane(const Vec3& center, const Vec3& normal, int material_id)
     : center_(center), normal_(normal), material_id_(material_id) {
-  aabb_ = AABB(glm::vec3(-INFINITY), glm::vec3(INFINITY));
+  aabb_ = AABB(Vec3(-INFINITY), Vec3(INFINITY));
   aabb_.apply_transformation(transform_);
 }
 
 bool Plane::local_intersect(Ray& ray, HitRecord& rec) const {
   float denom = glm::dot(normal_, ray.direction);
   if (std::abs(denom) > 1e-6f) {
-    glm::vec3 p0l0 = center_ - ray.origin;
+    Vec3 p0l0 = center_ - ray.origin;
     float t = glm::dot(p0l0, normal_) / denom;
     if (ray.interval_.min <= t && ray.interval_.max >= t) {
       rec.t = t;
@@ -24,3 +26,4 @@ bool Plane::local_intersect(Ray& ray, HitRecord& rec) const {
 }
 
 AABB Plane::get_aabb() const { return aabb_; }
+} // namespace hasmet

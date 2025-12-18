@@ -1,6 +1,8 @@
 #pragma once
-#include "core/color.h"
 
+#include "core/types.h"
+
+namespace hasmet {
 enum class MaterialType{
 	BlinnPhong,
 	Mirror,
@@ -24,3 +26,4 @@ struct Material{
   float refraction_index = 1.0f;
   float roughness = 0.0f;
 };
+} // namespace hasmet

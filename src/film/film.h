@@ -3,8 +3,10 @@
 #include <string>
 #include <vector>
 
-#include "core/color.h"
 
+#include "core/types.h"
+
+namespace hasmet {
 class Film {
  public:
   Film(int width, int height, const std::string& filename);
@@ -22,3 +24,4 @@ class Film {
   std::string filename_;
   std::vector<Color> pixels_;
 };
+} // namespace hasmet

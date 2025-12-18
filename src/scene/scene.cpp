@@ -1,6 +1,7 @@
 #include "scene.h"
 
 #include "core/logging.h"
+namespace hasmet {
 Scene::Scene() {}
 
 void Scene::add_shape(std::unique_ptr<Hittable> shape) {
@@ -49,3 +50,5 @@ bool Scene::is_occluded(const Ray& r) const {
 }
 
 void Scene::build_bvh() { bvh_.build(objects_); }
+
+} // namespace hasmet

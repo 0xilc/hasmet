@@ -1,5 +1,6 @@
 #include "hittable.h"
 
+namespace hasmet {
 bool Hittable::intersect(Ray& ray, HitRecord& rec) const {
   if (is_identity_transform_ && !has_motion_blur_) {
     return local_intersect(ray, rec);
@@ -27,7 +28,7 @@ bool Hittable::intersect(Ray& ray, HitRecord& rec) const {
     rec.p += motion_blur_ * ray.sampling_info.time;
   }
   rec.normal = glm::normalize(
-      glm::vec3(inverse_transpose_transform_ * glm::vec4(rec.normal, 0.0f)));
+      Vec3(inverse_transpose_transform_ * glm::vec4(rec.normal, 0.0f)));
   
   ray.interval_.max = local_ray.interval_.max;
   return true;
@@ -40,3 +41,4 @@ void Hittable::set_transform(const glm::mat4& m) {
   aabb_.apply_transformation(m);
   is_identity_transform_ = false;
 }
+} // namespace hasmet

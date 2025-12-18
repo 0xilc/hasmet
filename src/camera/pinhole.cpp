@@ -7,8 +7,9 @@
 #include "core/ray.h"
 #include "core/sampling.h"
 
-PinholeCamera::PinholeCamera(const glm::vec3& position,
-                             const glm::vec3& look_at, const glm::vec3& up,
+namespace hasmet {
+PinholeCamera::PinholeCamera(const Vec3& position,
+                             const Vec3& look_at, const Vec3& up,
                              float vertical_fov_degrees, int film_width,
                              int film_height, std::string image_name,
                              int num_samples, const glm::mat4& transform) {
@@ -16,22 +17,22 @@ PinholeCamera::PinholeCamera(const glm::vec3& position,
   film_height_ = film_height;
   image_name_ = image_name;
   num_samples_ = num_samples;
-  const glm::vec3 initial_gaze = glm::normalize(look_at - position);
-  const glm::vec3 final_position = transform * glm::vec4(position, 1.0f);
-  const glm::vec3 final_up = transform * glm::vec4(up, 0.0f);
-  const glm::vec3 transformed_gaze = transform * glm::vec4(initial_gaze, 0.0f);
+  const Vec3 initial_gaze = glm::normalize(look_at - position);
+  const Vec3 final_position = transform * glm::vec4(position, 1.0f);
+  const Vec3 final_up = transform * glm::vec4(up, 0.0f);
+  const Vec3 transformed_gaze = transform * glm::vec4(initial_gaze, 0.0f);
 
   float zoom_factor = glm::length(transformed_gaze);
   if (zoom_factor < 1e-6f) {
     zoom_factor = 1.0f;
   }
 
-  const glm::vec3 final_gaze_dir =
+  const Vec3 final_gaze_dir =
       transformed_gaze / zoom_factor;  // glm::normalize(transformed_gaze)
 
-  const glm::vec3 w = -final_gaze_dir;
-  const glm::vec3 u = glm::normalize(glm::cross(final_up, w));
-  const glm::vec3 v = glm::cross(w, u);
+  const Vec3 w = -final_gaze_dir;
+  const Vec3 u = glm::normalize(glm::cross(final_up, w));
+  const Vec3 v = glm::cross(w, u);
 
   const float aspect_ratio =
       static_cast<float>(film_width) / static_cast<float>(film_height);
@@ -42,7 +43,7 @@ PinholeCamera::PinholeCamera(const glm::vec3& position,
 
   float half_width = aspect_ratio * half_height;
 
-  glm::vec3 view_plane_center = final_position - w;
+  Vec3 view_plane_center = final_position - w;
 
   position_ = final_position;
 
@@ -57,15 +58,15 @@ std::vector<Ray> PinholeCamera::generateRays(float px, float py) const {
   std::vector<Ray> rays;
   rays.reserve(num_samples_);
 
-  std::vector<glm::vec3> pixel_samples;
+  std::vector<Vec3> pixel_samples;
   pixel_samples.reserve(num_samples_);
   generate_pixel_samples(px, py, pixel_samples);
 
-  glm::vec3 e = position_;
+  Vec3 e = position_;
 
   for (int i = 0; i < num_samples_; i++) {
-    glm::vec3 point_on_plane = pixel_samples[i];
-    glm::vec3 ray_direction = glm::normalize(point_on_plane - position_);
+    Vec3 point_on_plane = pixel_samples[i];
+    Vec3 ray_direction = glm::normalize(point_on_plane - position_);
     rays.emplace_back(position_, ray_direction);
   }
 
@@ -73,17 +74,18 @@ std::vector<Ray> PinholeCamera::generateRays(float px, float py) const {
 }
 
 void PinholeCamera::generate_pixel_samples(int px, int py,
-                                           std::vector<glm::vec3>& out) const {
+                                           std::vector<Vec3>& out) const {
   out.clear();
 
   const auto& jittered_samples =
       Sampling::generate_jittered_samples(num_samples_);
 
   for (const auto& [dx, dy] : jittered_samples) {
-    glm::vec3 sample_point =
+    Vec3 sample_point =
         top_left_corner_ + (static_cast<float>(px) + dx) * horizontal_spacing_ +
         (static_cast<float>(py) + dy) * vertical_spacing_;
 
     out.emplace_back(sample_point);
   }
 }
+} // namespace hasmet

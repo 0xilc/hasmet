@@ -6,6 +6,7 @@
 #include "core/ray.h"
 #include "hittable.h"
 
+namespace hasmet {
 struct BvhBuildNode;
 
 struct LinearBvhNode {
@@ -35,3 +36,4 @@ class BVH {
 
   int flatten_bvh_tree(BvhBuildNode* node, int* offset);
 };
+} // namespace hasmet

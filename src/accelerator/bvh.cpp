@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <iostream>
 
+namespace hasmet {
 struct BvhBuildNode {
   AABB bounds;
   BvhBuildNode* left = nullptr;
@@ -183,3 +184,4 @@ bool BVH::is_occluded(const Ray& ray) const {
 }
 
 AABB BVH::get_root_aabb() { return nodes_[0].bbox; }
+} // namespace hasmet
