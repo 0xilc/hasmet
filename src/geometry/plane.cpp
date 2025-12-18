@@ -13,7 +13,7 @@ bool Plane::local_intersect(Ray& ray, HitRecord& rec) const {
   if (std::abs(denom) > 1e-6f) {
     Vec3 p0l0 = center_ - ray.origin;
     float t = glm::dot(p0l0, normal_) / denom;
-    if (ray.interval_.min <= t && ray.interval_.max >= t) {
+    if (ray.t_min <= t && ray.t_max >= t) {
       rec.t = t;
       rec.p = ray.origin + t * ray.direction;
       rec.normal = glm::normalize(normal_);

@@ -45,7 +45,7 @@ bool Triangle::local_intersect(Ray& ray, HitRecord& rec) const {
 
   float t = f * glm::dot(edge2, q);
 
-  if (t > ray.interval_.min && t < ray.interval_.max) {
+  if (t > ray.t_min && t < ray.t_max) {
     rec.t = t;
     rec.p = ray.origin + ray.direction * t;
     rec.material_id = material_id_;

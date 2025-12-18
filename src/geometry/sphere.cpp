@@ -30,9 +30,9 @@ bool Sphere::local_intersect(Ray& r, HitRecord& rec) const {
   double sqrtd = sqrt(discriminant);
 
   double root = (-half_b - sqrtd) / a;
-  if (root < r.interval_.min || root > r.interval_.max) {
+  if (root < r.t_min || root > r.t_max) {
     root = (-half_b + sqrtd) / a;
-    if (root < r.interval_.min || root > r.interval_.max) {
+    if (root < r.t_min || root > r.t_max) {
       return false;
     }
   }

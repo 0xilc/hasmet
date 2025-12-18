@@ -62,7 +62,7 @@ class AABB {
   }
 
   bool intersect(Ray& ray) const {
-    Interval tmp_interval = ray.interval_;
+    Interval tmp_interval(ray.t_min, ray.t_max);
     for (int i = 0; i < 3; i++) {
       double t0 = (axis(i).min - ray.origin[i]) / ray.direction[i];
       double t1 = (axis(i).max - ray.origin[i]) / ray.direction[i];

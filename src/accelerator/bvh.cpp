@@ -118,7 +118,7 @@ bool BVH::intersect(Ray& ray, HitRecord& rec) const {
         for (int i = 0; i < node->num_primitives; i++) {
           if (primitives_[node->primitives_offset + i]->intersect(ray, rec)) {
             hit = true;
-            ray.interval_.max = rec.t;
+            ray.t_max = rec.t;
           }
         }
         if (to_visit_offset == 0) break;

@@ -14,9 +14,9 @@ class WhittedIntegrator : public Integrator {
                       const Camera& camera) const override;
 
  private:
-  Color Li(Ray& ray, const Scene& scene, int depth) const;
+  Color Li(Ray& ray, const Scene& scene, int depth, int sample_index, int num_samples) const;
   Color calculate_blinn_phong(const Ray& ray, const HitRecord& rec,
-                              const Scene& scene, int depth) const;
+                              const Scene& scene, int depth, int sample_index, int num_samples) const;
   int max_depth_;
 };
 } // namespace hasmet

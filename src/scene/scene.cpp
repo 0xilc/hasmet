@@ -29,7 +29,7 @@ bool Scene::intersect(Ray& r, HitRecord& rec) const {
       if (!hit || temp_rec.t < rec.t) {
         hit = true;
         rec = temp_rec;
-        r.interval_.max = rec.t;
+        r.t_max = rec.t;
       }
     }
   }
