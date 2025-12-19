@@ -5,14 +5,7 @@
 # The 'Checks' key specifies which checks to enable or disable.
 # We start by disabling all checks ('-*') and then selectively enable groups.
 # This is a robust way to ensure you only run the checks you want.
-Checks: '
-  -*,
-  bugprone-*,
-  cppcoreguidelines-*,
-  modernize-*,
-  performance-*,
-  readability-*
-'
+Checks: '-*,bugprone-*,cppcoreguidelines-*,modernize-*,performance-*,readability-*'
 
 # 'CheckOptions' allows you to fine-tune the behavior of specific checks.
 # This is useful for customizing rules to fit your project's style.

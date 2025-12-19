@@ -13,6 +13,8 @@
 #include "parser/parser.h"
 #include "scene/scene.h"
 #include "core/types.h"
+#include "accelerator/instance.h"
+#include "core/logging.h"
 
 namespace hasmet::Parser::ParserAdapter {
 
@@ -60,8 +62,7 @@ Vec3 create_vec3(const Parser::Vec3f_& v_) {
 Sphere create_sphere(const Parser::Sphere_& sphere_,
                      const std::vector<Parser::Vec3f_>& vertex_data_) {
   return Sphere(create_vec3(vertex_data_[sphere_.center_vertex_id]),
-                sphere_.radius, sphere_.material_id,
-                create_vec3(sphere_.motion_blur));
+                sphere_.radius, sphere_.material_id);
 }
 
 Triangle create_triangle(const Parser::Triangle_& triangle_,
@@ -186,12 +187,12 @@ Scene read_scene(std::string filename) {
   }
 
   for (const Parser::Sphere_& sphere_ : parsed_scene.spheres) {
-    auto sphere_obj = std::make_unique<Sphere>(
-        create_sphere(sphere_, parsed_scene.vertex_data));
-
-    glm::mat4 transform = create_transformation_matrix(sphere_.transformations);
-    sphere_obj->set_transform(transform);
-    scene.objects_.push_back(std::move(sphere_obj));
+    Vec3 position = create_vec3(parsed_scene.vertex_data[sphere_.center_vertex_id]);
+    auto geometry = std::make_shared<Sphere>(position, sphere_.radius, sphere_.material_id);
+    auto inst = std::make_unique<Instance>(geometry);
+    inst->set_transform(create_transformation_matrix(sphere_.transformations));
+    inst->set_motion_blur(create_vec3(sphere_.motion_blur));
+    scene.objects_.push_back(std::move(inst));
   }
 
   scene.ambient_light_ =
@@ -208,16 +209,18 @@ Scene read_scene(std::string filename) {
   }
 
   for (const Parser::Triangle_& triangle_ : parsed_scene.triangles) {
-    auto triangle_obj = std::make_unique<Triangle>(
+    auto geometry = std::make_shared<Triangle>(
         create_triangle(triangle_, parsed_scene.vertex_data));
-
-    glm::mat4 transform =
-        create_transformation_matrix(triangle_.transformations);
-    triangle_obj->set_transform(transform);
-    scene.objects_.push_back(std::move(triangle_obj));
+    auto inst = std::make_unique<Instance>(geometry);
+    inst->set_transform(create_transformation_matrix(triangle_.transformations));
+    scene.objects_.push_back(std::move(inst));
   }
 
-  std::unordered_map<int, Mesh*> mesh_map;
+  struct ObjectBase {
+    std::shared_ptr<Hittable> geometry;
+    glm::mat4 composite_transform;
+  };
+  std::unordered_map<int, ObjectBase> object_registry;
 
   for (const Parser::Mesh_& mesh_ : parsed_scene.meshes) {
     std::vector<std::shared_ptr<Triangle>> mesh_faces;
@@ -269,47 +272,40 @@ Scene read_scene(std::string filename) {
       }
     } else {
       for (const Parser::Triangle_& face_ : mesh_.faces) {
-        mesh_faces.push_back(std::make_unique<Triangle>(
+        mesh_faces.push_back(std::make_shared<Triangle>(
             create_triangle(face_, parsed_scene.vertex_data)));
       }
     }
 
-    std::shared_ptr<Mesh> mesh = std::make_unique<Mesh>(
-        mesh_faces, mesh_.material_id, create_vec3(mesh_.motion_blur));
+    auto mesh_geo = std::make_shared<Mesh>(mesh_faces, mesh_.material_id);
+    auto inst = std::make_unique<Instance>(mesh_geo);
+    glm::mat4 m_base = create_transformation_matrix(mesh_.transformations);
+    inst->set_transform(m_base);
+    inst->set_motion_blur(create_vec3(mesh_.motion_blur));
 
-    glm::mat4 transform = create_transformation_matrix(mesh_.transformations);
-    mesh->set_transform(transform);
-    scene.objects_.push_back(std::move(mesh));
-    mesh_map[mesh_.id] = static_cast<Mesh*>(scene.objects_.back().get());
+    object_registry[mesh_.id] = {mesh_geo, m_base};
+    scene.objects_.push_back(std::move(inst));
   }
 
   for (const Parser::MeshInstance_ mi_ : parsed_scene.mesh_instances) {
-    // TODO: Fix ordering issue here. if the base mesh is not defined before
-    // the instance, it will cause error.
-    const Mesh* base_mesh_ = mesh_map[mi_.base_mesh_id];
-    if (base_mesh_ == nullptr) {
-      std::cerr << "Error: Base mesh with ID " << mi_.base_mesh_id
-                << " not found for mesh instance " << mi_.id << std::endl;
+    if (object_registry.find(mi_.base_mesh_id) == object_registry.end()) {
+      LOG_ERROR("Base object ID " << mi_.base_mesh_id << " not found!");
       continue;
     }
-    std::shared_ptr<BVH> blas = base_mesh_->blas_;
-    std::shared_ptr<Mesh> mesh_instance = std::make_shared<Mesh>(
-        blas, mi_.material_id, create_vec3(mi_.motion_blur));
-
-    glm::mat4 transform;
+    const auto& base_info = object_registry[mi_.base_mesh_id];
+    glm::mat4 m_new = create_transformation_matrix(mi_.transformations);
+    glm::mat4 m_final;
     if (mi_.reset_transform) {
-      transform = create_transformation_matrix(mi_.transformations);
+      m_final = m_new;
     } else {
-      glm::mat4 base_transform = base_mesh_->get_transform();
-      std::vector<Transformation_> base_transformations;
-      glm::mat4 instance_transform =
-          create_transformation_matrix(mi_.transformations);
-      transform = instance_transform * base_transform;
+      m_final = m_new * base_info.composite_transform;
     }
+    auto mi_inst = std::make_unique<Instance>(base_info.geometry);
+    mi_inst->set_transform(m_final);
+    mi_inst->set_motion_blur(create_vec3(mi_.motion_blur));
 
-    mesh_instance->set_transform(transform);
-    scene.objects_.push_back(std::move(mesh_instance));
-    mesh_map[mi_.id] = static_cast<Mesh*>(scene.objects_.back().get());
+    object_registry[mi_.id] = {base_info.geometry, m_final};
+    scene.objects_.push_back(std::move(mi_inst));
   }
 
   for (const Parser::Plane_& plane_ : parsed_scene.planes) {
@@ -317,13 +313,13 @@ Scene read_scene(std::string filename) {
         create_vec3(parsed_scene.vertex_data[plane_.point_vertex_id]);
     Vec3 normal = create_vec3(plane_.normal);
 
-    std::shared_ptr plane =
-        std::make_unique<Plane>(point, normal, plane_.material_id);
+    auto plane_geo = std::make_shared<Plane>(point, normal, plane_.material_id);
+    auto plane_inst = std::make_unique<Instance>(plane_geo);
 
     glm::mat4 transform = create_transformation_matrix(plane_.transformations);
-    plane->set_transform(transform);
+    plane_inst->set_transform(transform);
 
-    scene.planes_.push_back(std::move(plane));
+    scene.objects_.push_back(std::move(plane_inst));
   }
 
   scene.build_bvh();

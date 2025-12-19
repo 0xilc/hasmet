@@ -11,10 +11,11 @@ class Triangle : public Hittable {
            int material_id, const Vec3 vertex_normals[3] = nullptr,
            bool smooth_shading = false);
 
-  virtual bool local_intersect(Ray& ray, HitRecord& rec) const override;
+  virtual bool intersect(Ray& ray, HitRecord& rec) const override;
   virtual AABB get_aabb() const override;
 
  private:
+  AABB local_aabb_;
   Vec3 indices_[3];
   Vec3 vertex_normals_[3];
   int material_id_;

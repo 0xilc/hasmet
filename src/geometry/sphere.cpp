@@ -6,15 +6,13 @@
 #include "core/types.h"
 
 namespace hasmet {
-Sphere::Sphere(const Vec3& center, float radius, int material_id, Vec3 motion_blur)
+Sphere::Sphere(const Vec3& center, float radius, int material_id)
     : center_(center), radius_(radius), material_id_(material_id) {
-  motion_blur_ = motion_blur;
-  has_motion_blur_ = true;
-  aabb_ = AABB(center - Vec3(radius, radius, radius),
+  local_aabb_ = AABB(center - Vec3(radius, radius, radius),
                center + Vec3(radius, radius, radius));
 }
 
-bool Sphere::local_intersect(Ray& r, HitRecord& rec) const {
+bool Sphere::intersect(Ray& r, HitRecord& rec) const {
   Vec3 oc = r.origin - center_;
 
   double a = glm::dot(r.direction, r.direction);
@@ -45,5 +43,5 @@ bool Sphere::local_intersect(Ray& r, HitRecord& rec) const {
   return true;
 }
 
-AABB Sphere::get_aabb() const { return aabb_; }
+AABB Sphere::get_aabb() const { return local_aabb_; }
 } // namespace hasmet

@@ -1,0 +1,54 @@
+#pragma once
+#include "hittable.h"
+#include <memory>
+#include <glm/glm.hpp>
+
+namespace hasmet {
+class Instance : public Hittable {
+ public:
+  Instance(std::shared_ptr<Hittable> object) : object_(object) {}
+
+  void set_transform(const glm::mat4& m) {
+    transform_ = m;
+    inv_transform_ = glm::inverse(m);
+    world_aabb_ = object_->get_aabb();
+    world_aabb_.apply_transformation(transform_);
+  }
+
+  void set_motion_blur(const Vec3& v) {
+    if (glm::dot(v, v) > 1e-8f) {
+      motion_blur_ = v;
+      has_motion_blur_ = true;
+    }
+  }
+
+  virtual bool intersect(Ray& ray, HitRecord& rec) const override {
+    Ray local_ray = ray;
+    if (has_motion_blur_) local_ray.origin -= motion_blur_ * ray.time;
+    
+    local_ray.origin = Vec3(inv_transform_ * glm::vec4(local_ray.origin, 1.0f));
+    local_ray.direction = Vec3(inv_transform_ * glm::vec4(local_ray.direction, 0.0f));
+
+    if (!object_->intersect(local_ray, rec)) return false;
+
+    rec.p = Vec3(transform_ * glm::vec4(rec.p, 1.0f));
+    if (has_motion_blur_) rec.p += motion_blur_ * ray.time;
+    
+    glm::mat3 normal_matrix = glm::transpose(glm::mat3(inv_transform_));
+    rec.normal = glm::normalize(normal_matrix * rec.normal);
+    
+    ray.t_max = local_ray.t_max;
+    return true;
+  }
+
+  virtual AABB get_aabb() const override { return world_aabb_; }
+
+ private:
+  std::shared_ptr<Hittable> object_;
+  glm::mat4 transform_{1.0f};
+  glm::mat4 inv_transform_{1.0f};
+  AABB world_aabb_;
+  Vec3 motion_blur_{0.0f};
+  bool has_motion_blur_ = false;
+};
+}

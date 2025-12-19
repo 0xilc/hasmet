@@ -7,10 +7,11 @@ class Plane : public Hittable {
  public:
   Plane(const Vec3& center, const Vec3& normal, int material_id);
 
-  virtual bool local_intersect(Ray& ray, HitRecord& rec) const override;
+  virtual bool intersect(Ray& ray, HitRecord& rec) const override;
   virtual AABB get_aabb() const override;
 
  private:
+  AABB local_aabb_;
   Vec3 center_;
   Vec3 normal_;
   int material_id_;

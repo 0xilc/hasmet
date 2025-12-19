@@ -20,10 +20,10 @@ Triangle::Triangle(const Vec3& p1, const Vec3& p2,
 
   Vec3 min_v = glm::min(glm::min(indices_[0], indices_[1]), indices_[2]);
   Vec3 max_v = glm::max(glm::max(indices_[0], indices_[1]), indices_[2]);
-  aabb_ = AABB(min_v, max_v);
+  local_aabb_ = AABB(min_v, max_v);
 }
 
-bool Triangle::local_intersect(Ray& ray, HitRecord& rec) const {
+bool Triangle::intersect(Ray& ray, HitRecord& rec) const {
   Vec3 edge1 = indices_[1] - indices_[0];
   Vec3 edge2 = indices_[2] - indices_[0];
 
@@ -62,5 +62,5 @@ bool Triangle::local_intersect(Ray& ray, HitRecord& rec) const {
   return false;
 }
 
-AABB Triangle::get_aabb() const { return aabb_; }
+AABB Triangle::get_aabb() const { return local_aabb_; }
 } // namespace hasmet

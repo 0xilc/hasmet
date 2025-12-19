@@ -4,11 +4,10 @@
 namespace hasmet {
 Plane::Plane(const Vec3& center, const Vec3& normal, int material_id)
     : center_(center), normal_(normal), material_id_(material_id) {
-  aabb_ = AABB(Vec3(-INFINITY), Vec3(INFINITY));
-  aabb_.apply_transformation(transform_);
+  local_aabb_ = AABB(Vec3(-INFINITY), Vec3(INFINITY));
 }
 
-bool Plane::local_intersect(Ray& ray, HitRecord& rec) const {
+bool Plane::intersect(Ray& ray, HitRecord& rec) const {
   float denom = glm::dot(normal_, ray.direction);
   if (std::abs(denom) > 1e-6f) {
     Vec3 p0l0 = center_ - ray.origin;
@@ -25,5 +24,5 @@ bool Plane::local_intersect(Ray& ray, HitRecord& rec) const {
   return false;
 }
 
-AABB Plane::get_aabb() const { return aabb_; }
+AABB Plane::get_aabb() const { return local_aabb_; }
 } // namespace hasmet
