@@ -9,7 +9,7 @@
 namespace hasmet {
 class Sphere : public Hittable {
  public:
-  Sphere(const Vec3& center, float radius, int material_id);
+  Sphere(const Vec3& center, float radius);
 
   virtual bool intersect(Ray& r, HitRecord& rec) const override;
   virtual AABB get_aabb() const override;
@@ -18,6 +18,5 @@ class Sphere : public Hittable {
   AABB local_aabb_;
   Vec3 center_;
   float radius_;
-  int material_id_;
 };
 } // namespace hasmet

@@ -5,12 +5,10 @@
 
 namespace hasmet {
 Triangle::Triangle(const Vec3& p1, const Vec3& p2,
-                   const Vec3& p3, int material_id,
-                   const Vec3 vertex_normals[3], bool smooth_shading) {
+                   const Vec3& p3, const Vec3 vertex_normals[3], bool smooth_shading) {
   indices_[0] = p1;
   indices_[1] = p2;
   indices_[2] = p3;
-  material_id_ = material_id;
   smooth_shading_ = smooth_shading;
   if (smooth_shading_) {
     vertex_normals_[0] = vertex_normals[0];
@@ -48,7 +46,6 @@ bool Triangle::intersect(Ray& ray, HitRecord& rec) const {
   if (t > ray.t_min && t < ray.t_max) {
     rec.t = t;
     rec.p = ray.origin + ray.direction * t;
-    rec.material_id = material_id_;
 
     if (smooth_shading_) {
       rec.normal =

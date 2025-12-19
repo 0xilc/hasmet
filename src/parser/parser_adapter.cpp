@@ -59,12 +59,6 @@ Vec3 create_vec3(const Parser::Vec3f_& v_) {
   return Vec3(v_.x, v_.y, v_.z);
 }
 
-Sphere create_sphere(const Parser::Sphere_& sphere_,
-                     const std::vector<Parser::Vec3f_>& vertex_data_) {
-  return Sphere(create_vec3(vertex_data_[sphere_.center_vertex_id]),
-                sphere_.radius, sphere_.material_id);
-}
-
 Triangle create_triangle(const Parser::Triangle_& triangle_,
                          const std::vector<Parser::Vec3f_>& vertex_data_,
                          const Vec3 vertex_normals[3] = nullptr,
@@ -72,7 +66,7 @@ Triangle create_triangle(const Parser::Triangle_& triangle_,
   return Triangle(create_vec3(vertex_data_[triangle_.v0_id]),
                   create_vec3(vertex_data_[triangle_.v1_id]),
                   create_vec3(vertex_data_[triangle_.v2_id]),
-                  triangle_.material_id, vertex_normals, smooth_shading);
+                  vertex_normals, smooth_shading);
 }
 
 PointLight create_point_light(const Parser::PointLight_ light_) {
@@ -188,10 +182,11 @@ Scene read_scene(std::string filename) {
 
   for (const Parser::Sphere_& sphere_ : parsed_scene.spheres) {
     Vec3 position = create_vec3(parsed_scene.vertex_data[sphere_.center_vertex_id]);
-    auto geometry = std::make_shared<Sphere>(position, sphere_.radius, sphere_.material_id);
+    auto geometry = std::make_shared<Sphere>(position, sphere_.radius);
     auto inst = std::make_unique<Instance>(geometry);
     inst->set_transform(create_transformation_matrix(sphere_.transformations));
     inst->set_motion_blur(create_vec3(sphere_.motion_blur));
+    inst->set_material_id(sphere_.material_id);
     scene.objects_.push_back(std::move(inst));
   }
 
@@ -213,6 +208,7 @@ Scene read_scene(std::string filename) {
         create_triangle(triangle_, parsed_scene.vertex_data));
     auto inst = std::make_unique<Instance>(geometry);
     inst->set_transform(create_transformation_matrix(triangle_.transformations));
+    inst->set_material_id(triangle_.material_id);
     scene.objects_.push_back(std::move(inst));
   }
 
@@ -267,7 +263,7 @@ Scene read_scene(std::string filename) {
                                            vertex_normals[triangle_.v2_id]};
 
         mesh_faces.push_back(std::make_shared<Triangle>(
-            indices[0], indices[1], indices[2], triangle_.material_id,
+            indices[0], indices[1], indices[2],
             per_vertex_normals, true));
       }
     } else {
@@ -277,11 +273,12 @@ Scene read_scene(std::string filename) {
       }
     }
 
-    auto mesh_geo = std::make_shared<Mesh>(mesh_faces, mesh_.material_id);
+    auto mesh_geo = std::make_shared<Mesh>(mesh_faces);
     auto inst = std::make_unique<Instance>(mesh_geo);
     glm::mat4 m_base = create_transformation_matrix(mesh_.transformations);
     inst->set_transform(m_base);
     inst->set_motion_blur(create_vec3(mesh_.motion_blur));
+    inst->set_material_id(mesh_.material_id);
 
     object_registry[mesh_.id] = {mesh_geo, m_base};
     scene.objects_.push_back(std::move(inst));
@@ -303,7 +300,7 @@ Scene read_scene(std::string filename) {
     auto mi_inst = std::make_unique<Instance>(base_info.geometry);
     mi_inst->set_transform(m_final);
     mi_inst->set_motion_blur(create_vec3(mi_.motion_blur));
-
+    mi_inst->set_material_id(mi_.material_id);
     object_registry[mi_.id] = {base_info.geometry, m_final};
     scene.objects_.push_back(std::move(mi_inst));
   }
@@ -313,8 +310,9 @@ Scene read_scene(std::string filename) {
         create_vec3(parsed_scene.vertex_data[plane_.point_vertex_id]);
     Vec3 normal = create_vec3(plane_.normal);
 
-    auto plane_geo = std::make_shared<Plane>(point, normal, plane_.material_id);
+    auto plane_geo = std::make_shared<Plane>(point, normal);
     auto plane_inst = std::make_unique<Instance>(plane_geo);
+    plane_inst->set_material_id(plane_.material_id);
 
     glm::mat4 transform = create_transformation_matrix(plane_.transformations);
     plane_inst->set_transform(transform);

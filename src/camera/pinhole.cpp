@@ -67,6 +67,7 @@ std::vector<Ray> PinholeCamera::generateRays(float px, float py) const {
   for (int i = 0; i < num_samples_; i++) {
     Vec3 point_on_plane = pixel_samples[i];
     Vec3 ray_direction = glm::normalize(point_on_plane - position_);
+    
     rays.emplace_back(position_, ray_direction);
   }
 

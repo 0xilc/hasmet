@@ -2,8 +2,8 @@
 #include "core/types.h"
 
 namespace hasmet {
-Plane::Plane(const Vec3& center, const Vec3& normal, int material_id)
-    : center_(center), normal_(normal), material_id_(material_id) {
+Plane::Plane(const Vec3& center, const Vec3& normal)
+    : center_(center), normal_(normal) {
   local_aabb_ = AABB(Vec3(-INFINITY), Vec3(INFINITY));
 }
 
@@ -16,7 +16,6 @@ bool Plane::intersect(Ray& ray, HitRecord& rec) const {
       rec.t = t;
       rec.p = ray.origin + t * ray.direction;
       rec.normal = glm::normalize(normal_);
-      rec.material_id = material_id_;
       return true;
     }
   }

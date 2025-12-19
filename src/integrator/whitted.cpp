@@ -103,6 +103,7 @@ namespace hasmet
         for (int i = 0; i < num_samples; i++)
         {
           Ray &ray = rays[i];
+          ray.time = Sampling::_generate_random_float(0, 1);
           pixel_color += Li(ray, scene, max_depth_, i, num_samples);
         }
 
@@ -291,6 +292,7 @@ namespace hasmet
       // Shadow test
       Ray shadow_ray(rec.p + rec.normal * shadow_ray_epsilon, wi);
       shadow_ray.t_max = distance_to_light - 1e-4f;
+      shadow_ray.time = ray.time;
       if (scene.is_occluded(shadow_ray))
       {
         continue;
@@ -333,6 +335,7 @@ namespace hasmet
       // Shadow test
       Ray area_shadow_ray(rec.p + rec.normal * shadow_ray_epsilon, wi);
       area_shadow_ray.t_max = distance_to_light - shadow_ray_epsilon;
+      area_shadow_ray.time = ray.time;
       if (scene.is_occluded(area_shadow_ray)) continue;
 
       // Attenuation

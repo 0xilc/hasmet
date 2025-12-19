@@ -60,9 +60,9 @@ using namespace hasmet;
 // }
 
 int main() {
- const std::string filename = "dragon_metal";
+ const std::string filename = "dragon_dynamic";
  const std::string input_folder =
-     "/home/ilc/Desktop/hw2/inputs/";
+     "/home/ilc/Desktop/hw3/inputs/";
  const std::string input_filename = input_folder + filename + ".json";
  const std::string output_folder = "/home/ilc/Desktop/whitted/";
  const std::string output_filename = output_folder + filename + ".png";

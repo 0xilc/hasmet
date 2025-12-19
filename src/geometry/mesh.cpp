@@ -4,8 +4,7 @@
 #include "core/types.h"
 
 namespace hasmet {
-Mesh::Mesh(std::vector<std::shared_ptr<Triangle>>& faces, int material_id)
-    : material_id_(material_id) {
+Mesh::Mesh(std::vector<std::shared_ptr<Triangle>>& faces) {
   std::vector<std::shared_ptr<Hittable>> hittable_faces;
   hittable_faces.reserve(faces.size());
 
@@ -19,15 +18,11 @@ Mesh::Mesh(std::vector<std::shared_ptr<Triangle>>& faces, int material_id)
 }
 
 bool Mesh::intersect(Ray& ray, HitRecord& rec) const {
-  if (blas_->intersect(ray, rec)) {
-    rec.material_id = material_id_;
-    return true;
-  }
-  return false;
+  return (blas_->intersect(ray, rec));
 }
 
-Mesh::Mesh(const std::shared_ptr<BVH>& blas, int material_id)
-    : blas_(blas), material_id_(material_id) {
+Mesh::Mesh(const std::shared_ptr<BVH>& blas)
+    : blas_(blas){
   local_aabb_ = blas_->get_root_aabb();  
 }
 

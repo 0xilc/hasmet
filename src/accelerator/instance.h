@@ -8,6 +8,7 @@ class Instance : public Hittable {
  public:
   Instance(std::shared_ptr<Hittable> object) : object_(object) {}
 
+  // TODO: Solve temporal coupling between set_transform and set_motion_blur
   void set_transform(const glm::mat4& m) {
     transform_ = m;
     inv_transform_ = glm::inverse(m);
@@ -19,8 +20,17 @@ class Instance : public Hittable {
     if (glm::dot(v, v) > 1e-8f) {
       motion_blur_ = v;
       has_motion_blur_ = true;
+
+      AABB end_aabb = world_aabb_;
+      glm::mat4 motion_blur_m = glm::translate(glm::mat4(1.0f), v);
+      end_aabb.apply_transformation(motion_blur_m);
+      world_aabb_.expand(end_aabb);
     }
   }
+  
+  void set_material_id(int material_id) {
+    material_id_ = material_id;
+  };
 
   virtual bool intersect(Ray& ray, HitRecord& rec) const override {
     Ray local_ray = ray;
@@ -31,7 +41,9 @@ class Instance : public Hittable {
 
     if (!object_->intersect(local_ray, rec)) return false;
 
-    rec.p = Vec3(transform_ * glm::vec4(rec.p, 1.0f));
+    rec.p = ray.at(rec.t);
+    rec.material_id = material_id_;
+    
     if (has_motion_blur_) rec.p += motion_blur_ * ray.time;
     
     glm::mat3 normal_matrix = glm::transpose(glm::mat3(inv_transform_));
@@ -50,5 +62,6 @@ class Instance : public Hittable {
   AABB world_aabb_;
   Vec3 motion_blur_{0.0f};
   bool has_motion_blur_ = false;
+  int material_id_;
 };
 }

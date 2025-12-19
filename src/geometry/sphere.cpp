@@ -6,8 +6,8 @@
 #include "core/types.h"
 
 namespace hasmet {
-Sphere::Sphere(const Vec3& center, float radius, int material_id)
-    : center_(center), radius_(radius), material_id_(material_id) {
+Sphere::Sphere(const Vec3& center, float radius)
+    : center_(center), radius_(radius) {
   local_aabb_ = AABB(center - Vec3(radius, radius, radius),
                center + Vec3(radius, radius, radius));
 }
@@ -39,7 +39,6 @@ bool Sphere::intersect(Ray& r, HitRecord& rec) const {
   rec.p = r.at(rec.t);
   Vec3 outward_normal = (rec.p - center_) / radius_;
   rec.set_face_normal(r, outward_normal);
-  rec.material_id = material_id_;
   return true;
 }
 
