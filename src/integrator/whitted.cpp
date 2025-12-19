@@ -91,11 +91,11 @@ namespace hasmet
     int height = film.getHeight();
 
 #pragma omp parallel for schedule(dynamic, 10)
-    for (int y = 0; y < height - 1; ++y)
+    for (int y = 0; y < height; ++y)
     {
       for (int x = 0; x < width; ++x)
       {
-        Color pixel_color;
+        Color pixel_color(0.0f);
         std::vector<Ray> rays =
             camera.generateRays(static_cast<float>(x), static_cast<float>(y));
         int num_samples = static_cast<int>(rays.size());
