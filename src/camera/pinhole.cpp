@@ -8,11 +8,11 @@
 #include "core/sampling.h"
 
 namespace hasmet {
-PinholeCamera::PinholeCamera(const Vec3& position,
-                             const Vec3& look_at, const Vec3& up,
-                             float vertical_fov_degrees, int film_width,
-                             int film_height, std::string image_name,
-                             int num_samples, const glm::mat4& transform) {
+PinholeCamera::PinholeCamera(const Vec3& position, const Vec3& look_at,
+                             const Vec3& up, float vertical_fov_degrees,
+                             int film_width, int film_height,
+                             std::string image_name, int num_samples,
+                             const glm::mat4& transform) {
   film_width_ = film_width;
   film_height_ = film_height;
   image_name_ = image_name;
@@ -54,24 +54,14 @@ PinholeCamera::PinholeCamera(const Vec3& position,
       (-2.0f * half_height * v) / static_cast<float>(film_height);
 }
 
-std::vector<Ray> PinholeCamera::generateRays(float px, float py) const {
-  std::vector<Ray> rays;
-  rays.reserve(num_samples_);
+Ray PinholeCamera::generateRay(float px, float py, glm::vec2 u_pixel,
+                               glm::vec2 u_lens) const {
+  Vec3 point_on_plane = top_left_corner_ +
+                        (px + u_pixel.x) * horizontal_spacing_ +
+                        (py + u_pixel.y) * vertical_spacing_;
+  Vec3 direction = glm::normalize(point_on_plane - position_);
 
-  std::vector<Vec3> pixel_samples;
-  pixel_samples.reserve(num_samples_);
-  generate_pixel_samples(px, py, pixel_samples);
-
-  Vec3 e = position_;
-
-  for (int i = 0; i < num_samples_; i++) {
-    Vec3 point_on_plane = pixel_samples[i];
-    Vec3 ray_direction = glm::normalize(point_on_plane - position_);
-    
-    rays.emplace_back(position_, ray_direction);
-  }
-
-  return rays;
+  return Ray(position_, direction);
 }
 
 void PinholeCamera::generate_pixel_samples(int px, int py,
@@ -82,11 +72,11 @@ void PinholeCamera::generate_pixel_samples(int px, int py,
       Sampling::generate_jittered_samples(num_samples_);
 
   for (const auto& [dx, dy] : jittered_samples) {
-    Vec3 sample_point =
-        top_left_corner_ + (static_cast<float>(px) + dx) * horizontal_spacing_ +
-        (static_cast<float>(py) + dy) * vertical_spacing_;
+    Vec3 sample_point = top_left_corner_ +
+                        (static_cast<float>(px) + dx) * horizontal_spacing_ +
+                        (static_cast<float>(py) + dy) * vertical_spacing_;
 
     out.emplace_back(sample_point);
   }
 }
-} // namespace hasmet
+}  // namespace hasmet

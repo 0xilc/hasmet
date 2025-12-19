@@ -15,7 +15,6 @@
 #include "scene/scene.h"
 #include <chrono>
 #include "parser/parser.h"
-#include "integrator/normals.h"
 
 using namespace hasmet;
 

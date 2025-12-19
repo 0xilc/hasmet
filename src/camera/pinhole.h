@@ -9,12 +9,13 @@
 namespace hasmet {
 class PinholeCamera : public Camera {
  public:
-  PinholeCamera(const Vec3& position, const Vec3& look_at,
-                const Vec3& up, float vertical_fov_degrees, int film_width,
-                int film_height, std::string image_name,
-                int num_samples, const glm::mat4& transform = glm::mat4(1.0f));
+  PinholeCamera(const Vec3& position, const Vec3& look_at, const Vec3& up,
+                float vertical_fov_degrees, int film_width, int film_height,
+                std::string image_name, int num_samples,
+                const glm::mat4& transform = glm::mat4(1.0f));
 
-  std::vector<Ray> generateRays(float px, float py) const override;
+  Ray generateRay(float px, float py, glm::vec2 u_pixel,
+                  glm::vec2 u_lens) const override;
 
  private:
   Vec3 position_;
@@ -23,7 +24,6 @@ class PinholeCamera : public Camera {
   Vec3 vertical_spacing_;
 
   // Sampling utils
-  void generate_pixel_samples(int px, int py,
-                              std::vector<Vec3>& out) const;
+  void generate_pixel_samples(int px, int py, std::vector<Vec3>& out) const;
 };
-} // namespace hasmet
+}  // namespace hasmet

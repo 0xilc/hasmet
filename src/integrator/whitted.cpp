@@ -7,6 +7,7 @@
 
 #include "camera/pinhole.h"
 #include "core/logging.h"
+#include "core/sampler.h"
 #include "core/sampling.h"
 #include "core/types.h"
 #include "film/film.h"
@@ -81,26 +82,33 @@ void WhittedIntegrator::render(const Scene &scene, Film &film,
   int width = film.getWidth();
   int height = film.getHeight();
 
-#pragma omp parallel for schedule(dynamic, 10)
-  for (int y = 0; y < height; ++y) {
-    for (int x = 0; x < width; ++x) {
-      Color pixel_color(0.0f);
-      std::vector<Ray> rays =
-          camera.generateRays(static_cast<float>(x), static_cast<float>(y));
-      int num_samples = static_cast<int>(rays.size());
+#pragma omp parallel
+  {
+    Sampler local_sampler;
+    
+    #pragma omp for schedule(dynamic, 10)
+    for (int y = 0; y < height; ++y) {
+      for (int x = 0; x < width; ++x) {
+        Color pixel_color(0.0f);
+        int pixel_id = y * width + x;
 
-      for (int i = 0; i < num_samples; i++) {
-        Ray &ray = rays[i];
-        ray.time = Sampling::_generate_random_float(0, 1);
-        pixel_color += Li(ray, scene, max_depth_, i, num_samples);
+        for (int s = 0; s < camera.num_samples_; s++) {
+          glm::vec2 u_pixel = local_sampler.get_2d(pixel_id, s, 0);
+          glm::vec2 u_lens = local_sampler.get_2d(pixel_id, s, 1);
+          float time_sample = local_sampler.get_1d(pixel_id, s, 2);
+
+          Ray ray = camera.generateRay((float)x, float(y), u_pixel, u_lens);
+          ray.time = time_sample;
+
+          pixel_color += Li(ray, scene, max_depth_, s, camera.num_samples_);
+        }
+
+        film.addSample(x, y,
+                       pixel_color / static_cast<float>(camera.num_samples_));
       }
-
-      pixel_color /= static_cast<float>(num_samples);
-      film.addSample(x, y, pixel_color);
     }
   }
 }
-
 Color WhittedIntegrator::Li(Ray &ray, const Scene &scene, int depth,
                             int sample_index, int num_samples) const {
   if (depth <= 0) return Color(0.0f);

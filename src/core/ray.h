@@ -15,6 +15,8 @@ struct Ray {
   float t_min = 0.001f;
   float t_max = std::numeric_limits<float>::infinity();
 
+  Ray() = default;
+
   Ray(const Vec3& o, const Vec3& d) : origin(o), direction(d) {}
 
   Vec3 at(float t) const { return origin + t * direction; }
