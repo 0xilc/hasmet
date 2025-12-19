@@ -15,19 +15,19 @@ Sphere::Sphere(const Vec3& center, float radius)
 bool Sphere::intersect(Ray& r, HitRecord& rec) const {
   Vec3 oc = r.origin - center_;
 
-  double a = glm::dot(r.direction, r.direction);
-  double half_b = glm::dot(oc, r.direction);
-  double c = glm::dot(oc, oc) - radius_ * radius_;
+  float a = glm::dot(r.direction, r.direction);
+  float half_b = glm::dot(oc, r.direction);
+  float c = glm::dot(oc, oc) - radius_ * radius_;
 
-  double discriminant = half_b * half_b - a * c;
+  float discriminant = half_b * half_b - a * c;
 
   if (discriminant < 0) {
     return false;
   }
 
-  double sqrtd = sqrt(discriminant);
+  float sqrtd = sqrt(discriminant);
 
-  double root = (-half_b - sqrtd) / a;
+  float root = (-half_b - sqrtd) / a;
   if (root < r.t_min || root > r.t_max) {
     root = (-half_b + sqrtd) / a;
     if (root < r.t_min || root > r.t_max) {
@@ -35,7 +35,7 @@ bool Sphere::intersect(Ray& r, HitRecord& rec) const {
     }
   }
 
-  rec.t = static_cast<float>(root);
+  rec.t = root;
   rec.p = r.at(rec.t);
   Vec3 outward_normal = (rec.p - center_) / radius_;
   rec.set_face_normal(r, outward_normal);

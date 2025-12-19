@@ -75,9 +75,9 @@ namespace hasmet
 
       float r1 = Sampling::_generate_random_float(0.0f, 1.0f) - 0.5;
       float r2 = Sampling::_generate_random_float(0.0f, 1.0f) - 0.5;
-
-      ray.direction += (u * r1 + v * r2) * roughness;
-      ray.direction = glm::normalize(ray.direction);
+      
+      Vec3 new_direction = ray.direction + (u * r1 + v * r2) * roughness;
+      ray.direction = glm::normalize(new_direction);
     }
 
   } // namespace

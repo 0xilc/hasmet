@@ -84,12 +84,12 @@ class AABB {
   }
 
   void expand(const Vec3& p) {
-    x.min = std::min(x.min, (double)p.x);
-    x.max = std::max(x.max, (double)p.x);
-    y.min = std::min(y.min, (double)p.y);
-    y.max = std::max(y.max, (double)p.y);
-    z.min = std::min(z.min, (double)p.z);
-    z.max = std::max(z.max, (double)p.z);
+    x.min = std::min(x.min, p.x);
+    x.max = std::max(x.max, p.x);
+    y.min = std::min(y.min, p.y);
+    y.max = std::max(y.max, p.y);
+    z.min = std::min(z.min, p.z);
+    z.max = std::max(z.max, p.z);
   }
 
   void expand(const AABB& other) {
@@ -102,9 +102,9 @@ class AABB {
   }
 
   int longest_axis() const {
-    double dx = x.max - x.min;
-    double dy = y.max - y.min;
-    double dz = z.max - z.min;
+    float dx = x.max - x.min;
+    float dy = y.max - y.min;
+    float dz = z.max - z.min;
 
     if (dx > dy && dx > dz) return 0;
     if (dy > dz) return 1;
