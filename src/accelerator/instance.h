@@ -2,6 +2,7 @@
 #include "hittable.h"
 #include <memory>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace hasmet {
 class Instance : public Hittable {

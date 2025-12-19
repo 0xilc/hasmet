@@ -12,6 +12,7 @@
 #include "geometry/plane.h"
 #include "camera/thinlens.h"
 #include "core/types.h"
+#include "accelerator/instance.h"
 
 namespace hasmet {
 struct RenderConfig{
@@ -28,14 +29,14 @@ class Scene {
   bool intersect(Ray& r, HitRecord& rec) const;
   bool is_occluded(const Ray& r) const;
 
-  void add_shape(std::unique_ptr<Hittable> shape);
+  void add_shape(Instance shape);
   void add_point_light(std::unique_ptr<PointLight> light);
   void add_ambient_light(std::unique_ptr<AmbientLight> light);
   void build_bvh();
 
-  BVH bvh_;
+  BVH<Instance> bvh_;
+  std::vector<Instance> objects_;
   std::vector<std::shared_ptr<Plane>> planes_;
-  std::vector<std::shared_ptr<Hittable>> objects_;
   std::vector<std::unique_ptr<PointLight>> point_lights_;
   std::vector<std::unique_ptr<AreaLight>> area_lights_;
   std::vector<std::unique_ptr<Camera>> cameras_;

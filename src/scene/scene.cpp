@@ -4,7 +4,7 @@
 namespace hasmet {
 Scene::Scene() {}
 
-void Scene::add_shape(std::unique_ptr<Hittable> shape) {
+void Scene::add_shape(Instance shape) {
   objects_.push_back(std::move(shape));
 }
 

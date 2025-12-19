@@ -1,6 +1,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
+#include <memory>
+#include <unordered_map>
 
 #include "camera/pinhole.h"
 #include "camera/thinlens.h"
@@ -16,7 +18,9 @@
 #include "accelerator/instance.h"
 #include "core/logging.h"
 
-namespace hasmet::Parser::ParserAdapter {
+namespace hasmet {
+namespace Parser {
+namespace ParserAdapter {
 
 glm::mat4 create_transformation_matrix(
     const std::vector<Parser::Transformation_>& transforms) {
@@ -183,10 +187,10 @@ Scene read_scene(std::string filename) {
   for (const Parser::Sphere_& sphere_ : parsed_scene.spheres) {
     Vec3 position = create_vec3(parsed_scene.vertex_data[sphere_.center_vertex_id]);
     auto geometry = std::make_shared<Sphere>(position, sphere_.radius);
-    auto inst = std::make_unique<Instance>(geometry);
-    inst->set_transform(create_transformation_matrix(sphere_.transformations));
-    inst->set_motion_blur(create_vec3(sphere_.motion_blur));
-    inst->set_material_id(sphere_.material_id);
+    auto inst = Instance(geometry);
+    inst.set_transform(create_transformation_matrix(sphere_.transformations));
+    inst.set_motion_blur(create_vec3(sphere_.motion_blur));
+    inst.set_material_id(sphere_.material_id);
     scene.objects_.push_back(std::move(inst));
   }
 
@@ -206,10 +210,10 @@ Scene read_scene(std::string filename) {
   for (const Parser::Triangle_& triangle_ : parsed_scene.triangles) {
     auto geometry = std::make_shared<Triangle>(
         create_triangle(triangle_, parsed_scene.vertex_data));
-    auto inst = std::make_unique<Instance>(geometry);
-    inst->set_transform(create_transformation_matrix(triangle_.transformations));
-    inst->set_material_id(triangle_.material_id);
-    scene.objects_.push_back(std::move(inst));
+    auto inst = Instance(geometry);
+    inst.set_transform(create_transformation_matrix(triangle_.transformations));
+    inst.set_material_id(triangle_.material_id);
+    scene.add_shape(std::move(inst));
   }
 
   struct ObjectBase {
@@ -219,7 +223,7 @@ Scene read_scene(std::string filename) {
   std::unordered_map<int, ObjectBase> object_registry;
 
   for (const Parser::Mesh_& mesh_ : parsed_scene.meshes) {
-    std::vector<std::shared_ptr<Triangle>> mesh_faces;
+    std::vector<Triangle> mesh_faces;
     if (mesh_.smooth_shading) {
       std::vector<std::vector<std::pair<Vec3, float>>>
           per_vertex_triangles;
@@ -262,26 +266,25 @@ Scene read_scene(std::string filename) {
                                            vertex_normals[triangle_.v1_id],
                                            vertex_normals[triangle_.v2_id]};
 
-        mesh_faces.push_back(std::make_shared<Triangle>(
+        mesh_faces.push_back(Triangle(
             indices[0], indices[1], indices[2],
             per_vertex_normals, true));
       }
     } else {
       for (const Parser::Triangle_& face_ : mesh_.faces) {
-        mesh_faces.push_back(std::make_shared<Triangle>(
-            create_triangle(face_, parsed_scene.vertex_data)));
+        mesh_faces.push_back(create_triangle(face_, parsed_scene.vertex_data));
       }
     }
 
     auto mesh_geo = std::make_shared<Mesh>(mesh_faces);
-    auto inst = std::make_unique<Instance>(mesh_geo);
+    auto inst = Instance(mesh_geo);
     glm::mat4 m_base = create_transformation_matrix(mesh_.transformations);
-    inst->set_transform(m_base);
-    inst->set_motion_blur(create_vec3(mesh_.motion_blur));
-    inst->set_material_id(mesh_.material_id);
+    inst.set_transform(m_base);
+    inst.set_motion_blur(create_vec3(mesh_.motion_blur));
+    inst.set_material_id(mesh_.material_id);
 
     object_registry[mesh_.id] = {mesh_geo, m_base};
-    scene.objects_.push_back(std::move(inst));
+    scene.add_shape(std::move(inst));
   }
 
   for (const Parser::MeshInstance_ mi_ : parsed_scene.mesh_instances) {
@@ -297,10 +300,10 @@ Scene read_scene(std::string filename) {
     } else {
       m_final = m_new * base_info.composite_transform;
     }
-    auto mi_inst = std::make_unique<Instance>(base_info.geometry);
-    mi_inst->set_transform(m_final);
-    mi_inst->set_motion_blur(create_vec3(mi_.motion_blur));
-    mi_inst->set_material_id(mi_.material_id);
+    auto mi_inst = Instance(base_info.geometry);
+    mi_inst.set_transform(m_final);
+    mi_inst.set_motion_blur(create_vec3(mi_.motion_blur));
+    mi_inst.set_material_id(mi_.material_id);
     object_registry[mi_.id] = {base_info.geometry, m_final};
     scene.objects_.push_back(std::move(mi_inst));
   }
@@ -311,11 +314,11 @@ Scene read_scene(std::string filename) {
     Vec3 normal = create_vec3(plane_.normal);
 
     auto plane_geo = std::make_shared<Plane>(point, normal);
-    auto plane_inst = std::make_unique<Instance>(plane_geo);
-    plane_inst->set_material_id(plane_.material_id);
+    auto plane_inst = Instance(plane_geo);
+    plane_inst.set_material_id(plane_.material_id);
 
     glm::mat4 transform = create_transformation_matrix(plane_.transformations);
-    plane_inst->set_transform(transform);
+    plane_inst.set_transform(transform);
 
     scene.objects_.push_back(std::move(plane_inst));
   }
@@ -324,4 +327,6 @@ Scene read_scene(std::string filename) {
   return scene;
 }
 
-}  // namespace hasmet::Parser::ParserAdapter
+}  // namespace ParserAdapter
+}  // namespace Parser
+}  // namespace hasmet

@@ -8,7 +8,9 @@
 #include "material/material_manager.h"
 #include "core/types.h"
 
-namespace hasmet::Parser::ParserAdapter {
+namespace hasmet {
+namespace Parser {
+namespace ParserAdapter {
 
 Color create_color(const Parser::Vec3f_ v_);
 Sphere create_sphere(const Parser::Sphere_& sphere_,
@@ -19,4 +21,6 @@ PinholeCamera create_pinhole_camera(const Parser::Camera_& camera_);
 Scene read_scene(std::string filename);
 Vec3 create_vec3(const Parser::Vec3f_& v_);
 
-}  // namespace hasmet::Parser::ParserAdapter
+}  // namespace ParserAdapter
+}  // namespace Parser
+}  // namespace hasmet

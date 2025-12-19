@@ -9,14 +9,13 @@
 namespace hasmet {
 class Mesh : public Hittable {
  public:
-  Mesh(std::vector<std::shared_ptr<Triangle>>& faces);
-  Mesh(const std::shared_ptr<BVH>& blas);
+  Mesh(std::vector<Triangle>& faces);
 
   virtual bool intersect(Ray& ray, HitRecord& rec) const override;
   virtual AABB get_aabb() const override;
 
-  std::shared_ptr<BVH> blas_;
-
+  BVH<Triangle> blas_;
+  std::vector<Triangle> faces_;
  private:
   AABB local_aabb_;
 };

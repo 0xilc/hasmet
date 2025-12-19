@@ -4,7 +4,8 @@
 #include <vector>
 #include <ostream>
 
-namespace hasmet::Parser{
+namespace hasmet {
+namespace Parser {
 
 typedef struct Vec3f_ {
     Vec3f_() {};
@@ -152,4 +153,5 @@ inline std::ostream& operator<<(std::ostream& os, const Vec4f_& v) {
 void printSceneSummary(const Scene_& scene);
 void printScene(const Scene_& scene);
 
-}  // namespace hasmet::Parser
+}  // namespace Parser
+}  // namespace hasmet
