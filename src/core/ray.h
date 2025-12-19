@@ -2,9 +2,10 @@
 
 #include <glm/glm.hpp>
 #include <limits>
-#include "interval.h"
+
 #include "core/sampling.h"
 #include "core/types.h"
+#include "interval.h"
 
 namespace hasmet {
 struct Ray {
@@ -18,4 +19,4 @@ struct Ray {
 
   Vec3 at(float t) const { return origin + t * direction; }
 };
-} // namespace hasmet
+}  // namespace hasmet

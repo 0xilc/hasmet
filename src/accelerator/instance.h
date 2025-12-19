@@ -7,7 +7,7 @@
 namespace hasmet {
 class Instance : public Hittable {
  public:
-  Instance(std::shared_ptr<Hittable> object) : object_(object) {}
+  Instance(std::shared_ptr<Hittable> object) : object_(object), material_id_(1) {}
 
   // TODO: Solve temporal coupling between set_transform and set_motion_blur
   void set_transform(const glm::mat4& m) {

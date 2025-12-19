@@ -61,21 +61,32 @@ class AABB {
     z = Interval(new_min.z, new_max.z);
   }
 
-  bool intersect(Ray& ray) const {
-    Interval tmp_interval(ray.t_min, ray.t_max);
-    for (int i = 0; i < 3; i++) {
-      float t0 = (axis(i).min - ray.origin[i]) / ray.direction[i];
-      float t1 = (axis(i).max - ray.origin[i]) / ray.direction[i];
-      if (t0 > t1) std::swap(t0, t1);
+  bool intersect(const Ray& ray) const {
+    Vec3 inv_dir = 1.0f / ray.direction;
+    float t_min = ray.t_min;
+    float t_max = ray.t_max;
 
-      // check whether overlaps
-      if (tmp_interval.min < t0) tmp_interval.min = t0;
-      if (tmp_interval.max > t1) tmp_interval.max = t1;
+    float tx1 = (x.min - ray.origin.x) * inv_dir.x;
+    float tx2 = (x.max - ray.origin.x) * inv_dir.x;
 
-      if (tmp_interval.max <= tmp_interval.min)
-        return false;  // means no overlap between three axices.
-    }
-    return true;
+    t_min = std::max(t_min, std::min(tx1, tx2));
+    t_max = std::min(t_max, std::max(tx1, tx2));
+
+    float ty1 = (y.min - ray.origin.y) * inv_dir.y;
+    float ty2 = (y.max - ray.origin.y) * inv_dir.y;
+
+    t_min = std::max(t_min, std::min(ty1, ty2));
+    t_max = std::min(t_max, std::max(ty1, ty2));
+
+    if (t_min >= t_max) return false;
+
+    float tz1 = (z.min - ray.origin.z) * inv_dir.z;
+    float tz2 = (z.max - ray.origin.z) * inv_dir.z;
+
+    t_min = std::max(t_min, std::min(tz1, tz2));
+    t_max = std::min(t_max, std::max(tz1, tz2));
+
+    return t_min < t_max;
   }
 
   Vec3 centroid() const {
