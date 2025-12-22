@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <unordered_map>
+#include <filesystem>
 
 #include "camera/pinhole.h"
 #include "camera/thinlens.h"
@@ -17,6 +18,9 @@
 #include "core/types.h"
 #include "accelerator/instance.h"
 #include "core/logging.h"
+#include "texture/texture.h"
+#include "texture/texture_manager.h"
+#include "image/image_manager.h"
 
 namespace hasmet
 {
@@ -24,7 +28,6 @@ namespace hasmet
   {
     namespace ParserAdapter
     {
-
       glm::mat4 create_transformation_matrix(
           const std::vector<Parser::Transformation_> &transforms)
       {
@@ -74,6 +77,53 @@ namespace hasmet
       Vec2 create_vec2(const Parser::Vec2f_ &v_)
       {
         return Vec2(v_.x, v_.y);
+      }
+
+      Texture create_texture(const Parser::TextureMap_& tm_) {
+        Texture tex;
+        tex.id = tm_.id;
+
+        std::string type_str = tm_.type;
+        std::transform(type_str.begin(), type_str.end(), type_str.begin(), ::tolower);
+        
+        if (type_str == "image") {
+              tex.type = TextureType::IMAGE;
+              tex.image_id = tm_.image_id;
+        } 
+        else if (type_str == "perlin") {
+            tex.type = TextureType::PERLIN;
+            tex.noise_scale = tm_.noise_scale;
+            tex.noise_conversion = tm_.noise_conversion;
+            tex.num_octaves = tm_.num_octaves;
+        } 
+        else if (type_str == "checkerboard") {
+            tex.type = TextureType::CHECKERBOARD;
+            tex.scale = tm_.scale;
+            tex.offset = tm_.offset;
+            tex.black_color = create_color(tm_.black_color);
+            tex.white_color = create_color(tm_.white_color);
+        }
+        
+        std::string decal_str = tm_.decal_mode;
+        std::transform(decal_str.begin(), decal_str.end(), decal_str.begin(), ::tolower);
+
+        if (decal_str == "replace_kd") tex.decal_mode = DecalMode::REPLACE_KD;
+        else if (decal_str == "replace_ks") tex.decal_mode = DecalMode::REPLACE_KS;
+        else if (decal_str == "replace_background") tex.decal_mode = DecalMode::REPLACE_BACKGROUND;
+        else if (decal_str == "replace_normal") tex.decal_mode = DecalMode::REPLACE_NORMAL;
+        else if (decal_str == "bump_normal") tex.decal_mode = DecalMode::BUMP_NORMAL;
+        else if (decal_str == "blend_kd") tex.decal_mode = DecalMode::BLEND_KD;
+
+        std::string interp_str = tm_.interpolation;
+        std::transform(interp_str.begin(), interp_str.end(), interp_str.begin(), ::tolower);
+
+        if (interp_str == "bilinear") tex.interpolation = InterpolationType::BILINEAR;
+        else tex.interpolation = InterpolationType::NEAREST;
+
+        tex.bump_factor = tm_.bump_factor;
+        tex.normalizer = tm_.normalizer;
+
+        return tex;
       }
 
       Triangle create_triangle(const Parser::Triangle_ &triangle_,
@@ -198,6 +248,22 @@ namespace hasmet
             create_color(parsed_scene.background_color),
             parsed_scene.shadow_ray_epsilon, parsed_scene.intersection_test_epsilon,
             parsed_scene.max_recursion_depth};
+        
+        std::filesystem::path scene_path(filename);
+        std::filesystem::path base_dir = scene_path.parent_path();
+
+        // Read Images
+        ImageManager* image_manager = ImageManager::get_instance();
+        for (const Parser::Image_& img : parsed_scene.images) {
+          std::filesystem::path image_path = base_dir / img.data;
+          image_manager->load_image(img.id, image_path);
+        }
+
+        // Read Textures
+        TextureManager* texture_manager = TextureManager::get_instance();
+        for (const Parser::TextureMap_& tm : parsed_scene.texture_maps) {
+          texture_manager->add(tm.id, create_texture(tm));
+        }
 
         for (const Parser::Camera_ &camera_ : parsed_scene.cameras)
         {
@@ -256,6 +322,7 @@ namespace hasmet
           inst.set_texture_ids(triangle_.texture_ids);
           scene.add_shape(std::move(inst));
         }
+        
         struct ObjectBase
         {
           std::shared_ptr<Hittable> geometry;

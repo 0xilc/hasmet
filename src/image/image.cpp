@@ -1,9 +1,6 @@
 #include "image_manager.h"
 #include "core/logging.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h" 
-
 namespace hasmet {
 
 Image::Image(int width, int height, int channels, unsigned char* data)
