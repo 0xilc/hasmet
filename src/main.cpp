@@ -61,9 +61,9 @@ using namespace hasmet;
 int main() {
  const std::string filename = "dragon_dynamic";
  const std::string input_folder =
-     "C:/Users/akin/Desktop/hw3/inputs/";
+     "/home/ilc/Desktop/hw3/inputs/";
  const std::string input_filename = input_folder + filename + ".json";
- const std::string output_folder = "C:/Users/akin/Desktop/whitted/";
+ const std::string output_folder = "/home/ilc/Desktop/whitted/";
  const std::string output_filename = output_folder + filename + ".png";
 
  LOG_INFO("Reading the scene: " << filename);
