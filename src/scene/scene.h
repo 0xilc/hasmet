@@ -36,7 +36,7 @@ class Scene {
 
   BVH<Instance> bvh_;
   std::vector<Instance> objects_;
-  std::vector<std::shared_ptr<Plane>> planes_;
+  std::vector<Instance> planes_;
   std::vector<std::unique_ptr<PointLight>> point_lights_;
   std::vector<std::unique_ptr<AreaLight>> area_lights_;
   std::vector<std::unique_ptr<Camera>> cameras_;

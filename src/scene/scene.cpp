@@ -25,7 +25,7 @@ bool Scene::intersect(Ray& r, HitRecord& rec) const {
 
   for (const auto& plane : planes_) {
     HitRecord temp_rec;
-    if (plane->intersect(r, temp_rec)) {
+    if (plane.intersect(r, temp_rec)) {
       if (!hit || temp_rec.t < rec.t) {
         hit = true;
         rec = temp_rec;
@@ -43,7 +43,7 @@ bool Scene::is_occluded(const Ray& r) const {
   HitRecord temp_rec;
   Ray shadow_ray = r;
   for (const auto& plane : planes_) {
-    if (plane->intersect(shadow_ray, temp_rec)) return true;
+    if (plane.intersect(shadow_ray, temp_rec)) return true;
   }
 
   return false;

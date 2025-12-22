@@ -320,7 +320,7 @@ Scene read_scene(std::string filename) {
     glm::mat4 transform = create_transformation_matrix(plane_.transformations);
     plane_inst.set_transform(transform);
 
-    scene.objects_.push_back(std::move(plane_inst));
+    scene.planes_.push_back(std::move(plane_inst));
   }
 
   scene.build_bvh();
