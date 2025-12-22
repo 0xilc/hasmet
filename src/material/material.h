@@ -22,4 +22,5 @@ struct Material{
   Color absorption_coefficient{0.0f};
   float absorption_index = 0.0f;
   float refraction_index = 1.0f;
+  float roughness = 0.0f;
 };

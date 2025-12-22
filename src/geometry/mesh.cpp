@@ -1,7 +1,12 @@
 #include "mesh.h"
 
-Mesh::Mesh(std::vector<std::shared_ptr<Triangle>>& faces, int material_id)
+#include <glm/gtc/matrix_transform.hpp>
+
+Mesh::Mesh(std::vector<std::shared_ptr<Triangle>>& faces, int material_id,
+           glm::vec3 motion_blur = glm::vec3(0))
     : material_id_(material_id) {
+  motion_blur_ = motion_blur;
+  has_motion_blur_ = true;
   std::vector<std::shared_ptr<Hittable>> hittable_faces;
   hittable_faces.reserve(faces.size());
 
@@ -12,6 +17,13 @@ Mesh::Mesh(std::vector<std::shared_ptr<Triangle>>& faces, int material_id)
   blas_->build(hittable_faces);
   aabb_ = blas_->get_root_aabb();
   aabb_.apply_transformation(this->transform_);
+
+  AABB tmp = aabb_;
+
+  glm::mat4 translation_matrix = glm::translate(glm::mat4(1.0f), motion_blur_);
+
+  tmp.apply_transformation(translation_matrix);
+  aabb_.expand(tmp);
 }
 
 bool Mesh::local_intersect(Ray& ray, HitRecord& rec) const {
@@ -22,9 +34,18 @@ bool Mesh::local_intersect(Ray& ray, HitRecord& rec) const {
   return false;
 }
 
-Mesh::Mesh(const std::shared_ptr<BVH>& blas, int material_id)
+Mesh::Mesh(const std::shared_ptr<BVH>& blas, int material_id,
+           glm::vec3 motion_blur = glm::vec3(0))
     : blas_(blas), material_id_(material_id) {
+  motion_blur_ = motion_blur;
   aabb_ = blas_->get_root_aabb();
+
+  AABB tmp = aabb_;
+
+  glm::mat4 translation_matrix = glm::translate(glm::mat4(1.0f), motion_blur_);
+
+  tmp.apply_transformation(translation_matrix);
+  aabb_.expand(tmp);
 }
 
 AABB Mesh::get_aabb() const { return aabb_; }

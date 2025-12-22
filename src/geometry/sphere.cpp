@@ -4,8 +4,10 @@
 
 #include <cmath>
 
-Sphere::Sphere(const glm::vec3& center, float radius, int material_id)
+Sphere::Sphere(const glm::vec3& center, float radius, int material_id, glm::vec3 motion_blur)
     : center_(center), radius_(radius), material_id_(material_id) {
+  motion_blur_ = motion_blur;
+  has_motion_blur_ = true;
   aabb_ = AABB(center - glm::vec3(radius, radius, radius),
                center + glm::vec3(radius, radius, radius));
 }

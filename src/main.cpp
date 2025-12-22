@@ -3,6 +3,7 @@
 #include <chrono>
 
 #include "camera/pinhole.h"
+#include "camera/thinlens.h"
 #include "core/logging.h"
 #include "film/film.h"
 #include "geometry/sphere.h"
@@ -15,6 +16,7 @@
 #include <chrono>
 #include "parser/parser.h"
 #include "integrator/normals.h"
+//
 //int main(int argc, char* argv[]) {
 //  if (argc != 2) {
 //    LOG_ERROR("Usage: whitted_renderer <input_json_file>");
@@ -32,7 +34,7 @@
 //    Scene scene = Parser::ParserAdapter::read_scene(scene_path.string());
 //    WhittedIntegrator integrator(scene.render_config_.max_recursion_depth);
 //
-//    for (const std::unique_ptr<PinholeCamera>& camera : scene.cameras_) {
+//    for (const std::unique_ptr<Camera>& camera : scene.cameras_) {
 //      std::string output_name = camera->image_name_;
 //      std::filesystem::path output_path(output_name);
 //
@@ -55,32 +57,23 @@
 //  }
 //}
 
- int main() {
-  /*const std::string filename = "davids_camera_120";
-  const std::string input_folder = "C:/Users/akin/Desktop/hw2/inputs/raven/camera_around_david/";*/
-  /*const std::string filename = "davids_camera_zoom_356";
+int main() {
+  const std::string filename = "wine_glass_scene";
   const std::string input_folder =
-      "C:/Users/akin/Desktop/hw2/inputs/raven/camera_zoom_david/";*/
-
-  //const std::string filename = "davids_070";
-  //const std::string input_folder =
-  //    "C:/Users/akin/Desktop/hw2/inputs/raven/light_around_david/";6.15
-  
-  const std::string filename = "marching_dragons";
-  const std::string input_folder =
-      "/home/ilc/Desktop/hw2/inputs/";
+      "/home/ilc/Desktop/hw3/inputs/ramazan_tokay/";
   const std::string input_filename = input_folder + filename + ".json";
   const std::string output_folder = "/home/ilc/Desktop/whitted/";
   const std::string output_filename = output_folder + filename + ".png";
 
   LOG_INFO("Reading the scene: " << filename);
- /* Parser::Scene_ parser_scene;
-  Parser::parseScene(input_filename, parser_scene);
-  Parser::printScene(parser_scene);*/
+  // Parser::Scene_ parser_scene;
+  // Parser::parseScene(input_filename, parser_scene);
+  // Parser::printScene(parser_scene);
+
   Scene scene = Parser::ParserAdapter::read_scene(input_filename);
   WhittedIntegrator integrator(scene.render_config_.max_recursion_depth);
-  
-  for (const std::unique_ptr<PinholeCamera>& camera : scene.cameras_) {
+
+  for (const std::unique_ptr<Camera>& camera : scene.cameras_) {
     Film image(camera->film_width_, camera->film_height_, output_filename);
     auto start = std::chrono::high_resolution_clock::now();
     integrator.render(scene, image, *camera);

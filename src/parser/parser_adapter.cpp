@@ -3,10 +3,12 @@
 #include <iostream>
 
 #include "camera/pinhole.h"
+#include "camera/thinlens.h"
 #include "geometry/mesh.h"
 #include "geometry/plane.h"
 #include "geometry/sphere.h"
 #include "geometry/triangle.h"
+#include "light/area_light.h"
 #include "material/material_manager.h"
 #include "parser/parser.h"
 #include "scene/scene.h"
@@ -57,7 +59,8 @@ glm::vec3 create_vec3(const Parser::Vec3f_& v_) {
 Sphere create_sphere(const Parser::Sphere_& sphere_,
                      const std::vector<Parser::Vec3f_>& vertex_data_) {
   return Sphere(create_vec3(vertex_data_[sphere_.center_vertex_id]),
-                sphere_.radius, sphere_.material_id);
+                sphere_.radius, sphere_.material_id,
+                create_vec3(sphere_.motion_blur));
 }
 
 Triangle create_triangle(const Parser::Triangle_& triangle_,
@@ -72,9 +75,17 @@ Triangle create_triangle(const Parser::Triangle_& triangle_,
 
 PointLight create_point_light(const Parser::PointLight_ light_) {
   glm::mat4 transform = create_transformation_matrix(light_.transformations);
-  glm::vec3 position = transform * glm::vec4(create_vec3(light_.position), 1.0f);
-  return PointLight{position,
-                    create_color(light_.intensity)};
+  glm::vec3 position =
+      transform * glm::vec4(create_vec3(light_.position), 1.0f);
+  return PointLight{position, create_color(light_.intensity)};
+}
+
+AreaLight create_area_light(const Parser::AreaLight_ light_) {
+  glm::mat4 transform = create_transformation_matrix(light_.transformations);
+  glm::vec3 position =
+      transform * glm::vec4(create_vec3(light_.position), 1.0f);
+  return AreaLight{position, create_vec3(light_.normal), light_.size,
+                   create_color(light_.radiance)};
 }
 
 Material create_material(const Parser::Material_& material_) {
@@ -100,6 +111,7 @@ Material create_material(const Parser::Material_& material_) {
   mat.absorption_index = material_.absorption_index;
   mat.phong_exponent = material_.phong_exponent;
   mat.refraction_index = material_.refraction_index;
+  mat.roughness = material_.roughness;
 
   return mat;
 }
@@ -123,7 +135,28 @@ PinholeCamera create_pinhole_camera(const Parser::Camera_& camera_) {
   glm::mat4 transform = create_transformation_matrix(camera_.transformations);
   return PinholeCamera(position, look_at, up, vertical_fov_degrees,
                        camera_.image_width, camera_.image_height,
-                       camera_.image_name, transform);
+                       camera_.image_name, camera_.num_samples, transform);
+}
+
+ThinLensCamera create_thinlens_camera(const Parser::Camera_& camera_) {
+  glm::vec3 position(camera_.position.x, camera_.position.y,
+                     camera_.position.z);
+  glm::vec3 gaze(camera_.gaze.x, camera_.gaze.y, camera_.gaze.z);
+  glm::vec3 up(camera_.up.x, camera_.up.y, camera_.up.z);
+  glm::vec3 look_at = position + gaze;
+
+  float top = camera_.near_plane.t;
+  float bottom = camera_.near_plane.b;
+  float vertical_fov_radians =
+      2.0f * atan((top - bottom) * 0.5f / camera_.near_distance);
+  float vertical_fov_degrees = glm::degrees(vertical_fov_radians);
+
+  glm::mat4 transform = create_transformation_matrix(camera_.transformations);
+
+  return ThinLensCamera(position, look_at, up, vertical_fov_degrees,
+                        camera_.image_width, camera_.image_height,
+                        camera_.image_name, transform, camera_.num_samples,
+                        camera_.aperture_size, camera_.focus_distance);
 }
 
 Scene read_scene(std::string filename) {
@@ -137,8 +170,13 @@ Scene read_scene(std::string filename) {
       parsed_scene.max_recursion_depth};
 
   for (const Parser::Camera_& camera_ : parsed_scene.cameras) {
-    scene.cameras_.push_back(
-        std::make_unique<PinholeCamera>(create_pinhole_camera(camera_)));
+    if (camera_.aperture_size > 0){
+      scene.cameras_.push_back(
+          std::make_unique<ThinLensCamera>(create_thinlens_camera(camera_)));
+    } else {
+      scene.cameras_.push_back(
+          std::make_unique<PinholeCamera>(create_pinhole_camera(camera_)));
+    }
   }
 
   MaterialManager* material_manager = MaterialManager::get_instance();
@@ -155,13 +193,18 @@ Scene read_scene(std::string filename) {
     scene.objects_.push_back(std::move(sphere_obj));
   }
 
+  scene.ambient_light_ =
+      std::make_unique<AmbientLight>(create_color(parsed_scene.ambient_light));
+
   for (const Parser::PointLight_& light_ : parsed_scene.point_lights) {
     scene.point_lights_.push_back(
         std::make_unique<PointLight>(create_point_light(light_)));
   }
 
-  scene.ambient_light_ =
-      std::make_unique<AmbientLight>(create_color(parsed_scene.ambient_light));
+  for (const Parser::AreaLight_& light_ : parsed_scene.area_lights) {
+    scene.area_lights_.push_back(
+        std::make_unique<AreaLight>(create_area_light(light_)));
+  }
 
   for (const Parser::Triangle_& triangle_ : parsed_scene.triangles) {
     auto triangle_obj = std::make_unique<Triangle>(
@@ -230,8 +273,8 @@ Scene read_scene(std::string filename) {
       }
     }
 
-    std::shared_ptr<Mesh> mesh =
-        std::make_unique<Mesh>(mesh_faces, mesh_.material_id);
+    std::shared_ptr<Mesh> mesh = std::make_unique<Mesh>(
+        mesh_faces, mesh_.material_id, create_vec3(mesh_.motion_blur));
 
     glm::mat4 transform = create_transformation_matrix(mesh_.transformations);
     mesh->set_transform(transform);
@@ -249,8 +292,8 @@ Scene read_scene(std::string filename) {
       continue;
     }
     std::shared_ptr<BVH> blas = base_mesh_->blas_;
-    std::shared_ptr<Mesh> mesh_instance =
-        std::make_shared<Mesh>(blas, mi_.material_id);
+    std::shared_ptr<Mesh> mesh_instance = std::make_shared<Mesh>(
+        blas, mi_.material_id, create_vec3(mi_.motion_blur));
 
     glm::mat4 transform;
     if (mi_.reset_transform) {
@@ -275,7 +318,7 @@ Scene read_scene(std::string filename) {
 
     std::shared_ptr plane =
         std::make_unique<Plane>(point, normal, plane_.material_id);
-    
+
     glm::mat4 transform = create_transformation_matrix(plane_.transformations);
     plane->set_transform(transform);
 
