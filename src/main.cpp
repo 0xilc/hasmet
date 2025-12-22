@@ -59,17 +59,19 @@ using namespace hasmet;
 // }
 
 int main() {
- const std::string filename = "dragon_dynamic";
+ const std::string filename = "cube_wall";
  const std::string input_folder =
-     "/home/ilc/Desktop/hw3/inputs/";
+     "/home/ilc/Desktop/hw4/inputs/";
  const std::string input_filename = input_folder + filename + ".json";
  const std::string output_folder = "/home/ilc/Desktop/whitted/";
  const std::string output_filename = output_folder + filename + ".png";
 
  LOG_INFO("Reading the scene: " << filename);
- //Parser::Scene_ parser_scene;
- //Parser::parseScene(input_filename, parser_scene);
- //Parser::printScene(parser_scene);
+ Parser::Scene_ parser_scene;
+ Parser::parseScene(input_filename, parser_scene);
+ Parser::printScene(parser_scene);
+ return 0;
+ 
  auto start = std::chrono::high_resolution_clock::now();
  Scene scene = Parser::ParserAdapter::read_scene(input_filename);
  WhittedIntegrator integrator(scene.render_config_.max_recursion_depth);

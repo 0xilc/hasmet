@@ -7,6 +7,13 @@
 namespace hasmet {
 namespace Parser {
 
+typedef struct Vec2f_ {
+    Vec2f_() : x(0), y(0) {}
+    Vec2f_(float x, float y) : x(x), y(y) {}
+    float x, y;
+} Vec2f_;
+
+
 typedef struct Vec3f_ {
     Vec3f_() {};
     Vec3f_(float x, float y, float z) : x(x), y(y), z(z) {};
@@ -25,9 +32,9 @@ enum TransformationType {
 };
 
 typedef struct Transformation_ {
-  std::string id;
-  TransformationType type;
-  std::vector<float> data;
+    std::string id;
+    TransformationType type;
+    std::vector<float> data;
 } Transformation_;
 
 typedef struct Camera_ {
@@ -76,19 +83,49 @@ typedef struct Material_ {
     float roughness;
 } Material_;
 
+struct Image_ {
+    int id;
+    std::string data;
+};
+
+struct TextureMap_ {
+    int id;
+    std::string type;
+    int image_id;
+    std::string decal_mode;
+    std::string interpolation;
+    float bump_factor;
+
+    // Perlin noise params
+    float noise_scale;
+    float noise_conversion;
+    float num_octaves;
+
+    // Checkerboard params
+    float scale;
+    float offset;
+    Vec3f_ black_color;
+    Vec3f_ white_color;
+
+    float normalizer; // Default: 255.0f
+};
+
+
 typedef struct Triangle_ {
     int material_id;
     int v0_id, v1_id, v2_id;
     std::vector<Transformation_> transformations;
+    std::vector<int> texture_ids;
 } Triangle_;
 
 typedef struct Mesh_ {
     int id;
     int material_id;
-    std::vector<Triangle_> faces;
     bool smooth_shading;
+    std::vector<Triangle_> faces;
     std::vector<Transformation_> transformations;
     Vec3f_ motion_blur;
+    std::vector<int> texture_ids;
 } Mesh_;
 
 typedef struct MeshInstance_ {
@@ -98,6 +135,7 @@ typedef struct MeshInstance_ {
     bool reset_transform;
     std::vector<Transformation_> transformations;
     Vec3f_ motion_blur;
+    std::vector<int> texture_ids;
 } MeshInstance_;
 
 typedef struct Sphere_ {
@@ -107,6 +145,7 @@ typedef struct Sphere_ {
     float radius;
     std::vector<Transformation_> transformations;
     Vec3f_ motion_blur;
+    std::vector<int> texture_ids;
 } Sphere_;
 
 typedef struct Plane_ {
@@ -115,19 +154,23 @@ typedef struct Plane_ {
     int point_vertex_id;
     Vec3f_ normal;
     std::vector<Transformation_> transformations;
+    std::vector<int> texture_ids;
 } Plane_;
 
 typedef struct Scene_ {
     Vec3f_ background_color;
     float shadow_ray_epsilon;
     float intersection_test_epsilon;
-    int max_recursion_depth;         
+    int max_recursion_depth;
     std::vector<Camera_> cameras;
     Vec3f_ ambient_light;
     std::vector<PointLight_> point_lights;
     std::vector<AreaLight_> area_lights;
     std::vector<Material_> materials;
     std::vector<Vec3f_> vertex_data;
+    std::vector<Vec2f_> tex_coord_data;
+    std::vector<Image_> images;
+    std::vector<TextureMap_> texture_maps;
     std::vector<Mesh_> meshes;
     std::vector<MeshInstance_> mesh_instances;
     std::vector<Triangle_> triangles;
@@ -137,7 +180,6 @@ typedef struct Scene_ {
 } Scene_;
 
 // --- Function Declaration ---
-
 void parseScene(const std::string& filename, Scene_& scene);
 
 inline std::ostream& operator<<(std::ostream& os, const Vec3f_& v) {
