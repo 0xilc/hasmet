@@ -1,0 +1,47 @@
+#pragma once
+
+#include "core/types.h"
+
+namespace hasmet {
+enum class TextureType {
+	IMAGE,
+	PERLIN,
+	CHECKERBOARD
+};
+
+enum class DecalMode {
+    REPLACE_KD,
+    REPLACE_KS,
+    REPLACE_BACKGROUND,
+    REPLACE_NORMAL,
+    BUMP_NORMAL,
+    BLEND_KD
+};
+
+enum class InterpolationType {
+    NEAREST,
+    BILINEAR
+};
+
+struct Texture{
+    int id;
+    TextureType type = TextureType::IMAGE;
+    DecalMode decal_mode = DecalMode::REPLACE_KD;
+    InterpolationType interpolation = InterpolationType::BILINEAR;
+
+    int image_id = -1;
+    float normalizer = 255.0f;
+
+    float bump_factor = 1.0f;
+    float noise_scale = 1.0f;
+    float noise_conversion = 0.0f;
+    float num_octaves = 1.0f;
+
+    float scale = 1.0f;
+    float offset = 0.0f;
+    Color black_color{0.0f};
+    Color white_color{1.0f};
+
+    Texture() = default;
+};
+} // namespace hasmet
