@@ -3,6 +3,7 @@
 #include <memory>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 
 namespace hasmet {
 class Instance : public Hittable {
@@ -32,6 +33,10 @@ class Instance : public Hittable {
   void set_material_id(int material_id) {
     material_id_ = material_id;
   };
+
+  void set_texture_ids(const std::vector<int>& texture_ids) {
+    texture_ids_ = texture_ids;
+  }
 
   virtual bool intersect(Ray& ray, HitRecord& rec) const override {
     Ray local_ray = ray;
@@ -64,5 +69,6 @@ class Instance : public Hittable {
   Vec3 motion_blur_{0.0f};
   bool has_motion_blur_ = false;
   int material_id_;
+  std::vector<int> texture_ids_;
 };
 }

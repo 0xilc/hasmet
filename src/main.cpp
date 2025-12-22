@@ -59,9 +59,9 @@ using namespace hasmet;
 // }
 
 int main() {
- const std::string filename = "cube_wall";
+ const std::string filename = "dragon_metal";
  const std::string input_folder =
-     "/home/ilc/Desktop/hw4/inputs/";
+     "/home/ilc/Desktop/hw2/inputs/";
  const std::string input_filename = input_folder + filename + ".json";
  const std::string output_folder = "/home/ilc/Desktop/whitted/";
  const std::string output_filename = output_folder + filename + ".png";
@@ -70,7 +70,6 @@ int main() {
  Parser::Scene_ parser_scene;
  Parser::parseScene(input_filename, parser_scene);
  Parser::printScene(parser_scene);
- return 0;
  
  auto start = std::chrono::high_resolution_clock::now();
  Scene scene = Parser::ParserAdapter::read_scene(input_filename);
