@@ -16,9 +16,12 @@ Triangle::Triangle(const Vec3 vertices[3], const Vec3 vertex_normals[3], const V
   }
 
   if (tex_coords) {
+    has_uvs_ = true;
     tex_coords_[0] = tex_coords[0];
     tex_coords_[1] = tex_coords[1];
     tex_coords_[2] = tex_coords[2];
+  } else {
+    has_uvs_ = false;
   }
 
   Vec3 min_v = glm::min(glm::min(vertices_[0], vertices_[1]), vertices_[2]);
@@ -33,10 +36,11 @@ bool Triangle::intersect(Ray& ray, HitRecord& rec) const {
   Vec3 h = glm::cross(ray.direction, edge2);
   float a = glm::dot(edge1, h);
 
-  if (a == 0) return false;
+  if (a > -1e-8 && a < 1e-8) return false;
 
   float f = 1.0f / a;
   Vec3 s = ray.origin - vertices_[0];
+  
   float u = f * glm::dot(s, h);
 
   if (u < 0.0f || u > 1.0f) return false;
@@ -59,6 +63,14 @@ bool Triangle::intersect(Ray& ray, HitRecord& rec) const {
     } else {
       rec.normal = glm::normalize(glm::cross(edge1, edge2));
     }
+
+    if (has_uvs_) {
+      rec.uv = (1.0f - u - v) * tex_coords_[0] +
+                u * tex_coords_[1] + v * tex_coords_[2];
+    } else {
+      rec.uv = Vec2(0.0f, 0.0f);
+    }
+
     return true;
   }
   return false;

@@ -20,6 +20,7 @@ class Triangle : public Hittable {
   Vec3 vertices_[3];
   Vec3 vertex_normals_[3];
   Vec2 tex_coords_[3];
-  bool smooth_shading_;
+  bool smooth_shading_ = false;
+  bool has_uvs_ = false;
 };
 } // namespace hasmet 
