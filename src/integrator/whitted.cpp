@@ -85,7 +85,7 @@ void WhittedIntegrator::render(const Scene &scene, Film &film,
 #pragma omp parallel
   {
     Sampler local_sampler;
-    
+
     #pragma omp for schedule(dynamic, 10)
     for (int y = 0; y < height; ++y) {
       for (int x = 0; x < width; ++x) {
@@ -263,6 +263,7 @@ Color WhittedIntegrator::calculate_blinn_phong(const Ray &ray,
                                                const Scene &scene, int depth,
                                                int sample_index,
                                                int num_samples) const {
+  int num_samples_sqrt = static_cast<int>(glm::sqrt(num_samples));
   Color color(0.0f);
   MaterialManager *material_manager = MaterialManager::get_instance();
   const Material &material = material_manager->get(rec.material_id);
@@ -281,7 +282,8 @@ Color WhittedIntegrator::calculate_blinn_phong(const Ray &ray,
     Ray shadow_ray(rec.p + rec.normal * shadow_ray_epsilon, wi);
     shadow_ray.t_max = distance_to_light - 1e-4f;
     shadow_ray.time = ray.time;
-    if (scene.is_occluded(shadow_ray)) {
+
+    if (glm::dot(rec.normal, wi) < 0.0f || scene.is_occluded(shadow_ray)) {
       continue;
     }
 
@@ -300,19 +302,18 @@ Color WhittedIntegrator::calculate_blinn_phong(const Ray &ray,
   }
 
   // Area Lights
+  
   for (const auto &light : scene.area_lights_) {
-    int n = static_cast<int>(std::sqrt(num_samples));
-    if (n < 1) n = 1;
 
-    int ix = sample_index % n;
-    int iy = sample_index / n;
+    int ix = sample_index % num_samples_sqrt;
+    int iy = sample_index / num_samples_sqrt;
 
     float r1 =
         (static_cast<float>(ix) + Sampling::_generate_random_float(0, 1)) /
-        static_cast<float>(n);
+        static_cast<float>(num_samples_sqrt);
     float r2 =
         (static_cast<float>(iy) + Sampling::_generate_random_float(0, 1)) /
-        static_cast<float>(n);
+        static_cast<float>(num_samples_sqrt);
 
     Vec3 sampled_light_point =
         light->position +
@@ -327,7 +328,9 @@ Color WhittedIntegrator::calculate_blinn_phong(const Ray &ray,
     Ray area_shadow_ray(rec.p + rec.normal * shadow_ray_epsilon, wi);
     area_shadow_ray.t_max = distance_to_light - shadow_ray_epsilon;
     area_shadow_ray.time = ray.time;
-    if (scene.is_occluded(area_shadow_ray)) continue;
+
+    if (glm::dot(rec.normal, wi) < 0.0f || scene.is_occluded(area_shadow_ray))
+      continue;
 
     // Attenuation
     float area_of_light = light->size * light->size;
