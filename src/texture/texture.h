@@ -43,5 +43,7 @@ struct Texture{
     Color white_color{1.0f};
 
     Texture() = default;
+
+    Color evaluate(const Vec2& uv, const Vec3& p) const;
 };
 } // namespace hasmet
