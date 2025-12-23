@@ -7,7 +7,8 @@ enum class MaterialType{
 	BlinnPhong,
 	Mirror,
 	Conductor,
-	Dielectric
+	Dielectric,
+  TextureColor
 };
 
 struct Material{

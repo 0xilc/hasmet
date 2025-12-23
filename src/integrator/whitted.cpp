@@ -68,9 +68,8 @@ Material apply_textures(const Material& base_mat, const HitRecord& rec) {
         break;
       
       case DecalMode::REPLACE_ALL:
-        mat.diffuse_reflectance = tex_color;
-        mat.ambient_reflectance = Color(0.0f);
-        mat.specular_reflectance = Color(0.0f);
+        mat.diffuse_reflectance = tex_color * 255.0f;
+        mat.type = MaterialType::TextureColor;
         break;
     }
   }
@@ -256,7 +255,6 @@ Color WhittedIntegrator::Li(Ray &ray, const Scene &scene, int depth,
       final_color += L0;
       break;
     }
-
     case MaterialType::Conductor: {
       Vec3 wo = glm::normalize(ray.origin - rec.p);
       Vec3 wr = glm::normalize(glm::reflect(-wo, rec.normal));
@@ -285,11 +283,13 @@ Color WhittedIntegrator::Li(Ray &ray, const Scene &scene, int depth,
           mat.mirror_reflectance;
       break;
     }
-
     case MaterialType::BlinnPhong: {
       final_color += calculate_blinn_phong(ray, rec, mat, scene, depth, sample_index,
                                            num_samples);
       break;
+    }
+    case MaterialType::TextureColor: {
+      final_color = mat.diffuse_reflectance;
     }
 
     default:

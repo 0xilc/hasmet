@@ -46,7 +46,7 @@ struct Texture{
     float scale = 1.0f;
     float offset = 0.0f;
     Color black_color{0.0f};
-    Color white_color{1.0f};
+    Color white_color{255.0f};
 
     Texture() = default;
 
