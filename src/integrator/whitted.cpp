@@ -131,6 +131,12 @@ void WhittedIntegrator::render(const Scene &scene, Film &film,
           glm::vec2 u_pixel = local_sampler.get_2d(pixel_id, s, 0);
           glm::vec2 u_lens = local_sampler.get_2d(pixel_id, s, 1);
           float time_sample = local_sampler.get_1d(pixel_id, s, 2);
+          
+          #define CENTER_RAY 1
+          #if CENTER_RAY
+          u_pixel = Vec2(0.f);
+          u_lens = Vec2(0.f);
+          #endif
 
           Ray ray = camera.generateRay((float)x, float(y), u_pixel, u_lens);
           ray.time = time_sample;
