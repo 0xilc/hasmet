@@ -93,7 +93,11 @@ namespace hasmet
         else if (type_str == "perlin") {
             tex.type = TextureType::PERLIN;
             tex.noise_scale = tm_.noise_scale;
-            tex.noise_conversion = tm_.noise_conversion;
+            if (tm_.noise_conversion == "absval") {
+              tex.noise_conversion = NoiseConversionType::ABSVAL;
+            } else {
+              tex.noise_conversion = NoiseConversionType::LINEAR;
+            }
             tex.num_octaves = tm_.num_octaves;
         } 
         else if (type_str == "checkerboard") {

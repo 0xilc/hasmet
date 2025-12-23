@@ -897,7 +897,7 @@ namespace hasmet
             if (j.contains("NoiseScale"))
               tm.noise_scale = std::stof(j["NoiseScale"].get<std::string>());
             if (j.contains("NoiseConversion"))
-              tm.noise_conversion = std::stof(j["NoiseConversion"].get<std::string>());
+              tm.noise_conversion = j["NoiseConversion"].get<std::string>();
             if (j.contains("NumOctaves"))
               tm.num_octaves = std::stof(j["NumOctaves"].get<std::string>());
 

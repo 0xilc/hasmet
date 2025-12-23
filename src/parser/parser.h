@@ -98,7 +98,7 @@ struct TextureMap_ {
 
     // Perlin noise params
     float noise_scale;
-    float noise_conversion;
+    std::string noise_conversion;
     float num_octaves;
 
     // Checkerboard params

@@ -24,6 +24,11 @@ enum class InterpolationType {
     BILINEAR
 };
 
+enum class NoiseConversionType {
+    LINEAR,
+    ABSVAL
+};
+
 struct Texture{
     int id;
     TextureType type = TextureType::IMAGE;
@@ -35,7 +40,7 @@ struct Texture{
 
     float bump_factor = 1.0f;
     float noise_scale = 1.0f;
-    float noise_conversion = 0.0f;
+    NoiseConversionType noise_conversion = NoiseConversionType::LINEAR;
     float num_octaves = 1.0f;
 
     float scale = 1.0f;
