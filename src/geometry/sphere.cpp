@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include "core/types.h"
+#include <glm/gtc/constants.hpp>
 
 namespace hasmet {
 Sphere::Sphere(const Vec3& center, float radius)
@@ -39,6 +40,18 @@ bool Sphere::intersect(Ray& r, HitRecord& rec) const {
   rec.p = r.at(rec.t);
   Vec3 outward_normal = (rec.p - center_) / radius_;
   rec.set_face_normal(r, outward_normal);
+
+  Vec3 local_p = (rec.p - center_) / radius_;
+  float phi = std::atan2(local_p.z, local_p.x);
+  float theta = std::acos(local_p.y);
+
+  float u = (-phi + glm::pi<float>()) / (2.0f * glm::pi<float>());
+  float v = theta / glm::pi<float>();
+
+  Vec3 t_vec = Vec3(-local_p.z, 0.0f, local_p.x);
+  rec.tangent = glm::normalize(t_vec);
+  
+  rec.uv = Vec2(u, v);
   return true;
 }
 
