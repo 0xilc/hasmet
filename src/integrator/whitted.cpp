@@ -13,6 +13,7 @@
 #include "film/film.h"
 #include "material/material.h"
 #include "material/material_manager.h"
+#include "texture/texture_manager.h"
 #include "scene/scene.h"
 
 namespace hasmet {
@@ -42,6 +43,41 @@ inline float fresnel_conductor(float cos_theta, float n, float k) {
 }  // namespace
 
 namespace {
+Material apply_textures(const Material& base_mat, const HitRecord& rec) {
+  if (rec.texture_ids == nullptr || rec.texture_ids->empty()){
+    return base_mat;
+  }
+
+  Material mat = base_mat;
+  TextureManager* tm = TextureManager::get_instance();
+
+  for (int tid : *rec.texture_ids) {
+    const Texture& tex = tm->get(tid);
+    Color tex_color = tex.evaluate(rec.uv, rec.p);
+    switch (tex.decal_mode) {
+      case DecalMode::REPLACE_KD:
+        mat.diffuse_reflectance = tex_color;
+        break;
+      
+      case DecalMode::BLEND_KD:
+        mat.diffuse_reflectance = (mat.diffuse_reflectance + tex_color) * 0.5f;
+        break;
+      
+      case DecalMode::REPLACE_KS:
+        mat.specular_reflectance = tex_color;
+        break;
+      
+      case DecalMode::REPLACE_ALL:
+        mat.diffuse_reflectance = tex_color;
+        mat.ambient_reflectance = Color(0.0f);
+        mat.specular_reflectance = Color(0.0f);
+        break;
+    }
+  }
+
+  return mat;
+}
+
 void generate_area_light_samples(const AreaLight &light, int num_samples,
                                  std::vector<Vec3> &out) {
   out.clear();
@@ -109,6 +145,7 @@ void WhittedIntegrator::render(const Scene &scene, Film &film,
     }
   }
 }
+
 Color WhittedIntegrator::Li(Ray &ray, const Scene &scene, int depth,
                             int sample_index, int num_samples) const {
   if (depth <= 0) return Color(0.0f);
@@ -117,7 +154,11 @@ Color WhittedIntegrator::Li(Ray &ray, const Scene &scene, int depth,
   if (!scene.intersect(ray, rec)) return scene.render_config_.background_color;
 
   MaterialManager *material_manager = MaterialManager::get_instance();
-  const Material &mat = material_manager->get(rec.material_id);
+  const Material &base_mat = material_manager->get(rec.material_id);
+
+  Material mat = apply_textures(base_mat, rec);
+
+  
   Color final_color(0.0f);
 
   float intersection_test_epsilon =
@@ -125,7 +166,7 @@ Color WhittedIntegrator::Li(Ray &ray, const Scene &scene, int depth,
 
   switch (mat.type) {
     case MaterialType::Mirror: {
-      final_color += calculate_blinn_phong(ray, rec, scene, depth, sample_index,
+      final_color += calculate_blinn_phong(ray, rec, mat, scene, depth, sample_index,
                                            num_samples);
       Vec3 wo = glm::normalize(ray.origin - rec.p);
       Vec3 wr = glm::normalize(glm::reflect(-wo, rec.normal));
@@ -160,7 +201,7 @@ Color WhittedIntegrator::Li(Ray &ray, const Scene &scene, int depth,
       Color refract_color(0.0f);
 
       if (entering) {
-        final_color += calculate_blinn_phong(ray, rec, scene, depth,
+        final_color += calculate_blinn_phong(ray, rec, mat, scene, depth,
                                              sample_index, num_samples);
       }
 
@@ -236,7 +277,7 @@ Color WhittedIntegrator::Li(Ray &ray, const Scene &scene, int depth,
       float k = mat.absorption_index;
       float n = mat.refraction_index;
       float Fr = fresnel_conductor(cos_theta, n, k);
-      final_color += calculate_blinn_phong(ray, rec, scene, depth, sample_index,
+      final_color += calculate_blinn_phong(ray, rec, mat, scene, depth, sample_index,
                                            num_samples);
 
       final_color +=
@@ -246,7 +287,7 @@ Color WhittedIntegrator::Li(Ray &ray, const Scene &scene, int depth,
     }
 
     case MaterialType::BlinnPhong: {
-      final_color += calculate_blinn_phong(ray, rec, scene, depth, sample_index,
+      final_color += calculate_blinn_phong(ray, rec, mat, scene, depth, sample_index,
                                            num_samples);
       break;
     }
@@ -260,13 +301,12 @@ Color WhittedIntegrator::Li(Ray &ray, const Scene &scene, int depth,
 
 Color WhittedIntegrator::calculate_blinn_phong(const Ray &ray,
                                                const HitRecord &rec,
+                                               const Material& material,
                                                const Scene &scene, int depth,
                                                int sample_index,
                                                int num_samples) const {
   int num_samples_sqrt = static_cast<int>(glm::sqrt(num_samples));
   Color color(0.0f);
-  MaterialManager *material_manager = MaterialManager::get_instance();
-  const Material &material = material_manager->get(rec.material_id);
   float shadow_ray_epsilon = scene.render_config_.shadow_ray_epsilon;
 
   // Add ambient light
@@ -302,7 +342,6 @@ Color WhittedIntegrator::calculate_blinn_phong(const Ray &ray,
   }
 
   // Area Lights
-  
   for (const auto &light : scene.area_lights_) {
 
     int ix = sample_index % num_samples_sqrt;

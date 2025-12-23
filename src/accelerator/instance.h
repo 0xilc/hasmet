@@ -49,6 +49,7 @@ class Instance : public Hittable {
 
     rec.p = ray.at(rec.t);
     rec.material_id = material_id_;
+    rec.texture_ids = &this->texture_ids_;
     
     if (has_motion_blur_) rec.p += motion_blur_ * ray.time;
     

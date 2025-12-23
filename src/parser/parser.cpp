@@ -707,8 +707,12 @@ namespace hasmet
       }
 
       // --- Lights ---
-      scene.ambient_light = parseVec3f(scene_json["Lights"]["AmbientLight"]);
-
+      if (scene_json["Lights"].contains("AmbientLight")){
+        scene.ambient_light = parseVec3f(scene_json["Lights"]["AmbientLight"]);
+      } else {
+        scene.ambient_light = Vec3f_(0.0f, 0.0f, 0.0f);
+      }
+      
       // --> read point lights
       if (scene_json["Lights"].contains("PointLight"))
       {

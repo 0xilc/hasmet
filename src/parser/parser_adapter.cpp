@@ -111,6 +111,7 @@ namespace hasmet
         else if (decal_str == "replace_ks") tex.decal_mode = DecalMode::REPLACE_KS;
         else if (decal_str == "replace_background") tex.decal_mode = DecalMode::REPLACE_BACKGROUND;
         else if (decal_str == "replace_normal") tex.decal_mode = DecalMode::REPLACE_NORMAL;
+        else if (decal_str == "replace_all") tex.decal_mode = DecalMode::REPLACE_ALL;
         else if (decal_str == "bump_normal") tex.decal_mode = DecalMode::BUMP_NORMAL;
         else if (decal_str == "blend_kd") tex.decal_mode = DecalMode::BLEND_KD;
 

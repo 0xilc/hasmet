@@ -5,6 +5,7 @@
 #include "integrator.h"
 #include "core/types.h"
 #include "core/sampler.h"
+#include "material/material.h"
 
 namespace hasmet {
 class WhittedIntegrator : public Integrator {
@@ -16,7 +17,7 @@ class WhittedIntegrator : public Integrator {
 
  private:
   Color Li(Ray& ray, const Scene& scene, int depth, int sample_index, int num_samples) const;
-  Color calculate_blinn_phong(const Ray& ray, const HitRecord& rec,
+  Color calculate_blinn_phong(const Ray& ray, const HitRecord& rec, const Material& mat,
                               const Scene& scene, int depth, int sample_index, int num_samples) const;
   int max_depth_;
   Sampler sampler_;

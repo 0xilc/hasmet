@@ -14,6 +14,7 @@ enum class DecalMode {
     REPLACE_KS,
     REPLACE_BACKGROUND,
     REPLACE_NORMAL,
+    REPLACE_ALL,
     BUMP_NORMAL,
     BLEND_KD
 };
