@@ -28,6 +28,67 @@ namespace hasmet
   {
     namespace ParserAdapter
     {
+      Vec3 create_vec3(const Parser::Vec3f_ &v_)
+      {
+        return Vec3(v_.x, v_.y, v_.z);
+      }
+
+      Vec2 create_vec2(const Parser::Vec2f_ &v_)
+      {
+        return Vec2(v_.x, v_.y);
+      }
+
+      std::vector<Vec3> compute_mesh_tangents(const Parser::Mesh_& mesh,
+                                              const std::vector<Parser::Vec3f_>& vertex_data,
+                                            const std::vector<Parser::Vec2f_>& tex_coord_data) {
+        std::vector<Vec3> tangents(vertex_data.size(), Vec3(0.0f));
+        
+        for (const auto& face : mesh.faces) {
+          int i0 = face.v0_id;
+          int i1 = face.v1_id;
+          int i2 = face.v2_id;
+          
+          Vec3 v0 = create_vec3(vertex_data[i0]);
+          Vec3 v1 = create_vec3(vertex_data[i1]);
+          Vec3 v2 = create_vec3(vertex_data[i2]);
+          
+          if (tex_coord_data.empty()) continue;
+          
+          Vec2 uv0 = create_vec2(tex_coord_data[i0]);
+          Vec2 uv1 = create_vec2(tex_coord_data[i1]);
+          Vec2 uv2 = create_vec2(tex_coord_data[i2]);
+
+          Vec3 edge1 = v1 - v0;
+          Vec3 edge2 = v2 - v0;
+
+          Vec2 deltaUV1 = uv1 - uv0;
+          Vec2 deltaUV2 = uv2 - uv0;
+
+          float det = (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+          if (std::abs(det) < 1e-8f) continue;
+
+          float f = 1.0f / det;
+
+          Vec3 tangent;
+          tangent.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+          tangent.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+          tangent.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+
+          tangents[i0] += tangent;
+          tangents[i1] += tangent;
+          tangents[i2] += tangent;
+        }
+
+        for (auto& t: tangents) {
+          if (glm::length(t) > 1e-8f) {
+            t = glm::normalize(t);
+          }
+        }
+
+        return tangents;
+      }
+
       glm::mat4 create_transformation_matrix(
           const std::vector<Parser::Transformation_> &transforms)
       {
@@ -68,16 +129,6 @@ namespace hasmet
       }
 
       Color create_color(const Parser::Vec3f_ v_) { return Color(v_.x, v_.y, v_.z); }
-
-      Vec3 create_vec3(const Parser::Vec3f_ &v_)
-      {
-        return Vec3(v_.x, v_.y, v_.z);
-      }
-
-      Vec2 create_vec2(const Parser::Vec2f_ &v_)
-      {
-        return Vec2(v_.x, v_.y);
-      }
 
       Texture create_texture(const Parser::TextureMap_& tm_) {
         Texture tex;
@@ -135,12 +186,14 @@ namespace hasmet
                                const std::vector<Parser::Vec3f_> &vertex_data_,
                                const std::vector<Parser::Vec2f_> &tex_coord_data_,
                                const Vec3 vertex_normals[3] = nullptr,
+                               const Vec3 tangents[3] = nullptr,
                                bool smooth_shading = false)
       {
         Vec3 vertices[3] = {
             create_vec3(vertex_data_[triangle_.v0_id]),
             create_vec3(vertex_data_[triangle_.v1_id]),
             create_vec3(vertex_data_[triangle_.v2_id])};
+        
         Vec2 uvs[3];
         bool has_uv = !tex_coord_data_.empty();
         if (has_uv)
@@ -149,7 +202,8 @@ namespace hasmet
           uvs[1] = create_vec2(tex_coord_data_[triangle_.v1_id]);
           uvs[2] = create_vec2(tex_coord_data_[triangle_.v2_id]);
         }
-        return Triangle(vertices, vertex_normals, uvs, smooth_shading);
+
+        return Triangle(vertices, vertex_normals, has_uv ? uvs : nullptr, tangents, smooth_shading);
       }
 
       PointLight create_point_light(const Parser::PointLight_ light_)
@@ -337,6 +391,13 @@ namespace hasmet
 
         for (const Parser::Mesh_ &mesh_ : parsed_scene.meshes)
         {
+          std::vector<Vec3> mesh_tangents;
+          bool has_uv = !parsed_scene.tex_coord_data.empty();
+
+          if (has_uv) {
+            mesh_tangents = compute_mesh_tangents(mesh_, parsed_scene.vertex_data, parsed_scene.tex_coord_data);
+          }
+
           std::vector<Triangle> mesh_faces;
           if (mesh_.smooth_shading)
           {
@@ -399,14 +460,35 @@ namespace hasmet
                 uvs[2] = create_vec2(parsed_scene.tex_coord_data[triangle_.v2_id]);
               }
 
-              mesh_faces.push_back(Triangle(indices, per_vertex_normals, has_uv ? uvs : nullptr, true));
+              Vec3 tangents[3];
+              if (has_uv && !mesh_tangents.empty()){
+                tangents[0] = mesh_tangents[triangle_.v0_id];
+                tangents[1] = mesh_tangents[triangle_.v1_id];
+                tangents[2] = mesh_tangents[triangle_.v2_id];
+              }
+
+              mesh_faces.push_back(Triangle(indices, per_vertex_normals, has_uv ? uvs : nullptr, has_uv ? tangents : nullptr, true));
             }
           }
           else
           {
-            for (const Parser::Triangle_ &face_ : mesh_.faces)
+            for (const Parser::Triangle_ &triangle_ : mesh_.faces)
             {
-              mesh_faces.push_back(create_triangle(face_, parsed_scene.vertex_data, parsed_scene.tex_coord_data));
+                Vec3 tangents[3];
+                if (has_uv && !mesh_tangents.empty()) {
+                    tangents[0] = mesh_tangents[triangle_.v0_id];
+                    tangents[1] = mesh_tangents[triangle_.v1_id];
+                    tangents[2] = mesh_tangents[triangle_.v2_id];
+                }
+
+                mesh_faces.push_back(create_triangle(
+                    triangle_, 
+                    parsed_scene.vertex_data, 
+                    parsed_scene.tex_coord_data, 
+                    nullptr,
+                    has_uv ? tangents : nullptr,
+                    false
+                ));
             }
           }
 

@@ -3,7 +3,7 @@
 #include "core/types.h"
 
 namespace hasmet {
-Triangle::Triangle(const Vec3 vertices[3], const Vec3 vertex_normals[3], const Vec2 tex_coords[3], bool smooth_shading) {
+Triangle::Triangle(const Vec3 vertices[3], const Vec3 vertex_normals[3], const Vec2 tex_coords[3], const Vec3 tangents[3], bool smooth_shading) {
   vertices_[0] = vertices[0];
   vertices_[1] = vertices[1];
   vertices_[2] = vertices[2];
@@ -22,6 +22,15 @@ Triangle::Triangle(const Vec3 vertices[3], const Vec3 vertex_normals[3], const V
     tex_coords_[2] = tex_coords[2];
   } else {
     has_uvs_ = false;
+  }
+
+  if (tangents) {
+    has_tangents_ = true;
+    tangents_[0] = tangents[0];
+    tangents_[1] = tangents[1];
+    tangents_[2] = tangents[2];
+  } else {
+    has_tangents_ = false;
   }
 
   Vec3 min_v = glm::min(glm::min(vertices_[0], vertices_[1]), vertices_[2]);
@@ -68,7 +77,16 @@ bool Triangle::intersect(Ray& ray, HitRecord& rec) const {
       rec.uv = (1.0f - u - v) * tex_coords_[0] +
                 u * tex_coords_[1] + v * tex_coords_[2];
     } else {
-      rec.uv = Vec2(0.0f, 0.0f);
+      rec.uv = Vec2(0.0f);
+    }
+
+    if (has_tangents_) {
+      Vec3 interpolated_tangent = (1.0f - u - v) * tangents_[0] +
+                                   u * tangents_[1] +
+                                   v * tangents_[2];
+      rec.tangent = glm::normalize(interpolated_tangent);
+    } else {
+      rec.tangent = Vec3(0.0f);
     }
 
     return true;
