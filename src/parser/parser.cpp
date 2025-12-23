@@ -476,7 +476,7 @@ namespace hasmet
         scene.shadow_ray_epsilon =
             std::stof(scene_json["ShadowRayEpsilon"].get<std::string>());
       else
-        scene.shadow_ray_epsilon = 1e-6;
+        scene.shadow_ray_epsilon = 1e-3;
 
       if (scene_json.contains("IntersectionTestEpsilon"))
         scene.intersection_test_epsilon =
