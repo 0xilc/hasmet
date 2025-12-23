@@ -7,4 +7,5 @@ namespace hasmet {
     using Vec2 = glm::vec2;
     using Point3 = glm::vec3;
     using Color = glm::vec3;
+    using Mat3 = glm::mat3;
 }

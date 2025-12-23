@@ -43,7 +43,7 @@ inline float fresnel_conductor(float cos_theta, float n, float k) {
 }  // namespace
 
 namespace {
-Material apply_textures(const Material& base_mat, const HitRecord& rec) {
+Material apply_textures(const Material& base_mat, HitRecord& rec) {
   if (rec.texture_ids == nullptr || rec.texture_ids->empty()){
     return base_mat;
   }
@@ -70,6 +70,26 @@ Material apply_textures(const Material& base_mat, const HitRecord& rec) {
       case DecalMode::REPLACE_ALL:
         mat.diffuse_reflectance = tex_color * 255.0f;
         mat.type = MaterialType::TextureColor;
+        break;
+      
+      case DecalMode::REPLACE_NORMAL:
+        Vec3 map_normal = tex_color;
+        map_normal = map_normal * 2.0f - Vec3(1.0f);
+        map_normal.y = -map_normal.y;
+        
+        Vec3 N = glm::normalize(rec.normal);
+        Vec3 T = rec.tangent;
+
+        if (glm::length(T) < 1e-4) {
+          break;
+        }
+
+        T = glm::normalize(T);
+        T = glm::normalize(T - glm::dot(T, N) * N);
+        Vec3 B = glm::cross(N, T);
+
+        Mat3 TBN = Mat3(T, B, N);
+        rec.normal = glm::normalize(TBN * map_normal);
         break;
     }
   }

@@ -59,7 +59,7 @@ using namespace hasmet;
 // }
 
 int main() {
- const std::string filename = "plane_nearest";
+ const std::string filename = "cube_cushion";
  const std::string input_folder =
      "/home/ilc/Desktop/hw4/inputs/";
  const std::string input_filename = input_folder + filename + ".json";
