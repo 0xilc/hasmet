@@ -892,7 +892,7 @@ namespace hasmet
             tm.interpolation = j.contains("Interpolation") ? j["Interpolation"].get<std::string>() : "nearest";
             tm.bump_factor = j.contains("BumpFactor") ? std::stof(j["BumpFactor"].get<std::string>()) : 1.0f;
             tm.normalizer = j.contains("Normalizer") ? std::stof(j["Normalizer"].get<std::string>()) : 255.0f;
-
+            
             // Perlin
             if (j.contains("NoiseScale"))
               tm.noise_scale = std::stof(j["NoiseScale"].get<std::string>());

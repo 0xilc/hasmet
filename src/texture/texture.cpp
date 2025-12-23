@@ -3,6 +3,7 @@
 #include <cmath>
 #include <algorithm>
 #include "core/logging.h"
+#include "core/perlin.h"
 
 namespace hasmet {
 
@@ -68,10 +69,18 @@ Color Texture::evaluate(const Vec2& uv, const Vec3& p) const {
             return c_bottom * (1.0f - dy) + c_top * dy;
         }
     }
-
     else if (type == TextureType::PERLIN) {
-        // TODO: IMPLEMENT THIS
-        return Color(1.0f);
+        Vec3 scaled_p = p * noise_scale;
+
+        float noise_val = Perlin::get_instance().turb(scaled_p, (int)num_octaves);
+        if (noise_conversion == NoiseConversionType::LINEAR) {
+            noise_val = 0.5f * (1.0f + noise_val);
+        } else {
+            noise_val = std::abs(noise_val);
+        }
+        noise_val = std::max(0.0f, std::min(1.0f, noise_val));
+        
+        return Color(noise_val, noise_val, noise_val);
     }
 
     return Color(1.0f);
