@@ -10,7 +10,7 @@ class Triangle : public Hittable {
   Triangle(const Vec3 verteices[3] = nullptr,
            const Vec3 vertex_normals[3] = nullptr,
            const Vec2 tex_coords[3] = nullptr,
-           const Vec3 tangents[3] = nullptr,
+           const Vec3 tangents[2] = nullptr,
            bool smooth_shading = false);
 
   virtual bool intersect(Ray& ray, HitRecord& rec) const override;

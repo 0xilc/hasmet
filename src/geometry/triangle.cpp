@@ -3,7 +3,7 @@
 #include "core/types.h"
 
 namespace hasmet {
-Triangle::Triangle(const Vec3 vertices[3], const Vec3 vertex_normals[3], const Vec2 tex_coords[3], const Vec3 tangents[3], bool smooth_shading) {
+Triangle::Triangle(const Vec3 vertices[3], const Vec3 vertex_normals[3], const Vec2 tex_coords[3], const Vec3 tangents[2], bool smooth_shading) {
   vertices_[0] = vertices[0];
   vertices_[1] = vertices[1];
   vertices_[2] = vertices[2];
@@ -28,7 +28,6 @@ Triangle::Triangle(const Vec3 vertices[3], const Vec3 vertex_normals[3], const V
     has_tangents_ = true;
     tangents_[0] = tangents[0];
     tangents_[1] = tangents[1];
-    tangents_[2] = tangents[2];
   } else {
     has_tangents_ = false;
   }
@@ -81,16 +80,8 @@ bool Triangle::intersect(Ray& ray, HitRecord& rec) const {
     }
 
     if (has_tangents_) {
-      Vec3 interpolated_T = (1.0f - u - v) * tangents_[0] +
-                             u * tangents_[1] +
-                             v * tangents_[2];
-      
-      Vec3 T = glm::normalize(interpolated_T);
-      T = glm::normalize(T - glm::dot(T, rec.normal) * rec.normal);
-      Vec3 B = glm::cross(rec.normal, T);
-
-      rec.tangents[0] = T;
-      rec.tangents[1] = B;
+      rec.tangents[0] = tangents_[0];
+      rec.tangents[1] = tangents_[1];
     }
     return true;
   }
