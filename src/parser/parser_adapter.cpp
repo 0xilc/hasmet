@@ -415,6 +415,8 @@ namespace hasmet
 
                 tangents[0] = inv_det * (d * edge1 - b * edge2);
                 tangents[1] = inv_det * (-c * edge1 + a * edge2);
+                tangents[0] = glm::normalize(tangents[0]);
+                tangents[1] = glm::normalize(tangents[1]);
               }
 
               mesh_faces.push_back(Triangle(vertices, per_vertex_normals, has_uv ? uvs : nullptr, has_uv ? tangents : nullptr, true));
@@ -443,7 +445,6 @@ namespace hasmet
                 // 3. Tangent & Bitangent
                 Vec3 tangents[2];
                 if (has_uv) {
-                  printf("Calculating tangents for triangle\n");
                   Vec3 edge1 = vertices[1] - vertices[0];
                   Vec3 edge2 = vertices[2] - vertices[0];
                   auto a = uvs[1].x - uvs[0].x;
@@ -454,6 +455,8 @@ namespace hasmet
 
                   tangents[0] = inv_det * (d * edge1 - b * edge2);
                   tangents[1] = inv_det * (-c * edge1 + a * edge2);
+                  tangents[0] = glm::normalize(tangents[0]);
+                  tangents[1] = glm::normalize(tangents[1]);
                 }
                 mesh_faces.push_back(Triangle(
                     vertices, 

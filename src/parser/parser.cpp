@@ -470,7 +470,11 @@ namespace hasmet
       const auto &scene_json = j["Scene"];
 
       // --- Global Scene Settings ---
-      scene.background_color = parseVec3f(scene_json["BackgroundColor"]);
+      if (scene_json.contains("BackgroundColor")) {
+        scene.background_color = parseVec3f(scene_json["BackgroundColor"]);
+      } else {
+        scene.background_color = {0.0f, 0.0f, 0.0f};
+      }
 
       if (scene_json.contains("ShadowRayEpsilon"))
         scene.shadow_ray_epsilon =

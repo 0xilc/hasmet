@@ -49,7 +49,7 @@ struct Texture{
     Color white_color{255.0f};
 
     Texture() = default;
-
+    Color lookup(const Vec2& uv) const;
     Color evaluate(const Vec2& uv, const Vec3& p) const;
 
     Vec2 get_height_derivative(const Vec2& uv, const Vec3& p, const Vec3& T, const Vec3& B) const;

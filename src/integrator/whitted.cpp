@@ -80,7 +80,9 @@ Material apply_textures(const Material& base_mat, HitRecord& rec) {
         Vec3 N = glm::normalize(rec.normal);
         Vec3 T = rec.tangents[0];
         Vec3 B = rec.tangents[1];
-
+        T = glm::normalize(T - N * glm::dot(N, T));
+        B = glm::cross(T, N);
+        
         Mat3 TBN = Mat3(T, B, N);
         rec.normal = glm::normalize(TBN * map_normal);
         break;
@@ -92,8 +94,11 @@ Material apply_textures(const Material& base_mat, HitRecord& rec) {
         Vec3 N = glm::normalize(rec.normal);
         Vec3 T = rec.tangents[0]; // dp/du
         Vec3 B = rec.tangents[1]; // dp/dv
-        Vec2 gradients = tex.get_height_derivative(rec.uv, rec.p, T, B);
 
+        T = glm::normalize(T - N * glm::dot(N, T));
+        B = glm::cross(T, N);
+        
+        Vec2 gradients = tex.get_height_derivative(rec.uv, rec.p, T, B);
 
         float dh_du = gradients.x * tex.bump_factor;
         float dh_dv = gradients.y * tex.bump_factor;

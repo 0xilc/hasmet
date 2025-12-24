@@ -59,7 +59,7 @@ using namespace hasmet;
 // }
 
 int main() {
- const std::string filename = "sphere_nobump_bump";
+ const std::string filename = "bump_mapping_transformed";
  const std::string input_folder =
      "/home/ilc/Desktop/hw4/inputs/";
  const std::string input_filename = input_folder + filename + ".json";

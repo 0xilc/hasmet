@@ -53,9 +53,15 @@ class Instance : public Hittable {
     
     if (has_motion_blur_) rec.p += motion_blur_ * ray.time;
     
-    glm::mat3 normal_matrix = glm::transpose(glm::mat3(inv_transform_));
+    glm::mat normal_matrix = glm::transpose(glm::mat3(inv_transform_));
     rec.normal = glm::normalize(normal_matrix * rec.normal);
     
+    // glm::mat3 model_rot_scale = glm::mat3(glm::inverse(transform_));
+    // if(rec.tangents){
+    //   rec.tangents[0] = glm::normalize(model_rot_scale * rec.tangents[0]);
+    //   rec.tangents[1] = glm::normalize(model_rot_scale * rec.tangents[1]);
+    // }
+
     ray.t_max = local_ray.t_max;
     return true;
   }
