@@ -51,5 +51,7 @@ struct Texture{
     Texture() = default;
 
     Color evaluate(const Vec2& uv, const Vec3& p) const;
+
+    Vec2 get_height_derivative(const Vec2& uv, const Vec3& p, const Vec3& T, const Vec3& B) const;
 };
 } // namespace hasmet

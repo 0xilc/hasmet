@@ -72,7 +72,7 @@ Material apply_textures(const Material& base_mat, HitRecord& rec) {
         mat.type = MaterialType::TextureColor;
         break;
       
-      case DecalMode::REPLACE_NORMAL:
+      case DecalMode::REPLACE_NORMAL: {
         Vec3 map_normal = tex_color;
         map_normal = map_normal * 2.0f - Vec3(1.0f);
         map_normal = glm::normalize(map_normal);
@@ -84,6 +84,26 @@ Material apply_textures(const Material& base_mat, HitRecord& rec) {
         Mat3 TBN = Mat3(T, B, N);
         rec.normal = glm::normalize(TBN * map_normal);
         break;
+      }
+      case DecalMode::BUMP_NORMAL: {
+        Vec3 bump_map = tex_color;
+        float height = (tex_color.r + tex_color.g + tex_color.b) / 3.0f;
+
+        Vec3 N = glm::normalize(rec.normal);
+        Vec3 T = rec.tangents[0]; // dp/du
+        Vec3 B = rec.tangents[1]; // dp/dv
+        Vec2 gradients = tex.get_height_derivative(rec.uv, rec.p, T, B);
+
+
+        float dh_du = gradients.x * tex.bump_factor;
+        float dh_dv = gradients.y * tex.bump_factor;
+        Vec3 dq_du = T + dh_du * N;
+        Vec3 dq_dv = B + dh_dv * N;
+
+        Vec3 bumped_normal = glm::cross(dq_dv, dq_du);
+        rec.normal = glm::normalize(bumped_normal);
+        break;
+      }
     }
   }
 

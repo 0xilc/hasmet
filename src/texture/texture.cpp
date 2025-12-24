@@ -4,6 +4,7 @@
 #include <algorithm>
 #include "core/logging.h"
 #include "core/perlin.h"
+#include "core/types.h"
 
 namespace hasmet {
 
@@ -84,6 +85,29 @@ Color Texture::evaluate(const Vec2& uv, const Vec3& p) const {
     }
 
     return Color(1.0f);
+}
+
+Vec2 Texture::get_height_derivative(const Vec2& uv, const Vec3& p, const Vec3& T, const Vec3& B) const {
+    float delta_u = 0.001f;
+    float delta_v = 0.001f;
+    if (type == TextureType::IMAGE && image_id != -1) {
+         const Image& img = ImageManager::get_instance()->get(image_id);
+         delta_u = 1.0f / img.get_width(); 
+         delta_v = 1.0f / img.get_height();
+    }
+
+    Color c_center = evaluate(uv, p);
+    float h_center = (c_center.r + c_center.g + c_center.b) / 3.0f;
+
+    Color c_u = evaluate(uv + Vec2(delta_u, 0.0f), p + T * delta_u);
+    float h_u = (c_u.r + c_u.g + c_u.b) / 3.0f;
+
+    Color c_v = evaluate(uv + Vec2(0.0f, delta_v), p + B * delta_v);
+    float h_v = (c_v.r + c_v.g + c_v.b) / 3.0f;
+
+    float dh_du = (h_u - h_center) / delta_u;
+    float dh_dv = (h_v - h_center) / delta_v;
+    return Vec2(dh_du, dh_dv);
 }
 
 } // namespace hasmet
