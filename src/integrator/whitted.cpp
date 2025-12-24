@@ -75,18 +75,11 @@ Material apply_textures(const Material& base_mat, HitRecord& rec) {
       case DecalMode::REPLACE_NORMAL:
         Vec3 map_normal = tex_color;
         map_normal = map_normal * 2.0f - Vec3(1.0f);
-        map_normal.y = -map_normal.y;
-        
+        map_normal = glm::normalize(map_normal);
+
         Vec3 N = glm::normalize(rec.normal);
-        Vec3 T = rec.tangent;
-
-        if (glm::length(T) < 1e-4) {
-          break;
-        }
-
-        T = glm::normalize(T);
-        T = glm::normalize(T - glm::dot(T, N) * N);
-        Vec3 B = glm::cross(N, T);
+        Vec3 T = rec.tangents[0];
+        Vec3 B = rec.tangents[1];
 
         Mat3 TBN = Mat3(T, B, N);
         rec.normal = glm::normalize(TBN * map_normal);
@@ -152,7 +145,7 @@ void WhittedIntegrator::render(const Scene &scene, Film &film,
           glm::vec2 u_lens = local_sampler.get_2d(pixel_id, s, 1);
           float time_sample = local_sampler.get_1d(pixel_id, s, 2);
           
-          #define CENTER_RAY 1
+          #define CENTER_RAY 0
           #if CENTER_RAY
           u_pixel = Vec2(0.f);
           u_lens = Vec2(0.f);

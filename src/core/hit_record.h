@@ -9,7 +9,7 @@ struct HitRecord {
   float t;
   Vec3 p;
   Vec3 normal;
-  Vec3 tangent;
+  Vec3 tangents[2];
   bool front_face;
   int material_id;
   Vec2 uv{0.0f, 0.0f};

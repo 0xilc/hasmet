@@ -47,9 +47,13 @@ bool Sphere::intersect(Ray& r, HitRecord& rec) const {
 
   float u = (-phi + glm::pi<float>()) / (2.0f * glm::pi<float>());
   float v = theta / glm::pi<float>();
-
-  Vec3 t_vec = Vec3(-local_p.z, 0.0f, local_p.x);
-  rec.tangent = glm::normalize(t_vec);
+  
+  float pi = glm::pi<float>();
+  Vec3 T = {2.0f * pi * local_p.z, 0, -2.0f * pi * local_p.x};
+  Vec3 B = {pi * local_p.y * std::cos(phi), -pi * std::sin(theta), pi * local_p.y * std::sin(phi)};
+  
+  rec.tangents[0] = glm::normalize(T);
+  rec.tangents[1] = glm::normalize(B);
   
   rec.uv = Vec2(u, v);
   return true;

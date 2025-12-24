@@ -81,14 +81,17 @@ bool Triangle::intersect(Ray& ray, HitRecord& rec) const {
     }
 
     if (has_tangents_) {
-      Vec3 interpolated_tangent = (1.0f - u - v) * tangents_[0] +
-                                   u * tangents_[1] +
-                                   v * tangents_[2];
-      rec.tangent = glm::normalize(interpolated_tangent);
-    } else {
-      rec.tangent = Vec3(0.0f);
-    }
+      Vec3 interpolated_T = (1.0f - u - v) * tangents_[0] +
+                             u * tangents_[1] +
+                             v * tangents_[2];
+      
+      Vec3 T = glm::normalize(interpolated_T);
+      T = glm::normalize(T - glm::dot(T, rec.normal) * rec.normal);
+      Vec3 B = glm::cross(rec.normal, T);
 
+      rec.tangents[0] = T;
+      rec.tangents[1] = B;
+    }
     return true;
   }
   return false;
