@@ -17,9 +17,9 @@ Color Image::get_pixel(int x, int y) const {
   if (y >= height_) y = height_ - 1;
 
   int index = (y * width_ + x) * channels_;
-  float r = data_[index] / 255.0f;
-  float g = data_[index + 1] / 255.0f;
-  float b = data_[index + 2] / 255.0f;
+  float r = data_[index];
+  float g = data_[index + 1];
+  float b = data_[index + 2];
 
   return Color(r, g, b);
 }

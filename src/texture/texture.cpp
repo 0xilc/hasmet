@@ -25,7 +25,7 @@ Color Texture::lookup(const Vec2& uv) const {
         int x = std::min((int)(u * w), w - 1);
         int y = std::min((int)(v * h), h - 1);
 
-        return img.get_pixel(x, y);
+        return img.get_pixel(x, y) * inv_normalizer;
     }
     return Color(1.0f);
 }
@@ -61,7 +61,7 @@ Color Texture::evaluate(const Vec2& uv, const Vec3& p) const {
         if (interpolation == InterpolationType::NEAREST) {
             int i = std::min((int)x, w - 1);
             int j = std::min((int)y, h - 1);
-            return img.get_pixel(i, j);
+            return img.get_pixel(i, j) * inv_normalizer;
         }
         else if (interpolation == InterpolationType::BILINEAR) {
             float x_center = x - 0.5f;
@@ -78,7 +78,7 @@ Color Texture::evaluate(const Vec2& uv, const Vec3& p) const {
                 if (j < 0) j = 0;
                 if (i >= w) i = w - 1;
                 if (j >= h) j = h - 1;
-                return img.get_pixel(i, j);
+                return img.get_pixel(i, j) * inv_normalizer;
             };
 
             Color c00 = get_clamped(x_low, y_low);

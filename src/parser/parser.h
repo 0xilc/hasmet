@@ -107,7 +107,7 @@ struct TextureMap_ {
     Vec3f_ black_color;
     Vec3f_ white_color;
 
-    float normalizer; // Default: 255.0f
+    float normalizer;
 };
 
 

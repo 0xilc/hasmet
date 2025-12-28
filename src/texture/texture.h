@@ -36,7 +36,7 @@ struct Texture{
     InterpolationType interpolation = InterpolationType::BILINEAR;
 
     int image_id = -1;
-    float normalizer = 255.0f;
+    float inv_normalizer = 1.0f / 255.0f;
 
     float bump_factor = 1.0f;
     float noise_scale = 1.0f;

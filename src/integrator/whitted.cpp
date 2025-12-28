@@ -68,7 +68,7 @@ Material apply_textures(const Material& base_mat, HitRecord& rec) {
         break;
       
       case DecalMode::REPLACE_ALL:
-        mat.diffuse_reflectance = tex_color * 255.0f;
+        mat.diffuse_reflectance = tex_color;
         mat.type = MaterialType::TextureColor;
         break;
       
@@ -170,7 +170,7 @@ void WhittedIntegrator::render(const Scene &scene, Film &film,
           glm::vec2 u_lens = local_sampler.get_2d(pixel_id, s, 1);
           float time_sample = local_sampler.get_1d(pixel_id, s, 2);
           
-          #define CENTER_RAY 0
+          #define CENTER_RAY 1
           #if CENTER_RAY
           u_pixel = Vec2(0.f);
           u_lens = Vec2(0.f);
