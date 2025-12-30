@@ -15,11 +15,12 @@
 #include "accelerator/instance.h"
 
 namespace hasmet {
-struct RenderConfig{
+struct RenderContext{
   Color background_color;
-  float shadow_ray_epsilon;
-  float intersection_test_epsilon;
+  float shadow_eps;
+  float intersection_eps;
   int max_recursion_depth;
+  int num_samples;
 };
 
 class Scene {
@@ -41,7 +42,7 @@ class Scene {
   std::vector<std::unique_ptr<AreaLight>> area_lights_;
   std::vector<std::unique_ptr<Camera>> cameras_;
   std::unique_ptr<AmbientLight> ambient_light_;
-  RenderConfig render_config_;
+  RenderContext render_context_;
 };
 
 } // namespace hasmet

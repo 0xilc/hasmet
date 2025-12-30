@@ -252,7 +252,7 @@ namespace hasmet
         Parser::parseScene(filename, parsed_scene);
 
         Scene scene;
-        scene.render_config_ = RenderConfig{
+        scene.render_context_ = RenderContext{
             create_color(parsed_scene.background_color),
             parsed_scene.shadow_ray_epsilon, parsed_scene.intersection_test_epsilon,
             parsed_scene.max_recursion_depth};
