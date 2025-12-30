@@ -18,9 +18,7 @@
 
 namespace hasmet {
 namespace {
-inline float fresnel_dielectric(float cosThetaI, float etaI, float etaT,
-
-                                float cosThetaT) {
+inline float fresnel_dielectric(float cosThetaI, float etaI, float etaT, float cosThetaT) {
   float r_s = (etaT * cosThetaI - etaI * cosThetaT) /
 
               (etaT * cosThetaI + etaI * cosThetaT);
@@ -40,9 +38,7 @@ inline float fresnel_conductor(float cos_theta, float n, float k) {
       ((n * n + k * k) * cos_theta * cos_theta + 2 * n * cos_theta + 1);
   return 0.5 * (r_s + r_p);
 }
-}  // namespace
 
-namespace {
 Material apply_textures(const Material& base_mat, HitRecord& rec) {
   if (rec.texture_ids == nullptr || rec.texture_ids->empty()){
     return base_mat;
@@ -115,22 +111,6 @@ Material apply_textures(const Material& base_mat, HitRecord& rec) {
   return mat;
 }
 
-void generate_area_light_samples(const AreaLight &light, int num_samples,
-                                 std::vector<Vec3> &out) {
-  out.clear();
-
-  const auto &jittered_samples =
-      Sampling::generate_jittered_samples(num_samples);
-
-  for (const auto &[dx, dy] : jittered_samples) {
-    Vec3 sample_point =
-        light.position +
-        (light.u * (dx - 0.5f) + light.v * (dy - 0.5f)) * light.size;
-
-    out.emplace_back(sample_point);
-  }
-}
-
 void perturb_ray(Ray &ray, float roughness) {
   Vec3 w = glm::normalize(ray.direction);
 
@@ -145,10 +125,7 @@ void perturb_ray(Ray &ray, float roughness) {
   Vec3 new_direction = ray.direction + (u * r1 + v * r2) * roughness;
   ray.direction = glm::normalize(new_direction);
 }
-
 }  // namespace
-
-WhittedIntegrator::WhittedIntegrator(int max_depth) : max_depth_(max_depth) {}
 
 void WhittedIntegrator::render(const Scene &scene, Film &film,
                                const Camera &camera) const {
@@ -169,21 +146,14 @@ void WhittedIntegrator::render(const Scene &scene, Film &film,
           glm::vec2 u_pixel = local_sampler.get_2d(pixel_id, s, 0);
           glm::vec2 u_lens = local_sampler.get_2d(pixel_id, s, 1);
           float time_sample = local_sampler.get_1d(pixel_id, s, 2);
-          
-          #define CENTER_RAY 0
-          #if CENTER_RAY
-          u_pixel = Vec2(0.f);
-          u_lens = Vec2(0.f);
-          #endif
 
-          Ray ray = camera.generateRay((float)x, float(y), u_pixel, u_lens);
+          Ray ray = camera.generateRay(static_cast<float>(x), static_cast<float>(y), u_pixel, u_lens);
           ray.time = time_sample;
 
-          pixel_color += Li(ray, scene, max_depth_, s, camera.num_samples_);
+          pixel_color += Li(ray, scene, scene.render_config_.max_recursion_depth, s, camera.num_samples_);
         }
 
-        film.addSample(x, y,
-                       pixel_color / static_cast<float>(camera.num_samples_));
+        film.addSample(x, y, pixel_color / static_cast<float>(camera.num_samples_));
       }
     }
   }
@@ -200,8 +170,6 @@ Color WhittedIntegrator::Li(Ray &ray, const Scene &scene, int depth,
   const Material &base_mat = material_manager->get(rec.material_id);
 
   Material mat = apply_textures(base_mat, rec);
-
-  
   Color final_color(0.0f);
 
   float intersection_test_epsilon =

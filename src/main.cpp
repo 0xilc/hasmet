@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
   try {
     LOG_INFO("Reading scene...");
     Scene scene = Parser::ParserAdapter::read_scene(scene_path.string());
-    WhittedIntegrator integrator(scene.render_config_.max_recursion_depth);
+    WhittedIntegrator integrator;
 
     for (const std::unique_ptr<Camera>& camera : scene.cameras_) {
       std::string output_name = camera->image_name_;
@@ -50,7 +50,6 @@ int main(int argc, char* argv[]) {
       std::chrono::duration<double> elapsed = end - start;
       LOG_INFO("Rendering: " << output_path << " : "<< elapsed.count() << " seconds.");
       image.write();
-
     }
   } catch (const std::exception& e) {
     LOG_ERROR("An error occurred: " << e.what());

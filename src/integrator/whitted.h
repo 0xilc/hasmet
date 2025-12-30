@@ -10,7 +10,7 @@
 namespace hasmet {
 class WhittedIntegrator : public Integrator {
  public:
-  WhittedIntegrator(int max_depth);
+  WhittedIntegrator() = default;
 
   virtual void render(const Scene& scene, Film& film,
                       const Camera& camera) const override;
@@ -19,7 +19,6 @@ class WhittedIntegrator : public Integrator {
   Color Li(Ray& ray, const Scene& scene, int depth, int sample_index, int num_samples) const;
   Color calculate_blinn_phong(const Ray& ray, const HitRecord& rec, const Material& mat,
                               const Scene& scene, int depth, int sample_index, int num_samples) const;
-  int max_depth_;
   Sampler sampler_;
 };
 } // namespace hasmet
