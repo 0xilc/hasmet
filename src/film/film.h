@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 
-
 #include "core/types.h"
 
 namespace hasmet {
@@ -12,9 +11,7 @@ class Film {
   Film(int width, int height, const std::string& filename);
 
   void addSample(int x, int y, const Color& color);
-
   void write() const;
-
   int getWidth() const { return width_; }
   int getHeight() const { return height_; }
 
