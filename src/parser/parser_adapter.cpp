@@ -273,18 +273,40 @@ namespace hasmet
           texture_manager->add(tm.id, create_texture(tm));
         }
 
+        // Read Cameras
         for (const Parser::Camera_ &camera_ : parsed_scene.cameras)
         {
+          std::unique_ptr<Camera> camera_ptr;
           if (camera_.aperture_size > 0)
           {
-            scene.cameras_.push_back(
-                std::make_unique<ThinLensCamera>(create_thinlens_camera(camera_)));
+            camera_ptr = std::make_unique<ThinLensCamera>(create_thinlens_camera(camera_));
           }
           else
           {
-            scene.cameras_.push_back(
-                std::make_unique<PinholeCamera>(create_pinhole_camera(camera_)));
+            camera_ptr = std::make_unique<PinholeCamera>(create_pinhole_camera(camera_));
           }
+          // Read tonemaps
+          camera_ptr->tonemaps_.reserve(camera_.tonemaps.size());
+          for (const Parser::Tonemap_& tm : camera_.tonemaps) {
+            hasmet::Tonemap t;
+            if (tm.tmo == "Photographic") {
+              t.type = hasmet::Tonemap::Type::PHOTOGRAPHIC;
+            } else if (tm.tmo == "Filmic") {
+              t.type = hasmet::Tonemap::Type::FILMIC;
+            } else if (tm.tmo == "ACES") {
+              t.type = hasmet::Tonemap::Type::ACES;
+            } else {
+              t.type = hasmet::Tonemap::Type::NONE;
+            }
+            t.options[0] = tm.tmo_options[0];
+            t.options[1] = tm.tmo_options[1];
+            t.saturation = tm.saturation;
+            t.gamma = tm.gamma;
+            t.extension = tm.extension;
+            camera_ptr->tonemaps_.push_back(t);
+          }
+
+          scene.cameras_.push_back(std::move(camera_ptr));
         }
 
         MaterialManager *material_manager = MaterialManager::get_instance();
