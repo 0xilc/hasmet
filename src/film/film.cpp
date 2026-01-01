@@ -26,7 +26,7 @@ void Film::addSample(int x, int y, const Color& color) {
 
 void Film::write() const {
   LOG_INFO("Writing image to " + filename_ + "...");
-  bool success = write_png(filename_, pixels_, width_, height_);
+  bool success = write_exr(filename_, pixels_, width_, height_);
 
   if (success) {
     LOG_INFO("Image " + filename_ + " successfully written.");

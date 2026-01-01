@@ -1,9 +1,14 @@
 #include "image_io.h"
 
 #include <vector>
+#include "core/logging.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
+
+#define TINYEXR_IMPLEMENTATION
+#include "tinyexr.h"
+
 
 namespace hasmet {
 bool write_png(const std::string& filename, const std::vector<Color>& pixels,
@@ -28,5 +33,19 @@ bool write_png(const std::string& filename, const std::vector<Color>& pixels,
   return (result != 0);
 }
 
+bool write_exr(const std::string& filename, const std::vector<Color>& pixels,
+               int width, int height) {
+    const float* rgb_data = reinterpret_cast<const float*>(pixels.data());
+    const char* err = nullptr;
 
+    int result = SaveEXR(rgb_data, width, height, 3, 0, filename.c_str(), &err);
+    if (result != TINYEXR_SUCCESS) {
+        if (err) {
+            LOG_ERROR("TINYEXR Error: " << err);
+            FreeEXRErrorMessage(err);
+        }
+        return false;
+    }
+    return true;
+}
 } // namespace hasmet

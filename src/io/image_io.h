@@ -9,4 +9,7 @@ namespace hasmet {
 bool write_png(const std::string& filename, const std::vector<Color>& pixels,
                int width, int height);
 
+bool write_exr(const std::string& filename, const std::vector<Color>& pixels,
+               int width, int height);
+
 } // namespace hasmet
