@@ -6,7 +6,7 @@ namespace hasmet {
 
 class Image {
   public:
-    Image(int width, int height, int channels, unsigned char* data);
+    Image(int width, int height, int channels, float* data);
     Image() = default;
     ~Image() = default;
 
@@ -20,6 +20,6 @@ class Image {
     int height_ = 0;
     int channels_ = 0;
 
-    std::vector<unsigned char> data_;
+    std::vector<float> data_;
 };
 } // namespace hasmet

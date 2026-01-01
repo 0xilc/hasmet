@@ -126,7 +126,7 @@ namespace hasmet
         else tex.interpolation = InterpolationType::NEAREST;
 
         tex.bump_factor = tm_.bump_factor;
-        tex.inv_normalizer = 1.0f / tm_.normalizer;
+        tex.inv_normalizer = 255.0f / tm_.normalizer;
 
         return tex;
       }

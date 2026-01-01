@@ -58,9 +58,12 @@ using namespace hasmet;
 // }
 
 int main() {
- const std::string filename = "sphere_point_hdr_texture";
+//  const std::string filename = "sphere_point_hdr_texture";
+//  const std::string input_folder =
+//      "/home/ilc/Desktop/hw5/inputs/";
+const std::string filename = "scene";
  const std::string input_folder =
-     "/home/ilc/Desktop/hw5/inputs/";
+     "/home/ilc/Desktop/hw4/inputs/veach_ajar/";
  const std::string input_filename = input_folder + filename + ".json";
  const std::string output_folder = "/home/ilc/Desktop/whitted/";
  const std::string output_filename = output_folder + filename + ".png";

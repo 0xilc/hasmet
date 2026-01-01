@@ -3,7 +3,7 @@
 
 namespace hasmet {
 
-Image::Image(int width, int height, int channels, unsigned char* data)
+Image::Image(int width, int height, int channels, float* data)
     : width_(width), height_(height), channels_(channels) {
   if (data) {
     data_.assign(data, data + (width * height * channels));
