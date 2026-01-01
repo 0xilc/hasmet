@@ -37,6 +37,14 @@ typedef struct Transformation_ {
     std::vector<float> data;
 } Transformation_;
 
+typedef struct Tonemap_ {
+    std::string tmo;
+    float tmo_options[2];
+    float saturation;
+    float gamma;
+    std::string extension;
+} Tonemap_;
+
 typedef struct Camera_ {
     int id;
     Vec3f_ position;
@@ -51,6 +59,7 @@ typedef struct Camera_ {
     int num_samples;
     float aperture_size;
     float focus_distance;
+    std::vector<Tonemap_> tonemaps;
 } Camera_;
 
 typedef struct PointLight_ {

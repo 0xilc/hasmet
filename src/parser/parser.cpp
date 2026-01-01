@@ -642,13 +642,8 @@ namespace hasmet
         res_ss >> cam.image_width >> cam.image_height;
         cam.image_name = cam_json["ImageName"];
 
-        // --- Conditional parsing based on camera type ---
-        // Check if the camera is defined by Gaze (direction) or GazePoint
-        // (target)
         if (cam_json.contains("GazePoint"))
         {
-          // --- TYPE 1: "lookAt" camera with GazePoint and FovY ---
-
           // 1. Calculate the 'gaze' direction vector
           // gaze = normalize(GazePoint - Position)
           Vec3f_ gaze_point = parseVec3f(cam_json["GazePoint"]);
@@ -718,6 +713,57 @@ namespace hasmet
         else
         {
           cam.focus_distance = 0;
+        }
+
+        if (cam_json.contains("Tonemap")) {
+          auto& tm_entry = cam_json["Tonemap"];
+
+          auto parse_tonemap = [](const json& j) {
+            Tonemap_ tm;
+            if (j.contains("TMO")){
+              tm.tmo = j["TMO"].get<std::string>();
+            } else {
+              tm.tmo = "none";
+            }
+            
+            if (j.contains("TMOOptions")) {
+              std::stringstream ss(j["TMOOptions"].get<std::string>());
+              ss >> tm.tmo_options[0] >> tm.tmo_options[1];
+            } else {
+              tm.tmo_options[0] = 0.0f; 
+              tm.tmo_options[1] = 0.0f;
+            }
+          
+            if (j.contains("Saturation")) {
+              tm.saturation = std::stof(j["Saturation"].get<std::string>());
+            } else {
+              tm.saturation = 1.0f;
+            }
+
+            if (j.contains("Gamma")) {
+              tm.gamma = std::stof(j["Gamma"].get<std::string>());
+            } else {
+              tm.gamma = 1.0f;
+            }
+
+            if (j.contains("Extension")){
+              tm.extension = j["Extension"].get<std::string>();
+            } else {
+              tm.extension = "_phot.png";
+            }
+            
+            return tm;
+          };
+
+          if (tm_entry.is_array()) {
+            for (const auto& tm_json : tm_entry) {
+              Tonemap_ tm = parse_tonemap(tm_json);
+              cam.tonemaps.push_back(tm);
+            }
+          } else {
+            Tonemap_ tm = parse_tonemap(tm_entry);
+            cam.tonemaps.push_back(tm);
+          }
         }
 
         scene.cameras.push_back(cam);
@@ -1167,7 +1213,8 @@ namespace hasmet
                     << " | Res: " << cam.image_width << "x" << cam.image_height
                     << " | Output: " << cam.image_name 
                     << " | Samples: " << cam.num_samples 
-                    << " | Focus Dist: " << cam.focus_distance << std::endl;
+                    << " | Focus Dist: " << cam.focus_distance
+                    << " | Tonemaps: " << cam.tonemaps.size() << std::endl;
       }
       std::cout << std::endl;
 
