@@ -870,6 +870,38 @@ namespace hasmet
         }
       }
 
+      // --> read spot lights
+      if (scene_json["Lights"].contains("SpotLight"))
+      {
+        const auto &spot_lights_json = scene_json["Lights"]["SpotLight"];
+        auto parse_spot_light = [&](const json &sl_json)
+        {
+          SpotLight_ sl;
+          sl.id = std::stoi(sl_json["_id"].get<std::string>());
+          sl.position = parseVec3f(sl_json["Position"]);
+          sl.direction = parseVec3f(sl_json["Direction"]);
+          sl.intensity = parseVec3f(sl_json["Intensity"]);
+          sl.coverage_angle = std::stof(sl_json["CoverageAngle"].get<std::string>());
+          sl.falloff_angle = std::stof(sl_json["FalloffAngle"].get<std::string>());
+          if (sl_json.contains("Transformations"))
+          {
+            parse_transform_refs(sl_json["Transformations"].get<std::string>(),
+                                 sl.transformations);
+          }
+          scene.spot_lights.push_back(sl);
+        };
+
+        if (spot_lights_json.is_array())
+        {
+          for (const auto &pl_json : spot_lights_json)
+            parse_spot_light(pl_json);
+        }
+        else
+        {
+          parse_spot_light(spot_lights_json);
+        }
+      }
+
       // --- Materials ---
       const auto &materials_json = scene_json["Materials"]["Material"];
       auto parse_material = [&](const json &mat_json)
