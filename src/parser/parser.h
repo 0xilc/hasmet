@@ -69,6 +69,12 @@ typedef struct PointLight_ {
     std::vector<Transformation_> transformations;
 } PointLight_;
 
+typedef struct DirectionalLight_ {
+    int id;
+    Vec3f_ direction;
+    Vec3f_ radiance;
+} DirectionalLight_;
+
 typedef struct AreaLight_ {
     int id;
     Vec3f_ position;
@@ -176,6 +182,7 @@ typedef struct Scene_ {
     Vec3f_ ambient_light;
     std::vector<PointLight_> point_lights;
     std::vector<AreaLight_> area_lights;
+    std::vector<DirectionalLight_> directional_lights;
     std::vector<Material_> materials;
     std::vector<Vec3f_> vertex_data;
     std::vector<Vec2f_> tex_coord_data;

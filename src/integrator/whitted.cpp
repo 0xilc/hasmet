@@ -400,6 +400,27 @@ Color WhittedIntegrator::shade_blinn_phong(const Ray &ray,
              (std::pow(cos_alpha, material.phong_exponent) * attenuation);
   }
 
+  // Directional Lights
+  for (const auto &light : scene.directional_lights_) {
+    Vec3 wi = glm::normalize(-light->direction);
+    Color radiance = light->radiance;
+
+    // Shadow test
+    Ray shadow_ray(rec.p + rec.normal * rc.shadow_eps, wi);
+    shadow_ray.time = ray.time;
+    
+    if (glm::dot(rec.normal, wi) < 0.0f || scene.is_occluded(shadow_ray))
+      continue;
+
+    float cos_theta = glm::max(0.0f, glm::dot(rec.normal, wi));
+    color += Color(material.diffuse_reflectance) * radiance * cos_theta;
+
+    Vec3 wo = glm::normalize(ray.origin - rec.p);
+    Vec3 h = glm::normalize(wi + wo);
+    float cos_alpha = std::max(0.0f, glm::dot(rec.normal, h));
+    color += Color(material.specular_reflectance) * radiance 
+             * glm::pow(cos_alpha, material.phong_exponent);
+  }
   return color;
 }
 }  // namespace hasmet

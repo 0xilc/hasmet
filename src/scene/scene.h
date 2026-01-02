@@ -6,6 +6,7 @@
 #include "light/ambient_light.h"
 #include "light/point_light.h"
 #include "light/area_light.h"
+#include "light/directional_light.h"
 #include "material/material.h"
 #include "accelerator/bvh.h"
 #include "camera/pinhole.h"
@@ -40,6 +41,7 @@ class Scene {
   std::vector<Instance> planes_;
   std::vector<std::unique_ptr<PointLight>> point_lights_;
   std::vector<std::unique_ptr<AreaLight>> area_lights_;
+  std::vector<std::unique_ptr<DirectionalLight>> directional_lights_;
   std::vector<std::unique_ptr<Camera>> cameras_;
   std::unique_ptr<AmbientLight> ambient_light_;
   RenderContext render_context_;

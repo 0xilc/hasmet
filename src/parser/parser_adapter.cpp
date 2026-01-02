@@ -172,6 +172,12 @@ namespace hasmet
                          create_color(light_.radiance)};
       }
 
+      DirectionalLight create_directional_light(const Parser::DirectionalLight_ light_) {
+        Vec3 direction = create_vec3(light_.direction);
+        Color radiance = create_vec3(light_.radiance);
+        return DirectionalLight(direction, radiance);
+      }
+
       Material create_material(const Parser::Material_ &material_)
       {
         Material mat;
@@ -349,6 +355,11 @@ namespace hasmet
               std::make_unique<AreaLight>(create_area_light(light_)));
         }
 
+        for (const Parser::DirectionalLight_& light_ : parsed_scene.directional_lights) 
+        {
+          scene.directional_lights_.push_back(
+            std::make_unique<DirectionalLight>(create_directional_light(light_)));
+        }
         for (const Parser::Triangle_ &triangle_ : parsed_scene.triangles)
         {
           auto geometry = std::make_shared<Triangle>(

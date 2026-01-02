@@ -846,6 +846,30 @@ namespace hasmet
         }
       }
 
+      // --> read directional lights
+      if (scene_json["Lights"].contains("DirectionalLight"))
+      {
+        const auto &directional_lights_json = scene_json["Lights"]["DirectionalLight"];
+        auto parse_directional_light = [&](const json &pl_json)
+        {
+          DirectionalLight_ dl;
+          dl.id = std::stoi(pl_json["_id"].get<std::string>());
+          dl.direction = parseVec3f(pl_json["Direction"]);
+          dl.radiance = parseVec3f(pl_json["Radiance"]);
+          scene.directional_lights.push_back(dl);
+        };
+
+        if (directional_lights_json.is_array())
+        {
+          for (const auto &pl_json : directional_lights_json)
+            parse_directional_light(pl_json);
+        }
+        else
+        {
+          parse_directional_light(directional_lights_json);
+        }
+      }
+
       // --- Materials ---
       const auto &materials_json = scene_json["Materials"]["Material"];
       auto parse_material = [&](const json &mat_json)

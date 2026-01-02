@@ -35,7 +35,6 @@ int main(int argc, char* argv[]) {
     LOG_INFO("Reading scene...");
     Scene scene = Parser::ParserAdapter::read_scene(scene_path.string());
     WhittedIntegrator integrator;
-
     for (const std::unique_ptr<Camera>& camera : scene.cameras_) {
       Film film(camera->film_width_, camera->film_height_, camera->image_name_);
       integrator.render(scene, film, *camera);
