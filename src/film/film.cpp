@@ -13,6 +13,17 @@ Film::Film(int width, int height, const std::string& filename)
   pixels_.resize(width * height, Color(0.0f));
 }
 
+Film Film::operator=(Film other) {
+  if (this == &other) return *this;
+  
+  width_ = other.width_;
+  height_ = other.height_;
+  filename_ = other.filename_;
+  pixels_ = other.pixels_;
+
+  return *this;
+}
+
 void Film::addSample(int x, int y, const Color& color) {
   if (x < 0 || x >= width_ || y < 0 || y >= height_) {
     LOG_WARN("Attempted to write to out of bound pixel (" + std::to_string(x) +
@@ -34,6 +45,7 @@ void Film::write() const {
     success = write_exr(filename_, pixels_, width_, height_);
   }
   else {
+    
     success = write_png(filename_, pixels_, width_, height_);
   }
 
