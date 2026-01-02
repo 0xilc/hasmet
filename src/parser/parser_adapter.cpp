@@ -13,6 +13,7 @@
 #include "geometry/triangle.h"
 #include "light/area_light.h"
 #include "light/spot_light.h"
+#include "light/spherical_directional_light.h"
 #include "material/material_manager.h"
 #include "parser/parser.h"
 #include "scene/scene.h"
@@ -185,6 +186,10 @@ namespace hasmet
         Vec3 direction = create_vec3(light_.direction);
         Vec3 intensity = create_vec3(light_.intensity);    
         return SpotLight{position, direction, intensity, light_.coverage_angle, light_.falloff_angle};
+      }
+
+      SphericalDirectionalLight create_spherical_directional_light(const Parser::SphericalDirectionalLight_& light_) {
+        return SphericalDirectionalLight(light_.image_id, light_.type, light_.sampler);
       }
 
       Material create_material(const Parser::Material_ &material_)
@@ -374,6 +379,12 @@ namespace hasmet
         {
           scene.spot_lights_.push_back(
             std::make_unique<SpotLight>(create_spot_light(light_)));
+        }
+        
+        // --> read environment lights
+        for (const Parser::SphericalDirectionalLight_ &light_ : parsed_scene.spherical_directional_lights) {
+          scene.environment_lights_.push_back(
+              std::make_unique<SphericalDirectionalLight>(create_spherical_directional_light(light_)));
         }
 
         for (const Parser::Triangle_ &triangle_ : parsed_scene.triangles)

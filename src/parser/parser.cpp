@@ -902,6 +902,37 @@ namespace hasmet
         }
       }
 
+      // --> read spherical directional lights (Environment Lights)
+      if (scene_json["Lights"].contains("SphericalDirectionalLight"))
+      {
+        const auto &env_lights_json = scene_json["Lights"]["SphericalDirectionalLight"];
+        auto parse_env_light = [&](const json &el_json)
+        {
+          SphericalDirectionalLight_ el;
+          el.id = std::stoi(el_json["_id"].get<std::string>());
+          el.type = el_json["_type"].get<std::string>();
+          el.image_id = std::stoi(el_json["ImageId"].get<std::string>());
+          
+          if (el_json.contains("Sampler")) {
+              el.sampler = el_json["Sampler"].get<std::string>();
+          } else {
+              el.sampler = "cosine"; 
+          }
+          
+          scene.spherical_directional_lights.push_back(el);
+        };
+
+        if (env_lights_json.is_array())
+        {
+          for (const auto &el_json : env_lights_json)
+            parse_env_light(el_json);
+        }
+        else
+        {
+          parse_env_light(env_lights_json);
+        }
+      }
+      
       // --- Materials ---
       const auto &materials_json = scene_json["Materials"]["Material"];
       auto parse_material = [&](const json &mat_json)

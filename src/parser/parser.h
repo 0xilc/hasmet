@@ -94,6 +94,13 @@ typedef struct SpotLight_ {
     std::vector<Transformation_> transformations;
 } SpotLight_;
 
+typedef struct SphericalDirectionalLight_ {
+    int id;
+    std::string type;
+    int image_id;
+    std::string sampler;
+} SphericalDirectionalLight_;
+
 typedef struct Material_ {
     int id;
     std::string type;
@@ -184,15 +191,16 @@ typedef struct Plane_ {
 } Plane_;
 
 typedef struct Scene_ {
-    Vec3f_ background_color;
     float shadow_ray_epsilon;
     float intersection_test_epsilon;
     int max_recursion_depth;
-    std::vector<Camera_> cameras;
+    Vec3f_ background_color;
     Vec3f_ ambient_light;
+    std::vector<Camera_> cameras;
     std::vector<PointLight_> point_lights;
     std::vector<AreaLight_> area_lights;
     std::vector<DirectionalLight_> directional_lights;
+    std::vector<SphericalDirectionalLight_> spherical_directional_lights;
     std::vector<SpotLight_> spot_lights;
     std::vector<Material_> materials;
     std::vector<Vec3f_> vertex_data;
