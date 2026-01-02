@@ -91,9 +91,36 @@ void photographic(const Tonemap& tm, Film& film) {
         apply_gamma_correction(p, tm.gamma);
     }
 }
+
 void filmic(const Tonemap& tm, Film& film) {
-    LOG_ERROR("Not implemented yet");
-    return;
+    float Lw_avg = compute_log_avg_luminance(film);
+    float key = tm.options[0];
+    float scale = key / Lw_avg;
+
+    float L_white_scaled = compute_l_white(film, tm.options[1], scale);
+
+    auto map_filmic = [](float L) {
+        float a = 0.22f;
+        float b = 0.30f;
+        float c = 0.10f;
+        float d = 0.20f;
+        float e = 0.01f;
+        float f = 0.30f;
+        
+        return ((L*(a*L + c*b) + d*e) / (L*(a*L + b) + d*f)) - (e/f);
+    };
+    
+    float map_W = map_filmic(L_white_scaled);
+
+    for (Color& p : film.pixels_) {
+        float Li = get_luminance(p);
+        float L_scaled = Li * scale;
+
+        float Ld = map_filmic(L_scaled) / map_W;
+
+        apply_saturation(p, tm.saturation, Ld);
+        apply_gamma_correction(p, tm.gamma);
+    }
 }
 void aces(const Tonemap& tm, Film& film)
 {
