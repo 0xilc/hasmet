@@ -151,6 +151,19 @@ void aces(const Tonemap& tm, Film& film)
         apply_gamma_correction(p, tm.gamma);
     }
 }
+
+void ldr_legacy(const Tonemap& tm, Film& film) {
+    for (Color& p : film.pixels_) {
+        p.r /= 255.0f;
+        p.g /= 255.0f;
+        p.b /= 255.0f;
+        p.r = glm::clamp(p.r, 0.0f, 1.0f);
+        p.g = glm::clamp(p.g, 0.0f, 1.0f);
+        p.b = glm::clamp(p.b, 0.0f, 1.0f);
+
+        apply_gamma_correction(p, tm.gamma);
+    }
+}
 } // namespace
 
 Film do_tonemapping(const Tonemap& tonemap, const Film& film) {
@@ -169,8 +182,8 @@ Film do_tonemapping(const Tonemap& tonemap, const Film& film) {
             filmic(tonemap, result);
             break;
         }
-        case Tonemap::Type::NONE: {
-            // Do nothing
+        case Tonemap::Type::LDR_LEGACY: {
+            ldr_legacy(tonemap, result);
             break;
         }
     }

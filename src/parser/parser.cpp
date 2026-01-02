@@ -900,7 +900,12 @@ namespace hasmet
         {
           mat.roughness = 0.0f;
         }
-
+        if (mat_json.contains("_degamma")) {
+          mat.degamma = true;
+        }
+        else {
+          mat.degamma = false;
+        }
         scene.materials.push_back(mat);
       };
 

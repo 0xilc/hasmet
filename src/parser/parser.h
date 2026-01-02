@@ -90,6 +90,7 @@ typedef struct Material_ {
     Vec3f_ absorption_coefficient;
     float absorption_index;
     float roughness;
+    bool degamma;
 } Material_;
 
 struct Image_ {

@@ -5,16 +5,16 @@
 namespace hasmet {
 struct Tonemap{
     enum class Type {
-        NONE,
+        LDR_LEGACY,
         PHOTOGRAPHIC,
         FILMIC,
         ACES
     };
-    Type type = Type::NONE;
-    float options[2] = {1.0f, 1.0f};
+    Type type = Type::LDR_LEGACY;
+    float options[2] = {0.1f, 1.0f};
     float saturation = 1.0f;
     float gamma = 2.2f;
-    std::string extension = "_phot.png";
+    std::string extension = ".png";
 };
 
 class Camera {

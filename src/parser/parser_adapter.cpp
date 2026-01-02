@@ -191,6 +191,13 @@ namespace hasmet
         mat.ambient_reflectance = create_color(material_.ambient_reflectance);
         mat.diffuse_reflectance = create_color(material_.diffuse_reflectance);
         mat.specular_reflectance = create_color(material_.specular_reflectance);
+
+        if (material_.degamma) {
+          mat.ambient_reflectance = glm::pow(mat.ambient_reflectance, Color(2.2f));
+          mat.diffuse_reflectance = glm::pow(mat.diffuse_reflectance, Color(2.2f));
+          mat.specular_reflectance = glm::pow(mat.specular_reflectance, Color(2.2f));
+        }
+
         mat.mirror_reflectance = create_color(material_.mirror_reflectance);
         mat.absorption_coefficient = create_color(material_.absorption_coefficient);
         mat.absorption_index = material_.absorption_index;
@@ -296,7 +303,7 @@ namespace hasmet
             } else if (tm.tmo == "ACES") {
               t.type = hasmet::Tonemap::Type::ACES;
             } else {
-              t.type = hasmet::Tonemap::Type::NONE;
+              t.type = hasmet::Tonemap::Type::LDR_LEGACY;
             }
             t.options[0] = tm.tmo_options[0];
             t.options[1] = tm.tmo_options[1];

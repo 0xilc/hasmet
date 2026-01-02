@@ -35,10 +35,15 @@ void Film::addSample(int x, int y, const Color& color) {
   pixels_[index] = color;
 }
 
-void Film::write() const {
+std::string Film::get_extension() const{
   std::string ext = filename_.substr(filename_.find_last_of(".") + 1);
   std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+  
+  return std::move(ext);
+}
 
+void Film::write() const {
+  std::string ext = get_extension();  
   bool success = false;
   if (ext == "exr") {
     success = write_exr(filename_, pixels_, width_, height_);

@@ -39,8 +39,16 @@ int main(int argc, char* argv[]) {
     for (const std::unique_ptr<Camera>& camera : scene.cameras_) {
       Film film(camera->film_width_, camera->film_height_, camera->image_name_);
       integrator.render(scene, film, *camera);
-      film.write();
-      
+      if (film.get_extension() == "ext") {
+        film.write();
+      } else {
+        Tonemap tm;
+        tm.type = Tonemap::Type::LDR_LEGACY;
+        tm.extension = "." + film.get_extension();
+        Film tonemapped = do_tonemapping(tm, film);
+        tonemapped.write();
+      }
+
       for (const Tonemap& tm : camera->tonemaps_) {
           Film tonemapped = do_tonemapping(tm, film);
           tonemapped.write();

@@ -15,6 +15,7 @@ class Film {
   void write() const;
   int getWidth() const { return width_; }
   int getHeight() const { return height_; }
+  std::string get_extension() const;
   
   int width_;
   int height_;
