@@ -421,6 +421,54 @@ Color WhittedIntegrator::shade_blinn_phong(const Ray &ray,
     color += Color(material.specular_reflectance) * radiance 
              * glm::pow(cos_alpha, material.phong_exponent);
   }
+  
+  // Spot Lights
+  for (const auto &light : scene.spot_lights_) {
+    Vec3 wi_full = light->position - rec.p;
+    float distance_to_light = glm::length(wi_full);
+    Vec3 wi = glm::normalize(wi_full);
+
+    Ray shadow_ray(rec.p + rec.normal * rc.shadow_eps, wi);
+    shadow_ray.t_max = distance_to_light - rc.shadow_eps;
+    shadow_ray.time = ray.time;
+
+    if (glm::dot(rec.normal, wi) <= 0.0f || scene.is_occluded(shadow_ray)) {
+      continue;
+    }
+
+    float cos_alpha_spot = glm::dot(glm::normalize(light->direction), -wi);
+    float alpha = glm::acos(glm::clamp(cos_alpha_spot, -1.0f, 1.0f));
+    float half_coverage = glm::radians(light->coverage_angle) * 0.5f;
+    float half_falloff = glm::radians(light->falloff_angle) * 0.5f;
+
+    float s = 0.0f;
+    if (alpha <= half_falloff) {
+      s = 1.0f; 
+    } else if (alpha <= half_coverage) {
+      float num = cos_alpha_spot - std::cos(half_coverage);
+      float den = glm::cos(half_falloff) - glm::cos(half_coverage);
+      s = glm::pow(num / den, 4.0f);
+    } else {
+      s = 0.0f;
+    }
+
+    // Skip shading, outside of area
+    if (s == 0.0f) continue;
+
+    float dist2 = distance_to_light * distance_to_light;
+    
+    // -> Diffuse
+    float cos_theta = glm::max(0.0f, glm::dot(rec.normal, wi));
+    color += material.diffuse_reflectance * light->intensity * (s * cos_theta / dist2);
+
+    // -> Specular
+    Vec3 wo = glm::normalize(ray.origin - rec.p);
+    Vec3 h = glm::normalize(wi + wo);
+    float cos_alpha = glm::max(0.0f, glm::dot(rec.normal, h));
+    color += material.specular_reflectance * light->intensity *
+              (s * glm::pow(cos_alpha, material.phong_exponent) / dist2);
+  }
+
   return color;
 }
 }  // namespace hasmet
