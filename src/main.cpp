@@ -36,18 +36,8 @@ int main(int argc, char* argv[]) {
     WhittedIntegrator integrator;
 
     for (const std::unique_ptr<Camera>& camera : scene.cameras_) {
-      std::string output_name = camera->image_name_;
-      std::filesystem::path output_path(output_name);
-
-      if (!output_path.parent_path().empty()) {
-        std::filesystem::create_directories(output_path.parent_path());
-      }
-      
-      Film film(camera->film_width_, camera->film_height_, output_name);
-      
-      TIMER_START(Rendering);
+      Film film(camera->film_width_, camera->film_height_, camera->image_name_);
       integrator.render(scene, film, *camera);
-      TIMER_STOP(Rendering);
       film.write();
     }
   } catch (const std::exception& e) {

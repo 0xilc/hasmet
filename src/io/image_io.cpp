@@ -1,6 +1,7 @@
 #include "image_io.h"
 
 #include <vector>
+#include <filesystem>
 #include "core/logging.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -9,10 +10,21 @@
 #define TINYEXR_IMPLEMENTATION
 #include "tinyexr.h"
 
-
 namespace hasmet {
+namespace {
+void create_directory_if_missing(const std::string& filepath)
+{
+    std::filesystem::path output_path(filepath);
+
+    if (!output_path.parent_path().empty()) {
+    std::filesystem::create_directories(output_path.parent_path());
+    }
+}
+} // namespace
+
 bool write_png(const std::string& filename, const std::vector<Color>& pixels,
                int width, int height) {
+  create_directory_if_missing(filename);
   std::vector<unsigned char> image_data;
   image_data.reserve(width * height * 3);
 
@@ -35,6 +47,7 @@ bool write_png(const std::string& filename, const std::vector<Color>& pixels,
 
 bool write_exr(const std::string& filename, const std::vector<Color>& pixels,
                int width, int height) {
+    create_directory_if_missing(filename);
     const float* rgb_data = reinterpret_cast<const float*>(pixels.data());
     const char* err = nullptr;
 

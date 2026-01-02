@@ -15,6 +15,7 @@
 #include "material/material_manager.h"
 #include "texture/texture_manager.h"
 #include "scene/scene.h"
+#include "core/timer.h"
 
 namespace hasmet {
 namespace {
@@ -129,6 +130,7 @@ void perturb_ray(Ray &ray, float roughness) {
 
 void WhittedIntegrator::render(const Scene &scene, Film &film,
                                const Camera &camera) const {
+  SCOPED_TIMER("Rendering");
   int width = film.getWidth();
   int height = film.getHeight();
 
