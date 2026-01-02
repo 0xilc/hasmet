@@ -1,4 +1,5 @@
 #include "tonemap.h"
+#include "core/logging.h"
 
 namespace hasmet {
 namespace {
@@ -8,7 +9,7 @@ float get_luminance(const Color& p) {
 
 float compute_log_avg_luminance(const Film& film) {
     float sum_log_lum = 0.0f;
-    float eps = 0.00001f;
+    float eps = 0.00025f;
     int N = film.getWidth() * film.getHeight();
 
     for (const auto& p : film.pixels_) {
@@ -43,7 +44,10 @@ float compute_l_white(const Film& film, float burn_percent, float scale) {
 }
 
 void apply_saturation(Color& pixel, float saturation, float Ld) {
-    float inv_lum = 1.0f / get_luminance(pixel);
+    float lum = get_luminance(pixel);
+    if (lum < 1e-6f) return;
+    
+    float inv_lum = 1.0f / lum;
     pixel.r = glm::pow(pixel.r * inv_lum, saturation) * Ld;
     pixel.g = glm::pow(pixel.g * inv_lum, saturation) * Ld;
     pixel.b = glm::pow(pixel.b * inv_lum, saturation) * Ld;
@@ -56,15 +60,51 @@ void apply_gamma_correction(Color& pixel, float gamma) {
     }
 
     float inv_gamma = 1.0f / gamma;
-    pixel.r = 255.0f * glm::clamp(glm::pow(pixel.r, inv_gamma), 0.0f, 1.0f);
-    pixel.g = 255.0f * glm::clamp(glm::pow(pixel.g, inv_gamma), 0.0f, 1.0f);
-    pixel.b = 255.0f * glm::clamp(glm::pow(pixel.b, inv_gamma), 0.0f, 1.0f);
+    pixel.r = glm::clamp(glm::pow(pixel.r, inv_gamma), 0.0f, 1.0f);
+    pixel.g = glm::clamp(glm::pow(pixel.g, inv_gamma), 0.0f, 1.0f);
+    pixel.b = glm::clamp(glm::pow(pixel.b, inv_gamma), 0.0f, 1.0f);
 }
 
+void change_extension(Film& film, const std::string& extension) {
+    film.filename_ = film.filename_.substr(0, film.filename_.find_last_of('.')) + extension;
+}
+} // namespace
+
+namespace {
+void photographic(const Tonemap& tm, Film& film) {
+    float Lw_avg = compute_log_avg_luminance(film);
+
+    float key = tm.options[0];
+    float scale = key / Lw_avg;
+    
+    float L_white = compute_l_white(film, tm.options[1], scale);
+    float L_white2 = L_white * L_white;
+
+    for (Color& p : film.pixels_) {
+        float Li = get_luminance(p);
+        float L_scaled = Li * scale;
+
+        // Reinhard
+        float Ld = (L_scaled * (1.0f + (L_scaled / L_white2))) / (1.0f + L_scaled);
+        
+        apply_saturation(p, tm.saturation, Ld);
+        apply_gamma_correction(p, tm.gamma);
+    }
+}
+void filmic(const Tonemap& tm, Film& film) {
+    LOG_ERROR("Not implemented yet");
+    return;
+}
+void aces(const Tonemap& tm, Film& film)
+{
+    LOG_ERROR("Not implemented yet");
+    return;
+}
 } // namespace
 
 Film do_tonemapping(const Tonemap& tonemap, const Film& film) {
     Film result = film;
+    change_extension(result, tonemap.extension);
     switch (tonemap.type){
         case Tonemap::Type::PHOTOGRAPHIC: {
             photographic(tonemap, result);
@@ -83,34 +123,7 @@ Film do_tonemapping(const Tonemap& tonemap, const Film& film) {
             break;
         }
     }
-    
+
     return result;
 }
-
-void photographic(const Tonemap& tm, Film& film) {
-    float L_avg = compute_log_avg_luminance(film);
-    float key = tm.options[0];
-    float scale = key / L_avg;
-    float L_white = compute_l_white(film, tm.options[1], scale);
-    float L_white2 = L_white * L_white2;
-
-    for (Color& p : film.pixels_) {
-        float Li = get_luminance(p);
-        float L_scaled = Li * scale;
-        float Ld = (L_scaled * (1.0f + (L_scaled / L_white2))) / (1.0f + L_scaled);
-        
-        apply_saturation(p, tm.saturation, Ld);
-        apply_gamma_correction(p, tm.gamma);
-    }
-}
-void filmic(const Tonemap& tm, Film& film) {
-    LOG_ERROR("Not implemented yet");
-    return;
-}
-void aces(const Tonemap& tm, Film& film)
-{
-    LOG_ERROR("Not implemented yet");
-    return;
-}
-
 } // namespace hasmet

@@ -36,7 +36,6 @@ void Film::addSample(int x, int y, const Color& color) {
 }
 
 void Film::write() const {
-  LOG_INFO("Writing image to " + filename_ + "...");
   std::string ext = filename_.substr(filename_.find_last_of(".") + 1);
   std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 
@@ -45,12 +44,11 @@ void Film::write() const {
     success = write_exr(filename_, pixels_, width_, height_);
   }
   else {
-    
     success = write_png(filename_, pixels_, width_, height_);
   }
 
   if (success) {
-    LOG_INFO("Image: " << filename_ << " successfully written");
+    LOG_INFO("Image " << filename_ << " successfully written");
   } else {
     LOG_ERROR("Failed to write image to :" << filename_);
   }

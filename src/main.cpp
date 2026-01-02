@@ -15,6 +15,7 @@
 #include "scene/scene.h"
 #include "parser/parser.h"
 #include "core/timer.h"
+#include "film/tonemap.h"
 
 using namespace hasmet;
 
@@ -39,6 +40,11 @@ int main(int argc, char* argv[]) {
       Film film(camera->film_width_, camera->film_height_, camera->image_name_);
       integrator.render(scene, film, *camera);
       film.write();
+      
+      for (const Tonemap& tm : camera->tonemaps_) {
+          Film tonemapped = do_tonemapping(tm, film);
+          tonemapped.write();
+      }
     }
   } catch (const std::exception& e) {
     LOG_ERROR("An error occurred: " << e.what());

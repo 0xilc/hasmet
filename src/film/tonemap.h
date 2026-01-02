@@ -1,7 +1,6 @@
 #pragma once
 
 #include "film.h"
-#include "logging.h"
 #include "camera/camera.h"
 
 namespace hasmet {

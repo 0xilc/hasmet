@@ -29,14 +29,13 @@ bool write_png(const std::string& filename, const std::vector<Color>& pixels,
   image_data.reserve(width * height * 3);
 
   for (const auto& pixel : pixels) {
-    Color clamped_pixel = glm::clamp(pixel, 0.0f, 255.0f);
+    unsigned char r = static_cast<unsigned char>(glm::clamp(pixel.r * 255.0f, 0.0f, 255.0f));
+    unsigned char g = static_cast<unsigned char>(glm::clamp(pixel.g * 255.0f, 0.0f, 255.0f));
+    unsigned char b = static_cast<unsigned char>(glm::clamp(pixel.b * 255.0f, 0.0f, 255.0f));
 
-    image_data.push_back(
-        static_cast<unsigned char>(clamped_pixel.r));
-    image_data.push_back(
-        static_cast<unsigned char>(clamped_pixel.g));
-    image_data.push_back(
-        static_cast<unsigned char>(clamped_pixel.b));
+    image_data.push_back(r);
+    image_data.push_back(g);
+    image_data.push_back(b);
   }
 
   int result = stbi_write_png(filename.c_str(), width, height, 3,
