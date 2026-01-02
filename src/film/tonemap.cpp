@@ -106,7 +106,7 @@ void filmic(const Tonemap& tm, Film& film) {
         float d = 0.20f;
         float e = 0.01f;
         float f = 0.30f;
-        
+
         return ((L*(a*L + c*b) + d*e) / (L*(a*L + b) + d*f)) - (e/f);
     };
     
@@ -124,8 +124,32 @@ void filmic(const Tonemap& tm, Film& film) {
 }
 void aces(const Tonemap& tm, Film& film)
 {
-    LOG_ERROR("Not implemented yet");
-    return;
+    float Lw_avg = compute_log_avg_luminance(film);
+    float key = tm.options[0];
+    float scale = key / Lw_avg;
+
+    auto map_aces = [&](float L) {
+        float A = 2.51f;
+        float B = 0.03f;
+        float C = 2.43f;
+        float D = 0.59f;
+        float E = 0.14f;
+        
+        return (L * (A * L + B)) / (L * (C * L + D) + E);
+    };
+
+    float L_white_scaled = compute_l_white(film, tm.options[1], scale);
+    float map_W = map_aces(L_white_scaled);
+
+    for (Color& p : film.pixels_) {
+        float Li = get_luminance(p);
+        float L_scaled = Li * scale;
+
+        float Ld = map_aces(L_scaled) / map_W;
+
+        apply_saturation(p, tm.saturation, Ld);
+        apply_gamma_correction(p, tm.gamma);
+    }
 }
 } // namespace
 
