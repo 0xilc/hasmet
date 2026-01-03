@@ -1,46 +1,16 @@
-# This is the configuration file for the Clang-Tidy linter.
-# It defines which checks to run and how to configure them.
-# The file format is YAML.
+Checks: '-*,google-*,bugprone-*,performance-*'
 
-# The 'Checks' key specifies which checks to enable or disable.
-# We start by disabling all checks ('-*') and then selectively enable groups.
-# This is a robust way to ensure you only run the checks you want.
-Checks: '-*,bugprone-*,cppcoreguidelines-*,modernize-*,performance-*,readability-*'
-
-# 'CheckOptions' allows you to fine-tune the behavior of specific checks.
-# This is useful for customizing rules to fit your project's style.
 CheckOptions:
-  # --- Naming Conventions ---
-  # Enforce a consistent naming style. This is one of the most valuable checks.
-  # We will use CamelCase for types and lower_case for variables/functions.
   - key: readability-identifier-naming.ClassCase
     value: CamelCase
   - key: readability-identifier-naming.StructCase
     value: CamelCase
   - key: readability-identifier-naming.FunctionCase
-    value: lower_case
+    value: lower_case 
   - key: readability-identifier-naming.VariableCase
     value: lower_case
-  - key: readability-identifier-naming.MemberCase
-    value: lower_case_with_underscores # e.g., my_member_
+  - key: readability-identifier-naming.GlobalConstantCase
+    value: kCamelCase 
 
-  # --- Disabling Noisy Checks ---
-  # Don't require member initializers for plain C-style arrays.
-  - key: cppcoreguidelines-pro-type-member-init.IgnoreArrays
-    value: 1
-  # Don't suggest adding [[nodiscard]] to every function.
-  - key: modernize-use-nodiscard.CheckFunctions
-    value: 0
-  # Don't complain about magic numbers in simple test cases.
-  - key: readability-magic-numbers.IgnoreAllNumbers
-    value: 1
-
-# 'HeaderFilterRegex' is crucial. It tells Clang-Tidy which files to analyze.
-# We set it to analyze only headers within our own 'src' directory.
-# This prevents it from linting system headers (e.g., <vector>) or external libraries.
 HeaderFilterRegex: 'src/.*'
-
-# 'ExtraArgs' lets you pass command-line arguments to the Clang compiler instance
-# that Tidy uses to parse your code. Ensuring the C++ standard matches your
-# project is very important.
 ExtraArgs: ['-std=c++17']

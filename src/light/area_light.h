@@ -24,6 +24,8 @@ struct AreaLight : public Light {
     u = glm::normalize(glm::cross(tmp, w));
     v = glm::cross(w, u);
   }
+  
+  LightSample sample_li(const Vec3& hit_point, const Vec2& u) const;
 };
 
 } // namespace hasmet

@@ -10,5 +10,7 @@ struct DirectionalLight : public Light {
 
   DirectionalLight(const Vec3& direction, const Color& radiance)
       : direction(direction), radiance(radiance) {}
+  
+  LightSample sample_li(const Vec3& hit_point, const Vec2& u) const;
 };
 } // namespace hasmet

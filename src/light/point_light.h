@@ -10,5 +10,7 @@ struct PointLight : public Light {
 
   PointLight(const Vec3& pos, const Color& i)
       : position(pos), intensity(i) {}
+  
+  LightSample sample_li(const Vec3& hit_point, const Vec2& u) const;
 };
 } // namespace hasmet

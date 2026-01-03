@@ -18,5 +18,7 @@ struct SpotLight : public Light {
       coverage_angle(coverage), 
       falloff_angle(falloff) 
   {}
+
+  LightSample sample_li(const Vec3& hit_point, const Vec2& u) const;
 };
 } // namespace hasmet
