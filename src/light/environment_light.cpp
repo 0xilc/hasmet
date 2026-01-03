@@ -83,4 +83,10 @@ LightSample EnvironmentLight::sample_li(const HitRecord &rec,
   
   return { L, wi_world, pdf, std::numeric_limits<float>::infinity()};
 }
+
+Color EnvironmentLight::sample_le(const Ray& ray) const {
+  Vec2 uv = get_uv_from_dir(ray.direction, this->type);
+  
+  return ImageManager::get_instance()->get(image_id).get_pixel(uv.x, uv.y);
+}
 } // namespace hasmet

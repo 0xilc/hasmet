@@ -14,6 +14,7 @@ struct EnvironmentLight : public Light {
       : image_id(img_id), type(t), sampler(s) {}
 
   LightSample sample_li(const HitRecord& rec, const Vec2& u) const override;
+  Color sample_le(const Ray& ray) const;
 };
 
 } // namespace hasmet
