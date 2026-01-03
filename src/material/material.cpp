@@ -53,9 +53,12 @@ Color Material::evaluate(const Vec3& wi, const Vec3& wo, const HitRecord& rec) c
   
   Color diffuse = diffuse_reflectance;
 
+  // INFO: dividing specular to cos_theta is physically wrong, 
+  // but I put it here to mimic the old algorithm
   Vec3 h = glm::normalize(wi + wo);
+  float cos_theta = std::max(0.001f, glm::dot(rec.normal, wi));
   float cos_alpha = std::max(0.0f, glm::dot(rec.normal, h));
-  Color specular = specular_reflectance * glm::pow(cos_alpha, phong_exponent);
+  Color specular = specular_reflectance * glm::pow(cos_alpha, phong_exponent) / cos_theta;
 
   return diffuse + specular;
 }
