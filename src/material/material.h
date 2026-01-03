@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/hit_record.h"
 #include "core/types.h"
 
 namespace hasmet {
@@ -11,7 +12,17 @@ enum class MaterialType{
   TextureColor
 };
 
+struct BxDFSample {
+  Color weight{0.0f};
+  Vec3 wi{0.0f};
+  bool is_valid; // new ray generated?
+  bool is_transmission = false;
+};
+
 struct Material{
+  Color evaluate(const Vec3& wi, const Vec3& wo, const HitRecord& rec) const;
+  std::vector<BxDFSample> sample_f(const Vec3& wo, const HitRecord& rec, const glm::vec2& u);
+
   MaterialType type = MaterialType::BlinnPhong;
 
   // Phong properties
