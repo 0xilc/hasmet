@@ -3,8 +3,8 @@
 
 namespace hasmet {
 
-LightSample SpotLight::sample_li(const Vec3 &hit_point, const Vec2 &u) const {
-  Vec3 wi_full = position - hit_point;
+LightSample SpotLight::sample_li(const HitRecord& rec, const Vec2 &u) const {
+  Vec3 wi_full = position - rec.p;
   float dist2 = glm::dot(wi_full, wi_full);
   float dist = glm::sqrt(dist2);
   Vec3 wi = wi_full / dist;

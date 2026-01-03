@@ -7,7 +7,7 @@
 #include "light/point_light.h"
 #include "light/area_light.h"
 #include "light/directional_light.h"
-#include "light/spherical_directional_light.h"
+#include "light/environment_light.h"
 #include "light/spot_light.h"
 #include "material/material.h"
 #include "accelerator/bvh.h"
@@ -44,7 +44,7 @@ class Scene {
   std::vector<std::unique_ptr<PointLight>> point_lights_;
   std::vector<std::unique_ptr<AreaLight>> area_lights_;
   std::vector<std::unique_ptr<SpotLight>> spot_lights_;
-  std::vector<std::unique_ptr<SphericalDirectionalLight>> environment_lights_;
+  std::vector<std::unique_ptr<EnvironmentLight>> environment_lights_;
   std::vector<std::unique_ptr<DirectionalLight>> directional_lights_;
   std::vector<std::unique_ptr<Camera>> cameras_;
   std::unique_ptr<AmbientLight> ambient_light_;

@@ -2,6 +2,7 @@
 #include "light.h"
 
 #include "core/types.h"
+#include "core/hit_record.h"
 
 namespace hasmet {
 struct DirectionalLight : public Light {
@@ -11,6 +12,6 @@ struct DirectionalLight : public Light {
   DirectionalLight(const Vec3& direction, const Color& radiance)
       : direction(direction), radiance(radiance) {}
   
-  LightSample sample_li(const Vec3& hit_point, const Vec2& u) const;
+  LightSample sample_li(const HitRecord& rec, const Vec2& u) const override;
 };
 } // namespace hasmet

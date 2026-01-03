@@ -2,11 +2,11 @@
 
 namespace hasmet {
 
-LightSample AreaLight::sample_li(const Vec3 &hit_point, const Vec2 &u) const {
+LightSample AreaLight::sample_li(const HitRecord& rec, const Vec2 &u) const {
   Vec3 sampled_light_point =
       position + (this->u * (u.x - 0.5f) + (this->v * (u.y - 0.5f))) * size;
 
-  Vec3 wi_full = sampled_light_point - hit_point;
+  Vec3 wi_full = sampled_light_point - rec.p;
   float dist2 = glm::dot(wi_full, wi_full);
   float dist = glm::sqrt(dist2);
   Vec3 wi = wi_full / dist;

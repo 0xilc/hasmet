@@ -2,6 +2,7 @@
 #include "light.h"
 
 #include "core/types.h"
+#include "core/hit_record.h"
 
 namespace hasmet {
 struct SpotLight : public Light {
@@ -19,6 +20,6 @@ struct SpotLight : public Light {
       falloff_angle(falloff) 
   {}
 
-  LightSample sample_li(const Vec3& hit_point, const Vec2& u) const;
+  LightSample sample_li(const HitRecord& rec, const Vec2& u) const override;
 };
 } // namespace hasmet

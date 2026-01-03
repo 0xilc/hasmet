@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/hit_record.h"
 #include "core/types.h"
 
 namespace hasmet {
@@ -12,6 +13,7 @@ struct LightSample {
 
 class Light{
  public:
-  // virtual LightSample sample_li(const Vec3& hit_point, const Vec2& uxuy) const = 0;
+  virtual ~Light() = default;
+  virtual LightSample sample_li(const HitRecord& rec, const Vec2& u) const = 0;
 };
 } // namespace hasmet

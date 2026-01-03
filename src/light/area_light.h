@@ -3,6 +3,7 @@
 #include "light.h"
 #include <glm/glm.hpp>
 #include "core/types.h"
+#include "core/hit_record.h"
 
 namespace hasmet {
 struct AreaLight : public Light {
@@ -25,7 +26,7 @@ struct AreaLight : public Light {
     v = glm::cross(w, u);
   }
   
-  LightSample sample_li(const Vec3& hit_point, const Vec2& u) const;
+  LightSample sample_li(const HitRecord& rec, const Vec2& u) const override;
 };
 
 } // namespace hasmet

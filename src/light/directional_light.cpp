@@ -3,7 +3,7 @@
 
 namespace hasmet {
 
-LightSample DirectionalLight::sample_li(const Vec3& hit_point, const Vec2& u) const {
+LightSample DirectionalLight::sample_li(const HitRecord& rec, const Vec2& u) const {
   Vec3 wi = glm::normalize(-this->direction);
   Color L = Color(this->radiance);
 
