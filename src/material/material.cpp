@@ -44,11 +44,11 @@ Vec3 perturb(const Vec3& d, float roughness, const glm::vec2& u_sample) {
 
 Color Material::evaluate(const Vec3& wi, const Vec3& wo, const HitRecord& rec) const {
   if (type == MaterialType::TextureColor 
-      || type == MaterialType::Mirror || type == MaterialType::Dielectric) {
+      || type == MaterialType::Dielectric) {
     return Color(0.0f);
   };
   
-  Color diffuse = diffuse_reflectance / glm::pi<float>();
+  Color diffuse = diffuse_reflectance;
 
   Vec3 h = glm::normalize(wi + wo);
   float cos_alpha = std::max(0.0f, glm::dot(rec.normal, h));
