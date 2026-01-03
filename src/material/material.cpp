@@ -30,15 +30,18 @@ inline float fresnel_conductor(float cos_theta, float n, float k) {
 }
 
 Vec3 perturb(const Vec3& d, float roughness, const glm::vec2& u_sample) {
-    if (roughness <= 0.0f) return d;
-    Vec3 w = d;
-    Vec3 a = (std::abs(w.x) > 0.9f) ? Vec3(0, 1, 0) : Vec3(1, 0, 0);
-    Vec3 u_axis = glm::normalize(glm::cross(a, w));
-    Vec3 v_axis = glm::cross(w, u_axis);
-    float r1 = u_sample.x - 0.5f;
-    float r2 = u_sample.y - 0.5f;
-    
-    return glm::normalize(d + (u_axis * r1 + v_axis * r2) * roughness);
+  Vec3 w = glm::normalize(d);
+
+  Vec3 tmp =
+      (std::abs(w.x) > 0.9f) ? Vec3(0.0f, 1.0f, 0.0f) : Vec3(1.0f, 0.0f, 0.0f);
+  Vec3 u = glm::normalize(glm::cross(tmp, w));
+  Vec3 v = glm::cross(w, u);
+
+  float r1 = Sampling::_generate_random_float(0.0f, 1.0f) - 0.5;
+  float r2 = Sampling::_generate_random_float(0.0f, 1.0f) - 0.5;
+
+  Vec3 new_direction = d + (u * r1 + v * r2) * roughness;
+  return glm::normalize(new_direction);
 }
 } // namespace
 

@@ -5,22 +5,27 @@
 #include "glm/gtc/constants.hpp"
 #include "image/image_manager.h"
 #include "light/light.h"
+#include <cmath>
 #include <limits>
 
 namespace hasmet {
 namespace {
-Vec2 get_uv_from_dir(const Vec3 &d, const std::string &type) {
+Vec2 dir_to_uv(const Vec3 &d_in, const std::string &type) {
+  Vec3 d = glm::normalize(d_in);
   float u, v;
+  float pi = glm::pi<float>();
+
   if (type == "latlong") {
-    u = (1.0f + std::atan2(d.x, -d.z) / glm::pi<float>()) * 0.5f;
-    v = glm::acos(glm::clamp(d.y, -1.0f, 1.0f)) / glm::pi<float>();
+    u = (1.0f + std::atan2(d.x, -d.z) / pi) * 0.5f;
+    v = glm::acos(glm::clamp(d.y, -1.0f, 1.0f)) / pi;
   } else {
-    float r = (1.0f / glm::pi<float>()) *
-              glm::acos(glm::clamp(-d.z, -1.0f, 1.0f)) /
-              glm::sqrt(d.x * d.x + d.y * d.y + 1e-6f);
-    float u = (r * d.x + 1.0f) * 0.5f;
-    float v = (-r * d.y + 1.0f) * 0.5f;
+    float p = std::sqrt(d.x * d.x + d.y * d.y);
+    float r = (p > 1e-6f) ? (std::acos(glm::clamp(-d.z, -1.0f, 1.0f)) / (pi * p)) : 0.0f;
+
+    u = (d.x * r + 1.0f) * 0.5f;
+    v = (-d.y * r + 1.0f) * 0.5f; 
   }
+  
   return Vec2(u, v);
 }
 
@@ -79,14 +84,14 @@ LightSample EnvironmentLight::sample_li(const HitRecord &rec,
     v_tex = (-r * d.y + 1.0f) * 0.5f;
   }
 
-  Color L = ImageManager::get_instance()->get(image_id).get_pixel(u_tex, v_tex);
+  Color L = ImageManager::get_instance()->get(image_id).get_pixel_bilinear(u_tex, v_tex);
   
   return { L, wi_world, pdf, std::numeric_limits<float>::infinity()};
 }
 
 Color EnvironmentLight::sample_le(const Ray& ray) const {
-  Vec2 uv = get_uv_from_dir(ray.direction, this->type);
+  Vec2 uv = dir_to_uv(ray.direction, this->type);
   
-  return ImageManager::get_instance()->get(image_id).get_pixel(uv.x, uv.y);
+  return ImageManager::get_instance()->get(image_id).get_pixel_bilinear(uv.x, uv.y);
 }
 } // namespace hasmet

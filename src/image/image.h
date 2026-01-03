@@ -11,6 +11,7 @@ class Image {
     ~Image() = default;
 
     Color get_pixel(int x, int y) const;
+    Color get_pixel_bilinear(float u, float v) const;
 
     int get_width() const { return width_; }
     int get_height() const { return height_; }

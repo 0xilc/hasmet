@@ -24,4 +24,23 @@ Color Image::get_pixel(int x, int y) const {
   return Color(r, g, b);
 }
 
+Color Image::get_pixel_bilinear(float u, float v) const {
+  float x = u * (width_ - 1);
+  float y = v * (height_ - 1);
+
+  int x0 = static_cast<int>(std::floor(x));
+  int y0 = static_cast<int>(std::floor(y));
+  int x1 = static_cast<int>(std::min(x0 + 1, width_ - 1));
+  int y1 = static_cast<int>(std::min(y0 + 1, height_ - 1));
+
+  float dx = x - x0;
+  float dy = y - y0;
+
+  Color c00 = get_pixel(x0, y0);
+  Color c10 = get_pixel(x1, y0);
+  Color c01 = get_pixel(x0, y1);
+  Color c11 = get_pixel(x1, y1);
+  
+  return glm::mix(glm::mix(c00, c10, dx), glm::mix(c01, c11, dx), dy);
+}
 } // namespace hasmet
