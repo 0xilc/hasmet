@@ -43,7 +43,7 @@ Vec3 perturb(const Vec3& d, float roughness, const glm::vec2& u_sample) {
 } // namespace
 
 Color Material::evaluate(const Vec3& wi, const Vec3& wo, const HitRecord& rec) const {
-  if (type == MaterialType::TextureColor 
+  if (type == MaterialType::Unlit 
       || type == MaterialType::Dielectric) {
     return Color(0.0f);
   };

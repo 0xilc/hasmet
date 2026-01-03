@@ -54,7 +54,7 @@ Material apply_textures(const Material& base_mat, HitRecord& rec) {
       
       case DecalMode::REPLACE_ALL:
         mat.diffuse_reflectance = tex_color;
-        mat.type = MaterialType::TextureColor;
+        mat.type = MaterialType::Unlit;
         break;
       
       case DecalMode::REPLACE_NORMAL: {
@@ -151,7 +151,12 @@ Color WhittedIntegrator::Li(Ray& ray, const Scene& scene, int depth, Sampler& sa
   Material mat = apply_textures(base_mat, rec);
   ShadingContext ctx{ray, rec, mat, sampler, pixel_id, sample_index, num_samples};
   
-  Color L = shade_blinn_phong(ctx, scene);
+  Color L;
+  if (mat.type == MaterialType::Unlit) {
+      L = mat.diffuse_reflectance;
+  } else {
+      L = shade_blinn_phong(ctx, scene);
+  }
 
   int dim = 100;
   Vec3 wo = -glm::normalize(ray.direction);
@@ -208,7 +213,7 @@ Color WhittedIntegrator::shade_blinn_phong(const ShadingContext& ctx, const Scen
   process_list(scene.area_lights_);
   process_list(scene.spot_lights_);
   process_list(scene.directional_lights_);
-  // process_list(scene.environment_lights_);
+  process_list(scene.environment_lights_);
 
   return L_direct;
 }

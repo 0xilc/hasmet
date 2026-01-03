@@ -9,7 +9,7 @@ enum class MaterialType{
 	Mirror,
 	Conductor,
 	Dielectric,
-  TextureColor
+  Unlit
 };
 
 struct BxDFSample {
