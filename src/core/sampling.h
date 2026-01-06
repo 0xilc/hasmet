@@ -1,8 +1,8 @@
 #pragma once
 #include <random>
 
-namespace hasmet::Sampling{
-
+namespace hasmet{
+namespace Sampling{
 inline float _generate_random_float(float start, float end) {
   static thread_local std::mt19937 generator(std::random_device{}());
   std::uniform_real_distribution<float> distribution(start, end);
@@ -34,5 +34,5 @@ inline std::vector<std::pair<float, float>> generate_jittered_samples(int num_sa
 
   return samples;
 }
-
-} // namespace hasmet::Sampling
+}  // namespace Sampling
+} // namespace hasmet

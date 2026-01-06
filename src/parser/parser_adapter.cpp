@@ -291,7 +291,7 @@ namespace hasmet
         ImageManager* image_manager = ImageManager::get_instance();
         for (const Parser::Image_& img : parsed_scene.images) {
           std::filesystem::path image_path = base_dir / img.data;
-          image_manager->load_image(img.id, image_path);
+          image_manager->load_image(img.id, image_path.string());
         }
 
         // Read Textures
