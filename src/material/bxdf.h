@@ -24,4 +24,17 @@ class BxDF {
 
     BxDFType type_;
 };
+
+class OriginalBlinnPhongBRDF : public BxDF {
+public: 
+  OriginalBlinnPhongBRDF(const Color& kd, const Color& ks, float exponent);
+
+  virtual Color f(const Vec3& wo, const Vec3& wi) const override;
+  virtual Color sample_f(const Vec3& wo, Vec3* wi, const glm::vec2& u, float* pdf) const override;
+  virtual float pdf(const Vec3& wo, const Vec3& wi) const override;
+
+private:
+  Color kd_, ks_;
+  float exponent_;
+};
 }
