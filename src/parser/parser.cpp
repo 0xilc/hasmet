@@ -642,14 +642,16 @@ namespace hasmet
         res_ss >> cam.image_width >> cam.image_height;
         cam.image_name = cam_json["ImageName"];
 
-        if (cam_json.contains("GazePoint") || cam_json.contains("Gaze"))
-        {
-          std::string field_name = "GazePoint";
-          if (cam_json.contains("Gaze")) {field_name = "Gaze"; }
-            
+        if (cam_json.contains("FovY"))
+        { 
           // 1. Calculate the 'gaze' direction vector
           // gaze = normalize(GazePoint - Position)
-          Vec3f_ gaze_point = parseVec3f(cam_json[field_name]);
+          Vec3f_ gaze_point;
+          if (cam_json.contains("GazePoint"))
+            gaze_point = parseVec3f(cam_json["GazePoint"]);
+          else if (cam_json.contains("Gaze"))
+            gaze_point = parseVec3f(cam_json["Gaze"]);
+
           Vec3f_ gaze_vec = {gaze_point.x - cam.position.x,
                              gaze_point.y - cam.position.y,
                              gaze_point.z - cam.position.z};
@@ -1179,12 +1181,22 @@ namespace hasmet
           }
 
           const auto &fj = j["Faces"];
-          if (fj.contains("_data"))
-          {
-            std::stringstream ss(fj["_data"].get<std::string>());
-            int v0, v1, v2;
-            while (ss >> v0 >> v1 >> v2)
-              m.faces.push_back({m.material_id, v0 - 1, v1 - 1, v2 - 1});
+
+          int v_offset = 0;
+          if (fj.contains("_vertexOffset")) {
+              v_offset = std::stoi(fj["_vertexOffset"].get<std::string>());
+          }
+
+          if (fj.contains("_data")) {
+              std::stringstream ss(fj["_data"].get<std::string>());
+              int v0, v1, v2;
+              while (ss >> v0 >> v1 >> v2) {
+                  int final_v0 = v0 + v_offset - 1;
+                  int final_v1 = v1 + v_offset - 1;
+                  int final_v2 = v2 + v_offset - 1;
+                  
+                  m.faces.push_back({m.material_id, final_v0, final_v1, final_v2});
+              }
           }
           else if (fj.contains("_plyFile"))
           {

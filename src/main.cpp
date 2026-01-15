@@ -33,7 +33,8 @@ int main(int argc, char* argv[]) {
 
   try {
     LOG_INFO("Reading scene...");
-    Scene scene = Parser::ParserAdapter::read_scene("/home/ilc/Desktop/hw6/directLighting/inputs/cornellbox_jaroslav_diffuse.json");
+    Scene scene = Parser::ParserAdapter::read_scene(
+      "/home/ilc/Desktop/hw6/directLighting/inputs/cornellbox_jaroslav_diffuse.json");
     // Scene scene = Parser::ParserAdapter::read_scene(scene_path.string());
     WhittedIntegrator integrator;
     for (const std::unique_ptr<Camera>& camera : scene.cameras_) {
