@@ -642,11 +642,14 @@ namespace hasmet
         res_ss >> cam.image_width >> cam.image_height;
         cam.image_name = cam_json["ImageName"];
 
-        if (cam_json.contains("GazePoint"))
+        if (cam_json.contains("GazePoint") || cam_json.contains("Gaze"))
         {
+          std::string field_name = "GazePoint";
+          if (cam_json.contains("Gaze")) {field_name = "Gaze"; }
+            
           // 1. Calculate the 'gaze' direction vector
           // gaze = normalize(GazePoint - Position)
-          Vec3f_ gaze_point = parseVec3f(cam_json["GazePoint"]);
+          Vec3f_ gaze_point = parseVec3f(cam_json[field_name]);
           Vec3f_ gaze_vec = {gaze_point.x - cam.position.x,
                              gaze_point.y - cam.position.y,
                              gaze_point.z - cam.position.z};
@@ -766,6 +769,20 @@ namespace hasmet
           }
         }
 
+        if (cam_json.contains("Renderer")) {
+          cam.renderer = cam_json["Renderer"].get<std::string>();
+        } else {
+          cam.renderer = "RayTracing";
+        }
+
+        if (cam_json.contains("RendererParams")) {
+          std::istringstream params(cam_json["RendererParams"].get<std::string>());
+          std::string param;
+          while (params >> param) {
+            cam.renderer_params.push_back(param);
+          }
+        }
+
         scene.cameras.push_back(cam);
       };
 
@@ -780,130 +797,131 @@ namespace hasmet
       }
 
       // --- Lights ---
-      if (scene_json["Lights"].contains("AmbientLight")){
-        scene.ambient_light = parseVec3f(scene_json["Lights"]["AmbientLight"]);
-      } else {
-        scene.ambient_light = Vec3f_(0.0f, 0.0f, 0.0f);
-      }
-      
-      // --> read point lights
-      if (scene_json["Lights"].contains("PointLight"))
-      {
-        const auto &point_lights_json = scene_json["Lights"]["PointLight"];
-        auto parse_point_light = [&](const json &pl_json)
+      if (scene_json.contains("Lights")) {
+        if (scene_json["Lights"].contains("AmbientLight")){
+          scene.ambient_light = parseVec3f(scene_json["Lights"]["AmbientLight"]);
+        } else {
+          scene.ambient_light = Vec3f_(0.0f, 0.0f, 0.0f);
+        }
+        
+        // --> read point lights
+        if (scene_json["Lights"].contains("PointLight"))
         {
-          PointLight_ pl;
-          pl.id = std::stoi(pl_json["_id"].get<std::string>());
-          pl.position = parseVec3f(pl_json["Position"]);
-          pl.intensity = parseVec3f(pl_json["Intensity"]);
-          if (pl_json.contains("Transformations"))
+          const auto &point_lights_json = scene_json["Lights"]["PointLight"];
+          auto parse_point_light = [&](const json &pl_json)
           {
-            parse_transform_refs(pl_json["Transformations"].get<std::string>(),
-                                 pl.transformations);
-          }
-          scene.point_lights.push_back(pl);
-        };
+            PointLight_ pl;
+            pl.id = std::stoi(pl_json["_id"].get<std::string>());
+            pl.position = parseVec3f(pl_json["Position"]);
+            pl.intensity = parseVec3f(pl_json["Intensity"]);
+            if (pl_json.contains("Transformations"))
+            {
+              parse_transform_refs(pl_json["Transformations"].get<std::string>(),
+                                  pl.transformations);
+            }
+            scene.point_lights.push_back(pl);
+          };
 
-        if (point_lights_json.is_array())
-        {
-          for (const auto &pl_json : point_lights_json)
-            parse_point_light(pl_json);
-        }
-        else
-        {
-          parse_point_light(point_lights_json);
-        }
-      }
-
-      // --> read area lights
-      if (scene_json["Lights"].contains("AreaLight"))
-      {
-        const auto &area_lights_json = scene_json["Lights"]["AreaLight"];
-        auto parse_area_light = [&](const json &al_json)
-        {
-          AreaLight_ al;
-          al.id = std::stoi(al_json["_id"].get<std::string>());
-          al.position = parseVec3f(al_json["Position"]);
-          al.normal = parseVec3f(al_json["Normal"]);
-          al.radiance = parseVec3f(al_json["Radiance"]);
-          al.size = std::stoi(al_json["Size"].get<std::string>());
-          if (al_json.contains("Transformations"))
+          if (point_lights_json.is_array())
           {
-            parse_transform_refs(al_json["Transformations"].get<std::string>(),
-                                 al.transformations);
+            for (const auto &pl_json : point_lights_json)
+              parse_point_light(pl_json);
           }
-          scene.area_lights.push_back(al);
-        };
-
-        if (area_lights_json.is_array())
-        {
-          for (const auto &pl_json : area_lights_json)
-            parse_area_light(pl_json);
-        }
-        else
-        {
-          parse_area_light(area_lights_json);
-        }
-      }
-
-      // --> read directional lights
-      if (scene_json["Lights"].contains("DirectionalLight"))
-      {
-        const auto &directional_lights_json = scene_json["Lights"]["DirectionalLight"];
-        auto parse_directional_light = [&](const json &pl_json)
-        {
-          DirectionalLight_ dl;
-          dl.id = std::stoi(pl_json["_id"].get<std::string>());
-          dl.direction = parseVec3f(pl_json["Direction"]);
-          dl.radiance = parseVec3f(pl_json["Radiance"]);
-          scene.directional_lights.push_back(dl);
-        };
-
-        if (directional_lights_json.is_array())
-        {
-          for (const auto &pl_json : directional_lights_json)
-            parse_directional_light(pl_json);
-        }
-        else
-        {
-          parse_directional_light(directional_lights_json);
-        }
-      }
-
-      // --> read spot lights
-      if (scene_json["Lights"].contains("SpotLight"))
-      {
-        const auto &spot_lights_json = scene_json["Lights"]["SpotLight"];
-        auto parse_spot_light = [&](const json &sl_json)
-        {
-          SpotLight_ sl;
-          sl.id = std::stoi(sl_json["_id"].get<std::string>());
-          sl.position = parseVec3f(sl_json["Position"]);
-          sl.direction = parseVec3f(sl_json["Direction"]);
-          sl.intensity = parseVec3f(sl_json["Intensity"]);
-          sl.coverage_angle = std::stof(sl_json["CoverageAngle"].get<std::string>());
-          sl.falloff_angle = std::stof(sl_json["FalloffAngle"].get<std::string>());
-          if (sl_json.contains("Transformations"))
+          else
           {
-            parse_transform_refs(sl_json["Transformations"].get<std::string>(),
-                                 sl.transformations);
+            parse_point_light(point_lights_json);
           }
-          scene.spot_lights.push_back(sl);
-        };
-
-        if (spot_lights_json.is_array())
-        {
-          for (const auto &pl_json : spot_lights_json)
-            parse_spot_light(pl_json);
         }
-        else
-        {
-          parse_spot_light(spot_lights_json);
-        }
-      }
 
-      // --> read spherical directional lights (Environment Lights)
-      if (scene_json["Lights"].contains("SphericalDirectionalLight"))
+        // --> read area lights
+        if (scene_json["Lights"].contains("AreaLight"))
+        {
+          const auto &area_lights_json = scene_json["Lights"]["AreaLight"];
+          auto parse_area_light = [&](const json &al_json)
+          {
+            AreaLight_ al;
+            al.id = std::stoi(al_json["_id"].get<std::string>());
+            al.position = parseVec3f(al_json["Position"]);
+            al.normal = parseVec3f(al_json["Normal"]);
+            al.radiance = parseVec3f(al_json["Radiance"]);
+            al.size = std::stoi(al_json["Size"].get<std::string>());
+            if (al_json.contains("Transformations"))
+            {
+              parse_transform_refs(al_json["Transformations"].get<std::string>(),
+                                  al.transformations);
+            }
+            scene.area_lights.push_back(al);
+          };
+
+          if (area_lights_json.is_array())
+          {
+            for (const auto &pl_json : area_lights_json)
+              parse_area_light(pl_json);
+          }
+          else
+          {
+            parse_area_light(area_lights_json);
+          }
+        }
+
+        // --> read directional lights
+        if (scene_json["Lights"].contains("DirectionalLight"))
+        {
+          const auto &directional_lights_json = scene_json["Lights"]["DirectionalLight"];
+          auto parse_directional_light = [&](const json &pl_json)
+          {
+            DirectionalLight_ dl;
+            dl.id = std::stoi(pl_json["_id"].get<std::string>());
+            dl.direction = parseVec3f(pl_json["Direction"]);
+            dl.radiance = parseVec3f(pl_json["Radiance"]);
+            scene.directional_lights.push_back(dl);
+          };
+
+          if (directional_lights_json.is_array())
+          {
+            for (const auto &pl_json : directional_lights_json)
+              parse_directional_light(pl_json);
+          }
+          else
+          {
+            parse_directional_light(directional_lights_json);
+          }
+        }
+
+        // --> read spot lights
+        if (scene_json["Lights"].contains("SpotLight"))
+        {
+          const auto &spot_lights_json = scene_json["Lights"]["SpotLight"];
+          auto parse_spot_light = [&](const json &sl_json)
+          {
+            SpotLight_ sl;
+            sl.id = std::stoi(sl_json["_id"].get<std::string>());
+            sl.position = parseVec3f(sl_json["Position"]);
+            sl.direction = parseVec3f(sl_json["Direction"]);
+            sl.intensity = parseVec3f(sl_json["Intensity"]);
+            sl.coverage_angle = std::stof(sl_json["CoverageAngle"].get<std::string>());
+            sl.falloff_angle = std::stof(sl_json["FalloffAngle"].get<std::string>());
+            if (sl_json.contains("Transformations"))
+            {
+              parse_transform_refs(sl_json["Transformations"].get<std::string>(),
+                                  sl.transformations);
+            }
+            scene.spot_lights.push_back(sl);
+          };
+
+          if (spot_lights_json.is_array())
+          {
+            for (const auto &pl_json : spot_lights_json)
+              parse_spot_light(pl_json);
+          }
+          else
+          {
+            parse_spot_light(spot_lights_json);
+          }
+        }
+
+        // --> read spherical directional lights (Environment Lights)
+        if (scene_json["Lights"].contains("SphericalDirectionalLight"))
       {
         const auto &env_lights_json = scene_json["Lights"]["SphericalDirectionalLight"];
         auto parse_env_light = [&](const json &el_json)
@@ -931,6 +949,7 @@ namespace hasmet
         {
           parse_env_light(env_lights_json);
         }
+      }
       }
       
       // --- BRDFs ---
@@ -1347,7 +1366,9 @@ namespace hasmet
                     << " | Output: " << cam.image_name 
                     << " | Samples: " << cam.num_samples 
                     << " | Focus Dist: " << cam.focus_distance
-                    << " | Tonemaps: " << cam.tonemaps.size() << std::endl;
+                    << " | Tonemaps: " << cam.tonemaps.size()
+                    << " | Renderer: " << cam.renderer
+                    << " | Renderer params size: " << cam.renderer_params.size() << std::endl;
       }
       std::cout << std::endl;
 
@@ -1361,6 +1382,7 @@ namespace hasmet
       // BRDFs
       std::cout << "[BRDF]" << std::endl;
       std::cout << "  BRDFs                 : " << scene.brdfs.size() << std::endl; 
+      std::cout << std::endl;
 
       // 4. Materials & Textures
       std::cout << "[Materials & Textures]" << std::endl;

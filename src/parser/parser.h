@@ -60,6 +60,8 @@ typedef struct Camera_ {
     float aperture_size;
     float focus_distance;
     std::vector<Tonemap_> tonemaps;
+    std::string renderer;
+    std::vector<std::string> renderer_params;
 } Camera_;
 
 typedef struct PointLight_ {
