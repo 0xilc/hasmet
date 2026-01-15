@@ -933,6 +933,50 @@ namespace hasmet
         }
       }
       
+      // --- BRDFs ---
+      if (scene_json.contains("BRDFs")) {
+        const auto& brdfs_json = scene_json["BRDFs"];
+        
+        auto parse_brdf_node = [&](const json& b_json, const std::string& type_name) {
+            BRDF_ brdf;
+            brdf.type = type_name;
+            brdf.id = std::stoi(b_json["_id"].get<std::string>());
+
+            if (b_json.contains("Exponent"))
+                brdf.exponent = std::stof(b_json["Exponent"].get<std::string>());
+            else
+                brdf.exponent = 1.0f;
+
+            if (b_json.contains("_normalized"))
+                brdf.normalized = b_json["_normalized"].get<std::string>() == "true";
+            else
+                brdf.normalized = false;
+
+            if (b_json.contains("kdfresnel"))
+                brdf.kdfresnel = b_json["kdfresnel"].get<std::string>() == "true";
+            else
+                brdf.kdfresnel = false;
+
+            scene.brdfs.push_back(brdf);
+        };
+
+        std::vector<std::string> brdf_types = {
+            "OriginalBlinnPhong", "OriginalPhong", 
+            "ModifiedBlinnPhong", "ModifiedPhong", "TorranceSparrow"
+        };
+
+        for (const auto& type : brdf_types) {
+            if (brdfs_json.contains(type)) {
+                const auto& node = brdfs_json[type];
+                if (node.is_array()) {
+                    for (const auto& item : node) parse_brdf_node(item, type);
+                } else {
+                    parse_brdf_node(node, type);
+                }
+            }
+        }
+    }
+
       // --- Materials ---
       const auto &materials_json = scene_json["Materials"]["Material"];
       auto parse_material = [&](const json &mat_json)
@@ -996,13 +1040,10 @@ namespace hasmet
         scene.materials.push_back(mat);
       };
 
-      if (materials_json.is_array())
-      {
+      if (materials_json.is_array()) {
         for (const auto &mat_json : materials_json)
           parse_material(mat_json);
-      }
-      else
-      {
+      } else {
         parse_material(materials_json);
       }
 
@@ -1317,6 +1358,10 @@ namespace hasmet
       std::cout << "  Area Lights           : " << scene.area_lights.size() << std::endl;
       std::cout << std::endl;
 
+      // BRDFs
+      std::cout << "[BRDF]" << std::endl;
+      std::cout << "  BRDFs                 : " << scene.brdfs.size() << std::endl; 
+
       // 4. Materials & Textures
       std::cout << "[Materials & Textures]" << std::endl;
       std::cout << "  Materials             : " << scene.materials.size() << std::endl;
@@ -1339,13 +1384,5 @@ namespace hasmet
       
       std::cout << "==========================================================" << std::endl;
     }
-
-    void printScene(const Scene_ &scene)
-    {
-      printSceneSummary(scene);
-      // Detailed printing implementation can be added here if needed,
-      // using the overloaded operators in parser.h
-    }
-
   } // namespace Parser
 } // namespace hasmet

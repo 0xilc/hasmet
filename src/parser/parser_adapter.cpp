@@ -277,6 +277,7 @@ namespace hasmet
       {
         Parser::Scene_ parsed_scene;
         Parser::parseScene(filename, parsed_scene);
+        Parser::printSceneSummary(parsed_scene);
 
         Scene scene;
         scene.render_context_ = RenderContext{

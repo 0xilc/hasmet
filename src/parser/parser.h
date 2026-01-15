@@ -101,6 +101,14 @@ typedef struct SphericalDirectionalLight_ {
     std::string sampler;
 } SphericalDirectionalLight_;
 
+typedef struct BRDF_ {
+  int id;
+  std::string type;
+  bool normalized = false;
+  float exponent = 1.0f;
+  bool kdfresnel = false;
+} BRDF_;
+ 
 typedef struct Material_ {
     int id;
     std::string type;
@@ -142,7 +150,6 @@ struct TextureMap_ {
 
     float normalizer;
 };
-
 
 typedef struct Triangle_ {
     int material_id;
@@ -213,6 +220,7 @@ typedef struct Scene_ {
     std::vector<Sphere_> spheres;
     std::vector<Plane_> planes;
     std::vector<Transformation_> transformations;
+    std::vector<BRDF_> brdfs;
 } Scene_;
 
 // --- Function Declaration ---
@@ -229,7 +237,6 @@ inline std::ostream& operator<<(std::ostream& os, const Vec4f_& v) {
 }
 
 void printSceneSummary(const Scene_& scene);
-void printScene(const Scene_& scene);
 
 }  // namespace Parser
 }  // namespace hasmet
