@@ -168,6 +168,7 @@ typedef struct Mesh_ {
     std::vector<Transformation_> transformations;
     Vec3f_ motion_blur;
     std::vector<int> texture_ids;
+    Vec3f_ radiance = {0.0f, 0.0f, 0.0f};
 } Mesh_;
 
 typedef struct MeshInstance_ {
@@ -178,6 +179,7 @@ typedef struct MeshInstance_ {
     std::vector<Transformation_> transformations;
     Vec3f_ motion_blur;
     std::vector<int> texture_ids;
+    Vec3f_ radiance = {0.0f, 0.0f, 0.0f};
 } MeshInstance_;
 
 typedef struct Sphere_ {
@@ -188,6 +190,7 @@ typedef struct Sphere_ {
     std::vector<Transformation_> transformations;
     Vec3f_ motion_blur;
     std::vector<int> texture_ids;
+    Vec3f_ radiance = {0.0f, 0.0f, 0.0f};
 } Sphere_;
 
 typedef struct Plane_ {

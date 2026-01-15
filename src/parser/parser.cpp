@@ -1276,7 +1276,7 @@ namespace hasmet
         else
           parse_sph(sj);
       }
-
+      
       // Planes
       if (objects_json.contains("Plane"))
       {
@@ -1341,6 +1341,76 @@ namespace hasmet
             parse_tri(i);
         else
           parse_tri(tj);
+      }
+
+      // --- Light Objects ---
+
+      // LightSphere
+      if (objects_json.contains("LightSphere")) {
+          auto parse_light_sphere = [&](const json &j) {
+              Sphere_ s;
+              s.id = std::stoi(j["_id"].get<std::string>());
+              s.material_id = std::stoi(j["Material"].get<std::string>());
+              s.center_vertex_id = std::stoi(j["Center"].get<std::string>()) - 1;
+              s.radius = std::stof(j["Radius"].get<std::string>());
+              
+              if (j.contains("Radiance")) {
+                  s.radiance = parseVec3f(j["Radiance"].get<std::string>());
+              }
+
+              if (j.contains("Transformations")) {
+                  parse_transform_refs(j["Transformations"].get<std::string>(), s.transformations);
+              }
+
+              scene.spheres.push_back(s);
+          };
+
+          const auto &lsj = objects_json["LightSphere"];
+          if (lsj.is_array())
+              for (const auto &i : lsj) parse_light_sphere(i);
+          else
+              parse_light_sphere(lsj);
+      }
+      
+      // LightMesh
+      if (objects_json.contains("LightMesh"))
+      {
+          auto parse_light_mesh = [&](const json &j)
+          {
+              Mesh_ m;
+              m.id = std::stoi(j["_id"].get<std::string>());
+              m.material_id = std::stoi(j["Material"].get<std::string>());
+              m.smooth_shading = j.contains("_shadingMode") && (j["_shadingMode"].get<std::string>() == "smooth");
+
+              if (j.contains("Radiance")) {
+                  m.radiance = parseVec3f(j["Radiance"].get<std::string>());
+              }
+
+              if (j.contains("Transformations")) {
+                  parse_transform_refs(j["Transformations"].get<std::string>(), m.transformations);
+              }
+
+              const auto &fj = j["Faces"];
+              if (fj.contains("_data")) {
+                  std::stringstream ss(fj["_data"].get<std::string>());
+                  int v0, v1, v2;
+                  while (ss >> v0 >> v1 >> v2)
+                      m.faces.push_back({m.material_id, v0 - 1, v1 - 1, v2 - 1});
+              } 
+              else if (fj.contains("_plyFile")) {
+                  std::string ply = fj["_plyFile"];
+                  std::string dir = filename.substr(0, filename.find_last_of("/\\") + 1);
+                  PlyHelpers::parsePlyFile(dir + ply, m, scene);
+              }
+
+              scene.meshes.push_back(m);
+          };
+
+          const auto &mj = objects_json["LightMesh"];
+          if (mj.is_array())
+              for (const auto &i : mj) parse_light_mesh(i);
+          else
+              parse_light_mesh(mj);
       }
     }
 
