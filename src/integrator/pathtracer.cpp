@@ -70,7 +70,7 @@ Color PathTracerIntegrator::trace_path(const Scene& scene, Ray ray, int max_dept
 
     Vec2 u = sampler.get_2d(0, 0, depth + 10);
     BxDFSample bs = mat.sample(wo_world, rec, u);
-
+    
     if (!bs.is_valid) break;
 
     throughput *= bs.weight;

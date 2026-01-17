@@ -175,7 +175,7 @@ BxDFSample Material::sample(const Vec3& wo, const HitRecord& rec, const glm::vec
       }
     }
   }
-  else if (type == MaterialType::BlinnPhong) {
+  else {
     Frame frame(rec.normal);
     float phi = 2.0f * glm::pi<float>() * u.x;
     float cosTheta = std::sqrt(u.y);
@@ -190,13 +190,85 @@ BxDFSample Material::sample(const Vec3& wo, const HitRecord& rec, const glm::vec
         return s;
     }
 
-    // Since PDF = cos_theta_i / PI, the weight (f * cos / pdf) simplifies to:
-    s.weight = evaluate(s.wi, wo, rec) * glm::pi<float>(); 
+    Color tmp;
+    if (brdf) {
+      s.weight = brdf->evaluate(s.wi, wo, rec.normal, diffuse_reflectance, specular_reflectance);
+    } else {
+      s.weight = diffuse_reflectance / glm::pi<float>();
+    }
     s.is_valid = true;
   }
 
   return s;
 }
 
+Color BRDF::evaluate(const Vec3& wi, const Vec3& wo, const Vec3& n, const Color& kd, const Color& ks) {
+float cosThetaI = std::max(0.0f, glm::dot(n, wi));
+  if (cosThetaI <= 0.0f) return glm::vec3(0.0f);
+
+  glm::vec3 diffuse(0.0f);
+  glm::vec3 specular(0.0f);
+
+  glm::vec3 wh = glm::normalize(wi + wo);
+  float cosAlphaH = std::max(0.0f, glm::dot(n, wh));
+
+  switch (type)
+  {
+  case BRDFType::OriginalPhong:
+  {
+      glm::vec3 r = glm::normalize(2.0f * glm::dot(n, wi) * n - wi);
+      float cosAlphaR = std::max(0.0f, glm::dot(r, wo));
+
+      diffuse = kd;
+      float spec_factor = std::pow(cosAlphaR, exponent);
+      if (cosThetaI > 1e-6f) spec_factor /= cosThetaI;
+
+      specular = ks * spec_factor;
+      break;
+  }
+  case BRDFType::ModifiedPhong:
+  {
+      glm::vec3 r = glm::normalize(2.0f * glm::dot(n, wi) * n - wi);
+      float cosAlphaR = std::max(0.0f, glm::dot(r, wo));
+
+      if (normalized) {
+          // Eq 5: kd/PI + ks * (p+2)/2PI * cos^n(alpha_r)
+          diffuse = kd * (float)(1.0 / M_PI);
+          float norm_factor = (exponent + 2.0f) / (2.0f * M_PI);
+          specular = ks * (norm_factor * std::pow(cosAlphaR, exponent));
+      } else {
+          // Eq 3
+          diffuse = kd;
+          specular = ks * std::pow(cosAlphaR, exponent);
+      }
+      break;
+  }
+  case BRDFType::OriginalBlinnPhong:
+  {
+      // Eq 7: kd + ks * (cos^p(alpha_h) / cosThetaI)
+      diffuse = kd;
+      float spec_factor = std::pow(cosAlphaH, exponent);
+      if (cosThetaI > 1e-6f) spec_factor /= cosThetaI;
+
+      specular = ks * spec_factor;
+      break;
+  }
+  case BRDFType::ModifiedBlinnPhong:
+  {
+      if (normalized) {
+          // Eq 9: kd/PI + ks * (p+8)/8PI * cos^n(alpha_h)
+          diffuse = kd * (float)(1.0 / M_PI);
+          float norm_factor = (exponent + 8.0f) / (8.0f * M_PI);
+          specular = ks * (norm_factor * std::pow(cosAlphaH, exponent));
+      } else {
+          // Eq 8: kd + ks * cos^p(alpha_h)
+          diffuse = kd;
+          specular = ks * std::pow(cosAlphaH, exponent);
+      }
+      break;
+  }
+}
+return diffuse + specular;
+}
 } // namespace hasmet
 

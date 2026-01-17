@@ -1058,6 +1058,11 @@ namespace hasmet
         else {
           mat.degamma = false;
         }
+        if (mat_json.contains("_BRDF")) {
+          mat.brdf_id = std::stoi(mat_json["_BRDF"].get<std::string>());
+        } else {
+          mat.brdf_id = -1;
+        }
         scene.materials.push_back(mat);
       };
 

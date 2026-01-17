@@ -124,6 +124,7 @@ typedef struct Material_ {
     float absorption_index;
     float roughness;
     bool degamma;
+    int brdf_id;
 } Material_;
 
 struct Image_ {

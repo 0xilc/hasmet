@@ -2,6 +2,7 @@
 
 #include "core/hit_record.h"
 #include "core/types.h"
+#include "material/bxdf.h"
 
 namespace hasmet {
 enum class MaterialType{
@@ -19,13 +20,31 @@ struct BxDFSample {
   bool is_transmission = false;
 };
 
+enum class BRDFType {
+  OriginalBlinnPhong,
+  OriginalPhong,
+  ModifiedBlinnPhong,
+  ModifiedPhong,
+  TorranceSparrow
+};
+
+struct BRDF {
+  int id;
+  BRDFType type;
+  bool normalized;
+  float exponent;
+  bool kd_fresnel;
+
+  Color evaluate(const Vec3& wi, const Vec3& wo, const Vec3& n, const Color& kd, const Color& ks);
+};
+
 struct Material{
   Color evaluate(const Vec3& wi, const Vec3& wo, const HitRecord& rec) const;
   std::vector<BxDFSample> sample_f(const Vec3& wo, const HitRecord& rec, const glm::vec2& u) const;
   BxDFSample sample(const Vec3& wo, const HitRecord& rec, const glm::vec2& u) const;
-
   MaterialType type = MaterialType::BlinnPhong;
-
+  
+  BRDF* brdf = nullptr;
   // Phong properties
   Color ambient_reflectance{0.0f};
   Color diffuse_reflectance{0.0f};

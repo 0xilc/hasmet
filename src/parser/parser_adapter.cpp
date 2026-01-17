@@ -14,6 +14,7 @@
 #include "light/area_light.h"
 #include "light/spot_light.h"
 #include "light/environment_light.h"
+#include "material/material.h"
 #include "material/material_manager.h"
 #include "parser/parser.h"
 #include "scene/scene.h"
@@ -192,7 +193,42 @@ namespace hasmet
         return EnvironmentLight(light_.image_id, light_.type, light_.sampler);
       }
 
-      Material create_material(const Parser::Material_ &material_)
+      BRDF create_brdf(const Parser::BRDF_& _brdf) {
+        BRDF tmp;
+        tmp.id = _brdf.id;
+        tmp.exponent = _brdf.exponent;
+        tmp.kd_fresnel = _brdf.kdfresnel;
+        tmp.normalized = _brdf.normalized;
+        if (_brdf.type == "OriginalBlinnPhong")
+        {
+          tmp.type = BRDFType::OriginalBlinnPhong;
+        }
+        else if (_brdf.type == "OriginalPhong")
+        {
+          tmp.type = BRDFType::OriginalPhong;
+        }
+        else if (_brdf.type == "ModifiedBlinnPhong")
+        {
+          tmp.type = BRDFType::ModifiedBlinnPhong;
+        }
+        else if (_brdf.type == "ModifiedPhong")
+        {
+          tmp.type = BRDFType::ModifiedPhong;
+        }
+        else if (_brdf.type == "TorranceSparrow")
+        {
+          tmp.type = BRDFType::TorranceSparrow;
+        }
+        else
+        {
+          LOG_ERROR("DEBUG: |" + _brdf.type + "| Length: " + std::to_string(_brdf.type.length()));
+          throw std::runtime_error("Unsupported BRDF type!");
+        }
+        
+        return tmp;
+      }
+
+      Material create_material(const Parser::Material_ &material_, BRDF* brdf)
       {
         Material mat;
 
@@ -336,11 +372,17 @@ namespace hasmet
 
           scene.cameras_.push_back(std::move(camera_ptr));
         }
-
+        
+        std::vector<hasmet::BRDF> brdfs(parsed_scene.brdfs.size() + 1);
+        for (const Parser::BRDF_ brdf : parsed_scene.brdfs) {
+          brdfs[brdf.id] = create_brdf(brdf);
+        }
+        
         MaterialManager *material_manager = MaterialManager::get_instance();
         for (const Parser::Material_ material_ : parsed_scene.materials)
         {
-          material_manager->add(material_.id, create_material(material_));
+          BRDF* brdfptr = material_.brdf_id != -1 ? &brdfs[material_.brdf_id] : nullptr;
+          material_manager->add(material_.id, create_material(material_, brdfptr));
         }
 
         for (const Parser::Sphere_ &sphere_ : parsed_scene.spheres)
