@@ -352,6 +352,7 @@ namespace hasmet
           inst.set_motion_blur(create_vec3(sphere_.motion_blur));
           inst.set_material_id(sphere_.material_id);
           inst.set_texture_ids(sphere_.texture_ids);
+          inst.set_radiance(create_vec3(sphere_.radiance));
           scene.objects_.push_back(std::move(inst));
         }
 
@@ -543,6 +544,7 @@ namespace hasmet
           inst.set_motion_blur(create_vec3(mesh_.motion_blur));
           inst.set_material_id(mesh_.material_id);
           inst.set_texture_ids(mesh_.texture_ids);
+          inst.set_radiance(create_vec3(mesh_.radiance));
           object_registry[mesh_.id] = {mesh_geo, m_base};
           scene.add_shape(std::move(inst));
         }

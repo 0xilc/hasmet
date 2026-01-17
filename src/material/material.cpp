@@ -2,9 +2,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 #include "core/ray.h"
+#include "core/sampling.h"
 #include "core/types.h"
 #include "glm/exponential.hpp"
 #include "glm/geometric.hpp"
+#include "core/frame.h"
 
 namespace hasmet {
 namespace {
@@ -64,7 +66,7 @@ Color Material::evaluate(const Vec3& wi, const Vec3& wo, const HitRecord& rec) c
 }
 
 // TODO: convert this to one sample when we move to path tracing
-std::vector<BxDFSample> Material::sample_f(const Vec3& wo, const HitRecord& rec, const glm::vec2& u) {
+std::vector<BxDFSample> Material::sample_f(const Vec3& wo, const HitRecord& rec, const glm::vec2& u) const{
   std::vector<BxDFSample> samples;
 
   if (type == MaterialType::Mirror) {
@@ -118,6 +120,83 @@ std::vector<BxDFSample> Material::sample_f(const Vec3& wo, const HitRecord& rec,
   return samples;
 }
 
+BxDFSample Material::sample(const Vec3& wo, const HitRecord& rec, const glm::vec2& u) const{
+  BxDFSample s;
+
+  if (type == MaterialType::Mirror) {
+    s.wi = perturb(glm::reflect(-wo, rec.normal), roughness, u);
+    s.weight = mirror_reflectance;
+    s.is_valid = true;
+  }
+  else if (type == MaterialType::Conductor) {
+    s.wi = perturb(glm::reflect(-wo, rec.normal), roughness, u);
+    float cos_theta = std::max(0.0f, glm::dot(rec.normal, s.wi));
+    float Fr = fresnel_conductor(cos_theta, refraction_index, absorption_index);
+    s.weight = Fr * mirror_reflectance;
+    s.is_valid = true;
+  }
+  else if (type == MaterialType::Dielectric) {
+    bool entering = glm::dot(wo, rec.normal) > 0.0f;
+    Vec3 n = entering ? rec.normal : -rec.normal;
+    float etaI = entering ? 1.0f : refraction_index;
+    float etaT = entering ? refraction_index : 1.0f;
+    float eta = etaI / etaT;
+
+    float cosThetaI = glm::dot(wo, n);
+    float sin2ThetaT = eta * eta * (1.0f - cosThetaI * cosThetaI);
+
+    BxDFSample refl;
+    refl.wi = perturb(glm::reflect(-wo, n), roughness, u);
+    refl.is_transmission = false;
+    refl.is_valid = true;
+
+    if (sin2ThetaT > 1.0f) { // Total internal reflection
+      refl.weight = Color(1.0f);
+      s = refl;
+    }
+    else {
+      float cosThetaT = glm::sqrt(1.0f - sin2ThetaT);
+      float Fr = fresnel_dielectric(cosThetaI, etaI, etaT, cosThetaT);
+      refl.weight = Color(Fr);
+
+      // Refraction ray
+      BxDFSample refr;
+      refr.wi = perturb(eta * -wo + (eta * cosThetaI - cosThetaT) * n, roughness, u);
+      refr.weight = Color(1.0f - Fr);
+      refr.is_transmission = true;
+      refr.is_valid = true;
+
+      float random = Sampling::_generate_random_float(0.0f, 1.0f);
+      if (random < Fr) {
+        s = refl;
+      }
+      else {
+        s = refr;
+      }
+    }
+  }
+  else if (type == MaterialType::BlinnPhong) {
+    Frame frame(rec.normal);
+    float phi = 2.0f * glm::pi<float>() * u.x;
+    float cosTheta = std::sqrt(u.y);
+    float sinTheta = std::sqrt(std::max(0.0f, 1.0f - u.y));
+    
+    Vec3 local_wi(sinTheta * std::cos(phi), sinTheta * std::sin(phi), cosTheta);
+    s.wi = frame.to_world(local_wi);
+    
+    float cos_theta_i = glm::dot(rec.normal, s.wi);
+    if (cos_theta_i <= 1e-6f) { // Prevent division by zero/NaNs
+        s.is_valid = false;
+        return s;
+    }
+
+    // Since PDF = cos_theta_i / PI, the weight (f * cos / pdf) simplifies to:
+    s.weight = evaluate(s.wi, wo, rec) * glm::pi<float>(); 
+    s.is_valid = true;
+  }
+
+  return s;
+}
 
 } // namespace hasmet
 

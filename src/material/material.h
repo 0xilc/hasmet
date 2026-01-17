@@ -21,7 +21,8 @@ struct BxDFSample {
 
 struct Material{
   Color evaluate(const Vec3& wi, const Vec3& wo, const HitRecord& rec) const;
-  std::vector<BxDFSample> sample_f(const Vec3& wo, const HitRecord& rec, const glm::vec2& u);
+  std::vector<BxDFSample> sample_f(const Vec3& wo, const HitRecord& rec, const glm::vec2& u) const;
+  BxDFSample sample(const Vec3& wo, const HitRecord& rec, const glm::vec2& u) const;
 
   MaterialType type = MaterialType::BlinnPhong;
 

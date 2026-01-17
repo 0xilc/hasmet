@@ -1,4 +1,5 @@
 #pragma once
+#include "glm/detail/qualifier.hpp"
 #include "hittable.h"
 #include <memory>
 #include <glm/glm.hpp>
@@ -38,6 +39,12 @@ class Instance : public Hittable {
     texture_ids_ = texture_ids;
   }
 
+  void set_radiance(const Vec3 rad) {
+    if (glm::length(rad)) {
+      this->radiance_ = rad;
+    }
+  }
+
   virtual bool intersect(Ray& ray, HitRecord& rec) const override {
     Ray local_ray = ray;
     if (has_motion_blur_) local_ray.origin -= motion_blur_ * ray.time;
@@ -63,6 +70,7 @@ class Instance : public Hittable {
     // }
 
     ray.t_max = local_ray.t_max;
+    rec.radiance = this->radiance_;
     return true;
   }
 
@@ -77,5 +85,6 @@ class Instance : public Hittable {
   bool has_motion_blur_ = false;
   int material_id_;
   std::vector<int> texture_ids_;
+  std::optional<Color> radiance_;
 };
 }

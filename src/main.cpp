@@ -8,6 +8,7 @@
 #include "film/film.h"
 #include "geometry/sphere.h"
 #include "geometry/triangle.h"
+#include "integrator/pathtracer.h"
 #include "integrator/whitted.h"
 #include "material/material.h"
 #include "material/material_manager.h"
@@ -34,9 +35,9 @@ int main(int argc, char* argv[]) {
   try {
     LOG_INFO("Reading scene...");
     Scene scene = Parser::ParserAdapter::read_scene(
-      "/home/ilc/Desktop/hw6/directLighting/inputs/cornellbox_jaroslav_diffuse.json");
+      "/home/ilc/Desktop/hw6/pathTracing/inputs/zurna.json");
     // Scene scene = Parser::ParserAdapter::read_scene(scene_path.string());
-    WhittedIntegrator integrator;
+    PathTracerIntegrator integrator;
     for (const std::unique_ptr<Camera>& camera : scene.cameras_) {
       Film film(camera->film_width_, camera->film_height_, camera->image_name_);
       integrator.render(scene, film, *camera);
