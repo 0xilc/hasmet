@@ -60,6 +60,8 @@ typedef struct Camera_ {
     float aperture_size;
     float focus_distance;
     std::vector<Tonemap_> tonemaps;
+    std::string renderer;
+    std::vector<std::string> renderer_params;
 } Camera_;
 
 typedef struct PointLight_ {
@@ -101,6 +103,14 @@ typedef struct SphericalDirectionalLight_ {
     std::string sampler;
 } SphericalDirectionalLight_;
 
+typedef struct BRDF_ {
+  int id;
+  std::string type;
+  bool normalized = false;
+  float exponent = 1.0f;
+  bool kdfresnel = false;
+} BRDF_;
+ 
 typedef struct Material_ {
     int id;
     std::string type;
@@ -114,6 +124,7 @@ typedef struct Material_ {
     float absorption_index;
     float roughness;
     bool degamma;
+    int brdf_id;
 } Material_;
 
 struct Image_ {
@@ -143,7 +154,6 @@ struct TextureMap_ {
     float normalizer;
 };
 
-
 typedef struct Triangle_ {
     int material_id;
     int v0_id, v1_id, v2_id;
@@ -159,6 +169,7 @@ typedef struct Mesh_ {
     std::vector<Transformation_> transformations;
     Vec3f_ motion_blur;
     std::vector<int> texture_ids;
+    Vec3f_ radiance = {0.0f, 0.0f, 0.0f};
 } Mesh_;
 
 typedef struct MeshInstance_ {
@@ -169,6 +180,7 @@ typedef struct MeshInstance_ {
     std::vector<Transformation_> transformations;
     Vec3f_ motion_blur;
     std::vector<int> texture_ids;
+    Vec3f_ radiance = {0.0f, 0.0f, 0.0f};
 } MeshInstance_;
 
 typedef struct Sphere_ {
@@ -179,6 +191,7 @@ typedef struct Sphere_ {
     std::vector<Transformation_> transformations;
     Vec3f_ motion_blur;
     std::vector<int> texture_ids;
+    Vec3f_ radiance = {0.0f, 0.0f, 0.0f};
 } Sphere_;
 
 typedef struct Plane_ {
@@ -213,6 +226,7 @@ typedef struct Scene_ {
     std::vector<Sphere_> spheres;
     std::vector<Plane_> planes;
     std::vector<Transformation_> transformations;
+    std::vector<BRDF_> brdfs;
 } Scene_;
 
 // --- Function Declaration ---
@@ -229,7 +243,6 @@ inline std::ostream& operator<<(std::ostream& os, const Vec4f_& v) {
 }
 
 void printSceneSummary(const Scene_& scene);
-void printScene(const Scene_& scene);
 
 }  // namespace Parser
 }  // namespace hasmet
