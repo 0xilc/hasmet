@@ -22,7 +22,7 @@ struct RenderContext{
   Color background_color;
   float shadow_eps;
   float intersection_eps;
-  int max_recursion_depth;
+  int max_recursion_depth = 6;
   int num_samples;
 };
 
