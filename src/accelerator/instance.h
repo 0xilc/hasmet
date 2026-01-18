@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
+#include "core/sampler.h"
 
 namespace hasmet {
 class Instance : public Hittable {
@@ -37,7 +38,7 @@ class Instance : public Hittable {
   void set_texture_ids(const std::vector<int>& texture_ids) {
     texture_ids_ = texture_ids;
   }
-
+  
   virtual bool intersect(Ray& ray, HitRecord& rec) const override {
     Ray local_ray = ray;
     if (has_motion_blur_) local_ray.origin -= motion_blur_ * ray.time;
@@ -68,6 +69,13 @@ class Instance : public Hittable {
 
   virtual AABB get_aabb() const override { return world_aabb_; }
 
+  bool is_light() const { return glm::length(radiance_) > 0; }
+
+  void sample_surface(const Vec3& shading_p, Sampler& sampler, Vec3& out_p, Vec3& out_n, float out_pdf) const {
+    // TODO: Implement this for Next event estimation
+  }
+
+  Color radiance_{0.0f};
  private:
   std::shared_ptr<Hittable> object_;
   glm::mat4 transform_{1.0f};
