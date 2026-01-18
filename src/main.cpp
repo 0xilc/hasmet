@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
 
   try {
     LOG_INFO("Reading scene...");
-    std::string scene_path = "/home/ilc/Desktop/hw6/pathTracing/inputs/zurna2.json";
+    std::string scene_path = "/home/ilc/Desktop/hw6/pathTracing/inputs/cornell_diffuse.json";
     Scene scene = Parser::ParserAdapter::read_scene(scene_path);
     PathTracerIntegrator integrator;
     for (const std::unique_ptr<Camera>& camera : scene.cameras_) {
