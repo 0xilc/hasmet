@@ -2,6 +2,7 @@
 
 #include "core/hit_record.h"
 #include "core/types.h"
+#include <memory>
 
 namespace hasmet {
 enum class MaterialType{
@@ -36,9 +37,9 @@ struct BxDFSample {
 struct Material{
   Color evaluate(const Vec3& wi, const Vec3& wo, const HitRecord& rec) const;
   std::vector<BxDFSample> sample_f(const Vec3& wo, const HitRecord& rec, const glm::vec2& u);
-
+  Color compute_brdf(const Vec3& wi, const Vec3& wo, const HitRecord& rec) const;
   MaterialType type = MaterialType::BlinnPhong;
-  int brdf_id = -1;
+  std::optional<BRDFConfig> brdf_cfg;
 
   // Phong properties
   Color ambient_reflectance{0.0f};
