@@ -260,6 +260,7 @@ namespace hasmet
         mat.phong_exponent = material_.phong_exponent;
         mat.refraction_index = material_.refraction_index;
         mat.roughness = material_.roughness;
+        mat.brdf = brdf;
 
         return mat;
       }
