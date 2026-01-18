@@ -14,6 +14,7 @@
 #include "light/area_light.h"
 #include "light/spot_light.h"
 #include "light/environment_light.h"
+#include "material/material.h"
 #include "material/material_manager.h"
 #include "parser/parser.h"
 #include "scene/scene.h"
@@ -192,7 +193,7 @@ namespace hasmet
         return EnvironmentLight(light_.image_id, light_.type, light_.sampler);
       }
 
-      Material create_material(const Parser::Material_ &material_)
+      Material create_material(const Parser::Material_ &material_, BRDFConfig* brdf)
       {
         Material mat;
 
@@ -208,6 +209,10 @@ namespace hasmet
         else
           mat.type = MaterialType::BlinnPhong;
 
+        if (brdf) {
+          mat.brdf_cfg = *brdf;
+        }
+        
         mat.ambient_reflectance = create_color(material_.ambient_reflectance);
         mat.diffuse_reflectance = create_color(material_.diffuse_reflectance);
         mat.specular_reflectance = create_color(material_.specular_reflectance);
@@ -335,11 +340,49 @@ namespace hasmet
 
           scene.cameras_.push_back(std::move(camera_ptr));
         }
+        std::vector<BRDFConfig> brdf_configs;
+        for (const Parser::BRDF_ brdf : parsed_scene.brdfs) {
+          BRDFConfig cfg;
+          cfg.exponent = brdf.exponent;
+          cfg.kd_fresnel = brdf.kdfresnel;
+          cfg.normalized = brdf.normalized;
+          if (brdf.type == "OriginalBlinnPhong")
+          {
+            cfg.type = BRDFConfig::Type::OriginalBlinnPhong;
+          }
+          else if (brdf.type == "OriginalPhong")
+          {
+            cfg.type = BRDFConfig::Type::OriginalPhong;
+          }
+          else if (brdf.type == "ModifiedBlinnPhong")
+          {
+            cfg.type = BRDFConfig::Type::ModifiedBlinnPhong;
+          }
+          else if (brdf.type == "ModifiedPhong")
+          {
+            cfg.type = BRDFConfig::Type::ModifiedPhong;
+          }
+          else if (brdf.type == "TorranceSparrow")
+          {
+            cfg.type = BRDFConfig::Type::TorranceSparrow;
+          }
+          else
+          {
+            LOG_ERROR("DEBUG: |" + brdf.type + "| Length: " + std::to_string(brdf.type.length()));
+            throw std::runtime_error("Unsupported BRDF type!");
+          }
+          brdf_configs.push_back(cfg);
+        }
 
         MaterialManager *material_manager = MaterialManager::get_instance();
         for (const Parser::Material_ material_ : parsed_scene.materials)
         {
-          material_manager->add(material_.id, create_material(material_));
+          if (material_.brdf_id != -1) {
+            material_manager->add(material_.id, create_material(material_, &brdf_configs[material_.brdf_id - 1]));
+          }
+          else {
+            material_manager->add(material_.id, create_material(material_, nullptr));
+          }
         }
 
         for (const Parser::Sphere_ &sphere_ : parsed_scene.spheres)
