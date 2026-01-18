@@ -12,6 +12,20 @@ enum class MaterialType{
   Unlit
 };
 
+struct BRDFConfig {
+  enum class Type {
+    OriginalPhong,
+    OriginalBlinnPhong,
+    ModifiedPhong,
+    ModifiedBlinnPhong,
+    TorranceSparrow
+  };
+  Type type;
+  bool normalized;
+  float exponent;
+  bool kd_fresnel;
+};
+
 struct BxDFSample {
   Color weight{0.0f};
   Vec3 wi{0.0f};
@@ -24,6 +38,7 @@ struct Material{
   std::vector<BxDFSample> sample_f(const Vec3& wo, const HitRecord& rec, const glm::vec2& u);
 
   MaterialType type = MaterialType::BlinnPhong;
+  int brdf_id = -1;
 
   // Phong properties
   Color ambient_reflectance{0.0f};

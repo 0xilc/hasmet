@@ -1,6 +1,7 @@
 #include "material.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
+#include "core/hit_record.h"
 #include "core/ray.h"
 #include "core/types.h"
 #include "glm/exponential.hpp"
@@ -42,6 +43,15 @@ Vec3 perturb(const Vec3& d, float roughness, const glm::vec2& u_sample) {
 
   Vec3 new_direction = d + (u * r1 + v * r2) * roughness;
   return glm::normalize(new_direction);
+}
+
+inline float smith_geometry(const Vec3& n, const Vec3& h, const Vec3& wo, const Vec3& wi) {
+  float nh = glm::dot(n, h);
+  float nwo = glm::dot(n, wo);
+  float nwi = glm::dot(n, wi);
+  float hwo = glm::dot(h, wo);
+
+  return std::min(1.0f, std::min(2.0f * nh * nwo / hwo, 2.0f * nh * nwi / hwo));
 }
 } // namespace
 
@@ -118,6 +128,50 @@ std::vector<BxDFSample> Material::sample_f(const Vec3& wo, const HitRecord& rec,
   return samples;
 }
 
+Color evaluate_brdf(const BRDFConfig& cfg, const Material& mat, const Vec3& wi, const Vec3& wo, const HitRecord& rec) {
+  Vec3 n = rec.normal;
+  Vec3 h = glm::normalize(wi + wo);
+  float cos_theta_i = std::max(0.0f, glm::dot(n, wi));
+
+  // Diffuse Component
+  float diffuse_factor = cfg.normalized ? (1.0f / glm::pi<float>()) : 1.0f;
+  Color diffuse = mat.diffuse_reflectance * diffuse_factor;
+
+  // Specular Component
+  Color specular(0.0f);
+  float p = cfg.exponent;
+
+  if (cfg.type == BRDFConfig::Type::ModifiedPhong ||
+      cfg.type == BRDFConfig::Type::OriginalPhong) {
+    Vec3 r = glm::reflect(-wi, n);
+    float cos_alpha = std::max(0.0f, glm::dot(r, wo));
+    float norm = cfg.normalized ? (p + 2.0f) / (2.0f * glm::pi<float>()) : 1.0f;
+    float denom = (cfg.type == BRDFConfig::Type::OriginalPhong) ? std::max(0.001f, cos_theta_i) : 1.0f;
+
+    specular = mat.specular_reflectance * norm * glm::pow(cos_alpha, p) / denom;
+  }
+  else if (cfg.type == BRDFConfig::Type::ModifiedBlinnPhong ||
+           cfg.type == BRDFConfig::Type::OriginalBlinnPhong) {
+    float cos_alpha_h = std::max(0.0f, glm::dot(n, h));
+    float norm = cfg.normalized ? (p + 8.0f) / (8.0f * glm::pi<float>()) : 1.0f;
+    float denom = (cfg.type == BRDFConfig::Type::OriginalBlinnPhong) ? std::max(0.001f, cos_theta_i) : 1.0f;
+
+    specular = mat.specular_reflectance * norm * glm::pow(cos_alpha_h, p) / denom;
+  }
+  else if (cfg.type == BRDFConfig::Type::TorranceSparrow) {
+    float cos_beta = std::max(0.0f, glm::dot(h, wi));
+    float D = ((p + 2.0f) / (2.0f * glm::pi<float>())) * glm::pow(std::max(0.0f, glm::dot(n, h)), p);
+    float G = smith_geometry(n, h, wo, wi);
+    float R0 = mat.refraction_index;
+    float F = R0 + (1.0f - R0) * std::pow(1.0f - cos_beta, 5.0f);
+
+    specular = mat.specular_reflectance * (D * F * G) / (4.0f * std::max(0.001f, glm::dot(n, wi)) * std::max(0.001f, glm::dot(n, wo)));
+    
+    if (cfg.kd_fresnel) diffuse *= (1.0f - F);
+  }
+
+  return diffuse + specular;
+}
 
 } // namespace hasmet
 
