@@ -1408,12 +1408,23 @@ namespace hasmet
               }
 
               const auto &fj = j["Faces"];
+              
+              int v_offset = 0;
+              if (fj.contains("_vertexOffset")) {
+                  v_offset = std::stoi(fj["_vertexOffset"].get<std::string>());
+              }
+
               if (fj.contains("_data")) {
                   std::stringstream ss(fj["_data"].get<std::string>());
                   int v0, v1, v2;
-                  while (ss >> v0 >> v1 >> v2)
-                      m.faces.push_back({m.material_id, v0 - 1, v1 - 1, v2 - 1});
-              } 
+                  while (ss >> v0 >> v1 >> v2) {
+                      int final_v0 = v0 + v_offset - 1;
+                      int final_v1 = v1 + v_offset - 1;
+                      int final_v2 = v2 + v_offset - 1;
+                      
+                      m.faces.push_back({m.material_id, final_v0, final_v1, final_v2});
+                  }
+              }
               else if (fj.contains("_plyFile")) {
                   std::string ply = fj["_plyFile"];
                   std::string dir = filename.substr(0, filename.find_last_of("/\\") + 1);

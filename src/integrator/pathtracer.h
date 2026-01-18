@@ -16,8 +16,14 @@ class PathTracerIntegrator : public Integrator {
                       const Camera& camera) const override;
 
  private:
-  Color trace_path(Ray& ray, const Scene& scene, int max_depth) const;
+  Color trace_path(Ray& ray, const Scene& scene, Sampler& sampler, int pid, int sid, int max_depth) const;
   Sampler sampler_;
+  struct RenderConfig {
+    bool use_nee;
+    bool use_importance;
+    bool use_rr; 
+    bool use_mis;
+  } config_;
 };
 
 }
