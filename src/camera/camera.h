@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/ray.h"
+#include <vector>
 
 namespace hasmet {
 struct Tonemap{
@@ -32,5 +33,7 @@ class Camera {
   int film_height_;
   std::string image_name_;
   std::vector<Tonemap> tonemaps_;
+  std::string renderer_ = "Whitted";
+  std::vector<std::string> renderer_params_;
 };
 }  // namespace hasmet

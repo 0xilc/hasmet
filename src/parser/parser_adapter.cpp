@@ -317,6 +317,8 @@ namespace hasmet
           {
             camera_ptr = std::make_unique<PinholeCamera>(create_pinhole_camera(camera_));
           }
+          camera_ptr->renderer_ = camera_.renderer;
+          camera_ptr->renderer_params_ = camera_.renderer_params;
           // Read tonemaps
           camera_ptr->tonemaps_.reserve(camera_.tonemaps.size());
           for (const Parser::Tonemap_& tm : camera_.tonemaps) {
