@@ -51,7 +51,9 @@ class Instance : public Hittable {
     rec.p = ray.at(rec.t);
     rec.material_id = material_id_;
     rec.texture_ids = &this->texture_ids_;
-    
+    if (this->is_light()) {
+      rec.radiance = this->radiance_;
+    }
     if (has_motion_blur_) rec.p += motion_blur_ * ray.time;
     
     glm::mat normal_matrix = glm::transpose(glm::mat3(inv_transform_));
