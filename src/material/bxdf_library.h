@@ -54,5 +54,32 @@ private:
   Color R;
 };
 
+// TODO: fix this. now it acts as lambertian surface.
+class UnlitBxDF : public BxDF {
+public:
+  UnlitBxDF(const Color& color)
+  : BxDF(BxDFType(BSDF_UNLIT)), color(color) {}
+
+  Color f(const Vec3& wo, const Vec3& wi) const override {
+    return color * glm::one_over_pi<float>();
+  }
+
+  BxDFSample sample_f(const Vec3& wo, const Vec2& u) const override{
+    BxDFSample s;
+    float phi = 2.0f * glm::pi<float>() * u.x;
+    float r = std::sqrt(u.y);
+    s.wi = Vec3(r * std::cos(phi), r * std::sin(phi), std::sqrt(std::max(0.0f, 1.0f - u.y)));
+    s.pdf = pdf(wo, s.wi);
+    s.sampled_type = type;
+    return s;
+  }
+
+  float pdf(const Vec3& wo, const Vec3& wi) const override {
+    return (wi.z > 0) ? wi.z * glm::one_over_pi<float>() : 0.0f;
+  }
+
+private:
+  Color color;
+};
 
 }

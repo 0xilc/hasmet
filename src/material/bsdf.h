@@ -4,6 +4,7 @@
 #include "core/frame.h"
 #include "core/hit_record.h"
 #include "core/types.h"
+#include <memory>
 #include <vector>
 
 namespace hasmet {
