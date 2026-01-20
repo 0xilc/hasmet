@@ -1,15 +1,50 @@
 #pragma once
 
 #include "bxdf.h"
+#include "glm/geometric.hpp"
+#include "glm/glm.hpp"
 #include <cmath>
 #include <glm/gtc/constants.hpp>
 
 namespace hasmet {
 
+namespace {
+inline float fresnel_dielectric(float cosThetaI, float etaI, float etaT,
+                                float cosThetaT) {
+  float r_s = (etaT * cosThetaI - etaI * cosThetaT) /
+              (etaT * cosThetaI + etaI * cosThetaT);
+
+  float r_p = (etaI * cosThetaI - etaT * cosThetaT) /
+              (etaI * cosThetaI + etaT * cosThetaT);
+
+  return 0.5f * (r_s * r_s + r_p * r_p);
+}
+
+inline float fresnel_conductor(float cos_theta, float n, float k) {
+  float r_s = ((n * n + k * k) - 2 * n * cos_theta + cos_theta * cos_theta) /
+              ((n * n + k * k) + 2 * n * cos_theta + cos_theta * cos_theta);
+
+  float r_p = ((n * n + k * k) * cos_theta * cos_theta - 2 * n * cos_theta + 1) /
+              ((n * n + k * k) * cos_theta * cos_theta + 2 * n * cos_theta + 1);
+
+  return 0.5 * (r_s + r_p);
+}
+
+inline float smith_geometry(const Vec3& n, const Vec3& h, const Vec3& wo, const Vec3& wi) {
+  float nh = glm::dot(n, h);
+  float nwo = glm::dot(n, wo);
+  float nwi = glm::dot(n, wi);
+  float hwo = glm::dot(h, wo);
+
+  return std::min(1.0f, std::min(2.0f * nh * nwo / hwo, 2.0f * nh * nwi / hwo)); 
+}
+
+} // namespace
+
 class LambertianReflection : public BxDF {
 public:
   LambertianReflection(const Color& reflectance)
-  : BxDF(BxDFType(BSDF_DIFFUSE | BSDF_REFLECTION)), R(reflectance) {}
+      : BxDF(BxDFType(BSDF_DIFFUSE | BSDF_REFLECTION)), R(reflectance) {}
 
   Color f(const Vec3& wo, const Vec3& wi) const override {
     return R * glm::one_over_pi<float>();
@@ -19,7 +54,8 @@ public:
     BxDFSample s;
     float phi = 2.0f * glm::pi<float>() * u.x;
     float r = std::sqrt(u.y);
-    s.wi = Vec3(r * std::cos(phi), r * std::sin(phi), std::sqrt(std::max(0.0f, 1.0f - u.y)));
+    s.wi = Vec3(r * std::cos(phi), r * std::sin(phi),
+                std::sqrt(std::max(0.0f, 1.0f - u.y)));
     s.pdf = pdf(wo, s.wi);
     s.sampled_type = type;
     return s;
@@ -35,7 +71,8 @@ private:
 
 class SpecularReflection : public BxDF {
 public:
-  SpecularReflection(const Color& R) : BxDF(BxDFType(BSDF_SPECULAR | BSDF_REFLECTION)), R(R){}
+  SpecularReflection(const Color& R)
+      : BxDF(BxDFType(BSDF_SPECULAR | BSDF_REFLECTION)), R(R) {}
 
   Color f(const Vec3& wo, const Vec3& wi) const override {return Color(0.0f);}
 
@@ -43,7 +80,7 @@ public:
     BxDFSample s;
     s.wi = Vec3(-wo.x, -wo.y, wo.z); // Perfect reflection
     s.pdf = 1.0f;
-    s.f = R / std::abs(s.wi.z);
+    s.f = R / std::max(1e-6f, std::abs(s.wi.z));
     s.sampled_type = type;
     return s;
   }
@@ -54,21 +91,155 @@ private:
   Color R;
 };
 
+class SpecularTransmission : public BxDF {
+public:
+  SpecularTransmission(const Color& T, float ior)
+      : BxDF(BxDFType(BSDF_SPECULAR | BSDF_TRANSMISSION)), T(T), ior(ior) {}
+
+  Color f(const Vec3& wo, const Vec3& wi) const override { return Color(0.0f); }
+
+  BxDFSample sample_f(const Vec3& wo, const Vec2& u) const override {
+    BxDFSample s;
+    bool entering = wo.z > 0;
+    float etaI = entering ? 1.0f : ior;
+    float etaT = entering ? ior : 1.0f;
+    float eta = etaI / etaT;
+
+    Vec3 n = Vec3(0, 0, entering ? 1 : -1);
+    s.wi = glm::refract(glm::normalize(-wo), n, eta);
+
+    if (glm::length(s.wi) < 0.00001f) {
+      return {};
+    }
+
+    s.pdf = 1.0f;
+    float cos_thetaI = std::abs(wo.z);
+    float cos_thetaT = std::abs(s.wi.z);
+
+    float F = fresnel_dielectric(cos_thetaI, etaI, etaT, cos_thetaT);
+
+    s.f = T * (1.0f - F) / std::max(1e-6f, std::abs(s.wi.z));
+    s.sampled_type = type;
+
+    return s;
+  }
+
+  float pdf(const Vec3& wo, const Vec3& wi) const override { return 0.0f; }
+
+private:
+  Color T;        // Trasmittance color
+  float ior;      // index of refraction
+};
+
+class ConductorReflection : public BxDF {
+public:
+  ConductorReflection(const Color& eta, const Color& k)
+      : BxDF(BxDFType(BSDF_SPECULAR | BSDF_REFLECTION)), eta(eta), k(k) {}
+
+  Color f(const Vec3& wo, const Vec3& wi) const override { return Color(0.0f); }
+
+  BxDFSample sample_f(const Vec3& wo, const Vec2& u) const override {
+    BxDFSample s;
+    s.wi = Vec3(-wo.x, -wo.y, wo.z);
+    s.pdf = 1.0f;
+
+    float cos_theta = std::abs(s.wi.z);
+    Color F;
+    F.r = fresnel_conductor(cos_theta, eta.r, k.r);
+    F.g = fresnel_conductor(cos_theta, eta.g, k.g);
+    F.b = fresnel_conductor(cos_theta, eta.b, k.b);
+
+    s.f = F / std::max(1e-6f, std::abs(s.wi.z));
+    s.sampled_type = type;
+
+    return s;
+  }
+
+  float pdf(const Vec3& wo, const Vec3& wi) const override { return 0.0f; }
+
+private:
+  Color eta;
+  Color k;
+};
+
+class MicrofacetReflection : public BxDF {
+public:
+  MicrofacetReflection(const Color& ks, float p, float ior)
+      : BxDF(BxDFType(BSDF_GLOSSY | BSDF_REFLECTION)), ks(ks), p(p), ior(ior) {}
+
+  Color f(const Vec3& wo, const Vec3& wi) const override {
+    if (wo.z <= 0 || wi.z <= 0) return Color(0.0f);
+
+    Vec3 h = glm::normalize(wo + wi);
+    float cos_theta_h = std::max(0.0f, h.z);
+    float cos_theta_i = std::max(0.0f, wi.z);
+    float cos_theta_o = std::max(0.0f, wo.z);
+
+    float D = ((p + 2.0f) / (2.0f * glm::pi<float>())) * std::pow(cos_theta_h, p);
+    
+    float G = smith_geometry(Vec3(0, 0, 1), h, wo, wi);
+
+    float cos_beta = std::max(0.0f, glm::dot(h, wi));
+    float R0 = std::pow((1.0f - ior) / (1.0f + ior), 2.0f);
+    float F = R0 + (1.0f - R0) * std::pow(1.0f - cos_beta, 5.0f);
+
+    return ks * (D * G * F) / (4.0f * std::max(0.0001f,cos_theta_i * cos_theta_o));
+  }
+
+  BxDFSample sample_f(const Vec3& wo, const Vec2& u) const override {
+    BxDFSample s;
+    if (wo.z <= 0) return s;
+
+    float phi = 2.0f * glm::pi<float>() * u.x;
+    float cos_theta_h = std::pow(u.y, 1.0f / (p + 1.0f));
+    float sin_theta_h = std::sqrt(std::max(0.0f, 1.0f - cos_theta_h * cos_theta_h));
+
+    Vec3 h(sin_theta_h * std::cos(phi), sin_theta_h * std::sin(phi), cos_theta_h);
+    s.wi = glm::reflect(-wo, h);
+
+    if (s.wi.z <= 0) {
+      s.pdf = 0.0f;
+      return s;
+    }
+
+    s.pdf = pdf(wo, s.wi);
+    s.f = f(wo, s.wi);
+    s.sampled_type = type;
+    return s;
+  }
+
+  float pdf(const Vec3& wo, const Vec3& wi) const override {
+    if (wo.z <= 0 || wi.z <= 0) return 0.0f;
+
+    Vec3 h = glm::normalize(wo + wi);
+    float cos_theta_h = std::max(0.0f, h.z);
+    float cos_theta_d = std::max(0.0f, glm::dot(h, wi));
+
+    float pdf_h = ((p + 1.0f) / (2.0f * glm::pi<float>())) * std::pow(cos_theta_h, p);
+    return pdf_h / (4.0f * std::max(0.0001f,cos_theta_d));
+  }
+
+private:
+  Color ks;
+  float p;
+  float ior;
+};
+
 // TODO: fix this. now it acts as lambertian surface.
 class UnlitBxDF : public BxDF {
 public:
-  UnlitBxDF(const Color& color)
-  : BxDF(BxDFType(BSDF_UNLIT)), color(color) {}
+  UnlitBxDF(const Color& color) : BxDF(BxDFType(BSDF_UNLIT)), color(color) {}
 
   Color f(const Vec3& wo, const Vec3& wi) const override {
     return color * glm::one_over_pi<float>();
   }
 
-  BxDFSample sample_f(const Vec3& wo, const Vec2& u) const override{
+  BxDFSample sample_f(const Vec3& wo, const Vec2& u) const override {
     BxDFSample s;
     float phi = 2.0f * glm::pi<float>() * u.x;
     float r = std::sqrt(u.y);
-    s.wi = Vec3(r * std::cos(phi), r * std::sin(phi), std::sqrt(std::max(0.0f, 1.0f - u.y)));
+    s.wi = Vec3(r * std::cos(phi), r * std::sin(phi),
+                std::sqrt(std::max(0.0f, 1.0f - u.y)));
     s.pdf = pdf(wo, s.wi);
     s.sampled_type = type;
     return s;
@@ -82,4 +253,4 @@ private:
   Color color;
 };
 
-}
+} // namespace hasmet
