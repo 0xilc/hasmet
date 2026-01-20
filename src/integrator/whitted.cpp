@@ -78,6 +78,7 @@ Color WhittedIntegrator::trace_ray(Ray &ray, const Scene &scene, int depth,
 
   HitRecord rec;
   if (!scene.intersect(ray, rec)) {
+    
     if (!scene.environment_light_) {
       return scene.render_context_.background_color;
     }
@@ -118,7 +119,6 @@ Color WhittedIntegrator::shade_direct(const BSDF &bsdf, const HitRecord &rec,
                                       const Vec3 &woW, const Scene &scene,
                                       Sampler &sampler, int sample_idx,
                                       int pid) const {
-
   Color L_direct(0.0f);
 
   auto process_lights = [&](const auto& light_list) {
@@ -126,7 +126,7 @@ Color WhittedIntegrator::shade_direct(const BSDF &bsdf, const HitRecord &rec,
       glm::vec2 u = sampler.get_2d(pid, sample_idx, 0);
       LightSample ls = light->sample_li(rec, u);
 
-      if (ls.pdf <= 0.0f || glm::length(ls.L)) continue;
+      if (ls.pdf <= 0.0f || glm::length(ls.L) == 0) continue;
 
       Ray shadow_ray(rec.p + rec.normal * 0.0006f, ls.wi);
       shadow_ray.t_max = ls.dist - 0.0006f;
