@@ -178,8 +178,8 @@ private:
 
 class ConductorReflection : public BxDF {
 public:
-  ConductorReflection(const Color& eta, const Color& k)
-      : BxDF(BxDFType(BSDF_SPECULAR | BSDF_REFLECTION)), eta(eta), k(k) {}
+  ConductorReflection(const Color& eta, const Color& k, const Color& km)
+      : BxDF(BxDFType(BSDF_SPECULAR | BSDF_REFLECTION)), eta(eta), k(k), km(km) {}
 
   Color f(const Vec3& wo, const Vec3& wi) const override { return Color(0.0f); }
 
@@ -194,7 +194,7 @@ public:
     F.g = fresnel_conductor(cos_theta, eta.g, k.g);
     F.b = fresnel_conductor(cos_theta, eta.b, k.b);
 
-    s.f = F / std::max(1e-6f, std::abs(s.wi.z));
+    s.f = F * km / std::max(1e-6f, std::abs(s.wi.z));
     s.sampled_type = type;
 
     return s;
@@ -205,6 +205,7 @@ public:
 private:
   Color eta;
   Color k;
+  Color km{1.0f}; // Mirror reflectance
 };
 
 class MicrofacetReflection : public BxDF {
