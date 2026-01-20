@@ -19,14 +19,18 @@
 #include "texture/texture_manager.h"
 
 namespace hasmet {
-struct ShadingContext {
-  const Ray &ray;
-  const HitRecord &rec;
-  const Material &mat;
+struct SamplingContext {
   Sampler &sampler;
   int pixel_id;
   int sample_index;
   int num_samples;
+};
+
+struct PathState {
+  int depth;
+  const Medium* current_medium;
+
+  PathState(int d) : depth(d), current_medium(nullptr) {}
 };
 
 namespace {
@@ -50,80 +54,82 @@ void WhittedIntegrator::render(const Scene &scene, Film &film,
         Color pixel_color(0.0f);
         int pixel_id = y * width + x;
         for (int s = 0; s < camera.num_samples_; s++) {
-          glm::vec2 u_pixel = local_sampler.get_2d(pixel_id, s, 0);
-          glm::vec2 u_lens = local_sampler.get_2d(pixel_id, s, 1);
-          float time_sample = local_sampler.get_1d(pixel_id, s, 2);
+          SamplingContext ctx{local_sampler, pixel_id, s, camera.num_samples_};
 
-          Ray ray = camera.generateRay(static_cast<float>(x),
-                                       static_cast<float>(y), u_pixel, u_lens);
+          glm::vec2 u_pixel = ctx.sampler.get_2d(pixel_id, s, 0);
+          glm::vec2 u_lens = ctx.sampler.get_2d(pixel_id, s, 1);
+          float time_sample = ctx.sampler.get_1d(pixel_id, s, 2);
+
+          Ray ray = camera.generateRay(static_cast<float>(x), static_cast<float>(y), u_pixel, u_lens);
           ray.time = time_sample;
 
-          pixel_color +=
-              trace_ray(ray, scene, scene.render_context_.max_recursion_depth,
-                        local_sampler, s, camera.num_samples_, pixel_id);
+          PathState initial_state(scene.render_context_.max_recursion_depth);
+          pixel_color += trace_ray(ray, scene, initial_state, ctx);
         }
 
-        film.addSample(x, y,
-                       pixel_color / static_cast<float>(camera.num_samples_));
+        film.addSample(x, y,pixel_color / static_cast<float>(camera.num_samples_));
       }
     }
   }
 }
 
-Color WhittedIntegrator::trace_ray(Ray &ray, const Scene &scene, int depth,
-                                   Sampler &sampler, int sample_index,
-                                   int num_samples, int pixel_id) const {
-  if (depth <= 0)
+Color WhittedIntegrator::trace_ray(Ray &ray, const Scene &scene, PathState state, const SamplingContext& ctx) const {
+  if (state.depth <= 0)
     return Color(0.0f);
 
   HitRecord rec;
   if (!scene.intersect(ray, rec)) {
-    
     if (!scene.environment_light_) {
       return scene.render_context_.background_color;
     }
     return scene.environment_light_->sample_le(ray);
-    ;
+  }
+
+  Color throughput(1.0f);
+  if (state.current_medium) {
+    throughput = state.current_medium->transmittance(rec.t);
   }
 
   const Material &mat = *scene.get_material(rec.material_id);
-  ShadingContext ctx{ray,      rec,          mat,        sampler,
-                     pixel_id, sample_index, num_samples};
   BSDF bsdf(rec);
   mat.setup_bsdf(rec, bsdf);
-
   Vec3 woW = -glm::normalize(ray.direction);
-  Color L(0.0f);
 
-  L += shade_direct(bsdf, rec, woW, scene, sampler, sample_index, pixel_id);
+  Color L = shade_direct(bsdf, rec, woW, scene, ctx) * throughput;
 
-  Vec2 u = sampler.get_2d(pixel_id, sample_index, depth + 100);
+  Vec2 u = ctx.sampler.get_2d(ctx.pixel_id, ctx.sample_index, state.depth + 100);
   BxDFSample bs = bsdf.sample_f(woW, u);
 
   if (bs.pdf > 0 && (bs.sampled_type & BSDF_SPECULAR)) {
+    PathState next_state = state;
+    next_state.depth--;
+    
+    // Update medium
+    if (bs.sampled_type & BSDF_TRANSMISSION) {
+      bool entering = glm::dot(woW, rec.normal) > 0.0f;
+      next_state.current_medium = entering ? mat.get_internal_medium() : nullptr;
+    }
+
     Vec3 offset_dir =
         (is_same_hemisphere(bs.wi, rec.normal)) ? rec.normal : -rec.normal;
     Ray next_ray(rec.p + (offset_dir * 0.00006f), bs.wi);
     next_ray.time = ray.time;
-
-    Color L_recursive = trace_ray(next_ray, scene, depth - 1, sampler,
-                                  sample_index, num_samples, pixel_id);
-
-    L += bs.f * L_recursive * std::abs(glm::dot(bs.wi, rec.normal)) / bs.pdf;
+    Color L_recursive = trace_ray(next_ray, scene, next_state, ctx);
+    
+    float cos_theta = std::abs(glm::dot(bs.wi, rec.normal));
+    L += (bs.f * L_recursive * cos_theta * throughput) / bs.pdf;
   }
 
   return L;
 }
 
 Color WhittedIntegrator::shade_direct(const BSDF &bsdf, const HitRecord &rec,
-                                      const Vec3 &woW, const Scene &scene,
-                                      Sampler &sampler, int sample_idx,
-                                      int pid) const {
+                                      const Vec3 &woW, const Scene &scene, const SamplingContext& ctx) const {
   Color L_direct(0.0f);
 
   auto process_lights = [&](const auto& light_list) {
     for (const auto& light : light_list) {
-      glm::vec2 u = sampler.get_2d(pid, sample_idx, 0);
+      glm::vec2 u = ctx.sampler.get_2d(ctx.pixel_id, ctx.sample_index, 0);
       LightSample ls = light->sample_li(rec, u);
 
       if (ls.pdf <= 0.0f || glm::length(ls.L) == 0) continue;

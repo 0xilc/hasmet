@@ -4,6 +4,7 @@
 #include "core/types.h"
 #include <memory>
 #include "bsdf.h"
+#include "core/medium.h"
 
 namespace hasmet {
 
@@ -28,6 +29,7 @@ public:
   virtual ~Material() = default;
 
   virtual void setup_bsdf(HitRecord& rec, BSDF& bsdf) const = 0;
+  virtual const Medium* get_internal_medium() const { return nullptr; }
 };
 
 class MirrorMaterial : public Material {
@@ -68,14 +70,14 @@ private:
 
 class DielectricMaterial : public Material {
 public:
-  DielectricMaterial(float index_refraction, Color transmission_color = Color(1.0f))
-    : ior_(index_refraction), transmittance_(transmission_color) {}
+  DielectricMaterial(float ior, Color absorption = Color(0.0f))
+    : ior_(ior), medium_(absorption) {}
 
   void setup_bsdf(HitRecord& rec, BSDF& bsdf) const override;
-
+  const Medium* get_internal_medium() const override { return &medium_;}
 private:
   float ior_;            // Index of Refraction
-  Color transmittance_;  // Color tint of the glass
+  Medium medium_;
 };
 
 class UnlitMaterial : public Material {

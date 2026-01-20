@@ -8,7 +8,8 @@
 
 namespace hasmet {
 
-struct ShadingContext;
+struct SamplingContext;
+struct PathState;
 
 class WhittedIntegrator : public Integrator {
  public:
@@ -18,8 +19,8 @@ class WhittedIntegrator : public Integrator {
                       const Camera& camera) const override;
 
  private:
-  Color trace_ray(Ray& ray, const Scene& scene, int depth, Sampler& sampler, int sample_index, int num_samples, int pixel_id) const;
-  Color shade_direct(const BSDF& bsdf, const HitRecord& rec, const Vec3& woW, const Scene& scene, Sampler& sampler, int sample_idx, int pid) const;
+  Color trace_ray(Ray& ray, const Scene& scene, PathState state, const SamplingContext& ctx) const;
+  Color shade_direct(const BSDF& bsdf, const HitRecord& rec, const Vec3& woW, const Scene& scene, const SamplingContext& ctx) const;
   Sampler sampler_;
 };
 } // namespace hasmet
