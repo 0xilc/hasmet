@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
 
   try {
     LOG_INFO("Reading scene...");
-    std::string scene_path = "/home/ilc/Desktop/hw1/inputs/cornellbox.json";
+    std::string scene_path = "/home/ilc/Desktop/hw1/inputs/cornellbox_recursive.json";
     Scene scene = Parser::ParserAdapter::read_scene(scene_path);
     for (const std::unique_ptr<Camera>& camera : scene.cameras_) {
       Film film(camera->film_width_, camera->film_height_, camera->image_name_);

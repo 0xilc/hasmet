@@ -50,6 +50,8 @@ void ConductorMaterial::setup_bsdf(HitRecord& rec, BSDF& bsdf) const {
 }
 
 void DielectricMaterial::setup_bsdf(HitRecord& rec, BSDF& bsdf) const {
+  bsdf.add(new DielectricReflection(ior_));
+  bsdf.add(new SpecularTransmission(Color(1.0f), ior_));
 }
 
 void UnlitMaterial::setup_bsdf(HitRecord& rec, BSDF& bsdf) const {
