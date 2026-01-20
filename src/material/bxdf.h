@@ -10,6 +10,7 @@ enum BxDFType {
     BSDF_SPECULAR     = 1 << 2,
     BSDF_REFLECTION   = 1 << 3,
     BSDF_TRANSMISSION = 1 << 4,
+    BSDF_UNLIT        = 1 << 5,
     BSDF_ALL          = BSDF_DIFFUSE | BSDF_GLOSSY | BSDF_SPECULAR | BSDF_REFLECTION | BSDF_TRANSMISSION
 };
 
