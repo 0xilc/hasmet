@@ -35,7 +35,7 @@ void BlinnPhongMaterial::setup_bsdf(HitRecord& rec, BSDF& bsdf) const {
       break;
   }
   
-  bsdf.add(new LambertianReflection(effective_kd));
+  bsdf.add(new LambertianReflection(effective_kd, brdf_config_.normalized));
 }
 
 void MirrorMaterial::setup_bsdf(HitRecord& rec, BSDF& bsdf) const {
