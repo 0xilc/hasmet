@@ -1,10 +1,13 @@
 #pragma once
 
 #include "bxdf.h"
+#include "core/types.h"
+#include "glm/exponential.hpp"
 #include "glm/geometric.hpp"
 #include "glm/glm.hpp"
 #include <cmath>
 #include <glm/gtc/constants.hpp>
+#include "core/frame.h"
 
 namespace hasmet {
 
@@ -223,6 +226,113 @@ private:
   Color ks;
   float p;
   float ior;
+};
+
+class BlinnPhongReflection : public BxDF {
+public:
+  BlinnPhongReflection(const Color& ks, float p, bool is_modified, bool is_normalized)
+      : BxDF(BxDFType(BSDF_GLOSSY | BSDF_REFLECTION)), ks(ks), p(p), is_modified(is_modified), is_normalized(is_normalized) {}
+
+  Color f(const Vec3& wo, const Vec3& wi) const override {
+    if (wo.z <= 0 || wi.z <= 0) return Color(0.0f);
+
+    Vec3 h = glm::normalize(wo + wi);
+    float cos_alpha_h = std::max(0.0f, h.z);
+    float norm = is_normalized ? (p + 8.0f) / (8.0f * glm::pi<float>()) : 1.0f;
+    float denom = is_modified ? 1.0f : std::max(0.001f, wi.z);
+
+    return ks * norm * glm::pow(cos_alpha_h, p) / denom;
+  }
+
+  BxDFSample sample_f(const Vec3& wo, const Vec2& u) const override {
+    BxDFSample s;
+    if (wo.z <= 0) return s;
+
+    float phi = 2.0f * glm::pi<float>() * u.x;
+    float cos_theta_h = glm::pow(u.y, 1.0f / (p + 1.0f));
+    float sin_theta_h = glm::sqrt(glm::max(0.0f, 1.0f - cos_theta_h * cos_theta_h));
+
+    Vec3 h(sin_theta_h * std::cos(phi), sin_theta_h * std::sin(phi), cos_theta_h);
+
+    s.wi = glm::reflect(-wo, h);
+
+    if (s.wi.z <= 0) {
+      s.pdf = 0.0f;
+      return s;
+    }
+
+    s.pdf = pdf(wo, s.wi);
+    s.f = f(wo, s.wi);
+    s.sampled_type = type;
+    return s;
+  }
+
+  float pdf(const Vec3& wo, const Vec3& wi) const override { return 0.0f; }
+
+private:
+  Color ks;
+  float p;
+  bool is_modified;
+  bool is_normalized;
+};
+
+class PhongReflection : public BxDF {
+public:
+  PhongReflection(const Color& ks, float p, bool is_modified, bool is_normalized)
+      : BxDF(BxDFType(BSDF_GLOSSY | BSDF_REFLECTION)), 
+        ks(ks), p(p), is_modified(is_modified), is_normalized(is_normalized) {}
+
+  Color f(const Vec3& wo, const Vec3& wi) const override {
+    if (wo.z <= 0 || wi.z <= 0) return Color(0.0f);
+
+    Vec3 r = Vec3(-wi.x, -wi.y, wi.z);
+    
+    float cos_alpha_r = std::max(0.0f, glm::dot(r, wo));
+    float norm = is_normalized ? (p + 2.0f) / (2.0f * glm::pi<float>()) : 1.0f;
+    float denom = is_modified ? 1.0f : std::max(0.001f, wi.z);
+
+    return ks * norm * std::pow(cos_alpha_r, p) / denom;
+  }
+
+  BxDFSample sample_f(const Vec3& wo, const Vec2& u) const override {
+    BxDFSample s;
+    if (wo.z <= 0) return s;
+
+    float phi = 2.0f * glm::pi<float>() * u.x;
+    float cos_theta = std::pow(u.y, 1.0f / (p + 1.0f));
+    float sin_theta = std::sqrt(std::max(0.0f, 1.0f - cos_theta * cos_theta));
+    Vec3 local_v(sin_theta * std::cos(phi), sin_theta * std::sin(phi), cos_theta);
+    
+    Vec3 r_wo = Vec3(-wo.x, -wo.y, wo.z);
+    
+    Frame reflection_frame(r_wo);
+    s.wi = reflection_frame.to_world(local_v);
+
+    if (s.wi.z <= 0) {
+      s.pdf = 0.0f;
+      return s;
+    }
+
+    s.pdf = pdf(wo, s.wi);
+    s.f = f(wo, s.wi);
+    s.sampled_type = type;
+    return s;
+  }
+
+  float pdf(const Vec3& wo, const Vec3& wi) const override {
+    if (wo.z <= 0 || wi.z <= 0) return 0.0f;
+
+    Vec3 r_wo = Vec3(-wo.x, -wo.y, wo.z);
+    float cos_alpha_r = std::max(0.0f, glm::dot(r_wo, wi));
+    
+    return ((p + 1.0f) / (2.0f * glm::pi<float>())) * std::pow(cos_alpha_r, p);
+  }
+
+private:
+  Color ks;
+  float p;
+  bool is_modified;
+  bool is_normalized;
 };
 
 // TODO: fix this. now it acts as lambertian surface.
