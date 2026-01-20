@@ -1,3 +1,4 @@
+#include <cctype>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
@@ -15,7 +16,6 @@
 #include "light/spot_light.h"
 #include "light/environment_light.h"
 #include "material/material.h"
-#include "material/material_manager.h"
 #include "parser/parser.h"
 #include "scene/scene.h"
 #include "core/types.h"
@@ -193,44 +193,63 @@ namespace hasmet
         return EnvironmentLight(light_.image_id, light_.type, light_.sampler);
       }
 
-      Material create_material(const Parser::Material_ &material_, BRDFConfig* brdf)
+      std::unique_ptr<Material> create_material(const Parser::Material_ &material_, BRDFConfig* brdf_cfg)
       {
-        Material mat;
+        Color diffuse = create_color(material_.diffuse_reflectance);
+        Color specular = create_color(material_.specular_reflectance);
+        Color mirror = create_color(material_.mirror_reflectance);
+        Color absorption = create_color(material_.absorption_coefficient);
+
+        if (material_.degamma) {
+          float gamma = 2.2f;
+          diffuse = glm::pow(diffuse, Color(gamma));
+          specular = glm::pow(specular, Color(gamma));
+          mirror = glm::pow(mirror, Color(gamma));
+        }
 
         std::string type_str = material_.type;
         std::transform(type_str.begin(), type_str.end(), type_str.begin(), ::tolower);
-
-        if (type_str == "mirror")
-          mat.type = MaterialType::Mirror;
-        else if (type_str == "conductor")
-          mat.type = MaterialType::Conductor;
-        else if (type_str == "dielectric")
-          mat.type = MaterialType::Dielectric;
-        else
-          mat.type = MaterialType::BlinnPhong;
-
-        if (brdf) {
-          mat.brdf_cfg = *brdf;
+        
+        if (type_str == "mirror") {
+          return std::make_unique<MirrorMaterial>(mirror, material_.roughness);
         }
         
-        mat.ambient_reflectance = create_color(material_.ambient_reflectance);
-        mat.diffuse_reflectance = create_color(material_.diffuse_reflectance);
-        mat.specular_reflectance = create_color(material_.specular_reflectance);
-
-        if (material_.degamma) {
-          mat.ambient_reflectance = glm::pow(mat.ambient_reflectance, Color(2.2f));
-          mat.diffuse_reflectance = glm::pow(mat.diffuse_reflectance, Color(2.2f));
-          mat.specular_reflectance = glm::pow(mat.specular_reflectance, Color(2.2f));
+        if (type_str == "conductor") {
+          return std::make_unique<ConductorMaterial>(
+            Color(material_.refraction_index),
+            absorption,
+            material_.roughness
+          );
         }
 
-        mat.mirror_reflectance = create_color(material_.mirror_reflectance);
-        mat.absorption_coefficient = create_color(material_.absorption_coefficient);
-        mat.absorption_index = material_.absorption_index;
-        mat.phong_exponent = material_.phong_exponent;
-        mat.refraction_index = material_.refraction_index;
-        mat.roughness = material_.roughness;
+        if (type_str == "dielectric") {
+          return std::make_unique<DielectricMaterial> (
+            material_.refraction_index,
+            absorption
+          );
+        }
 
-        return mat;
+        if (type_str == "unlit") {
+          return std::make_unique<UnlitMaterial>(diffuse);
+        }
+        
+        // TODO: Fix this and make blinnphong mat with one behaviour
+        // ctx: a material should be initialized as it is. and input should
+        // be given accordingly. this material is a composite due to hw 
+        // requirements.
+        BRDFConfig final_cfg;
+        if (brdf_cfg) {
+          final_cfg = *brdf_cfg;
+        } else {
+          final_cfg.type = BRDFConfig::Type::OriginalBlinnPhong;
+        }
+        // Default blinn-phong
+        return std::make_unique<BlinnPhongMaterial>(
+          diffuse,
+          specular,
+          material_.phong_exponent,
+          final_cfg
+        );
       }
 
       PinholeCamera create_pinhole_camera(const Parser::Camera_ &camera_)
@@ -376,15 +395,19 @@ namespace hasmet
           brdf_configs.push_back(cfg);
         }
 
-        MaterialManager *material_manager = MaterialManager::get_instance();
+        // Read materials
+        int max_mat_id = 0;
+        for (const auto& m : parsed_scene.materials) max_mat_id = std::max(max_mat_id, m.id);
+        scene.materials_.resize(max_mat_id + 1);
+
         for (const Parser::Material_ material_ : parsed_scene.materials)
         {
+          BRDFConfig* current_brdf = nullptr;
           if (material_.brdf_id != -1) {
-            material_manager->add(material_.id, create_material(material_, &brdf_configs[material_.brdf_id - 1]));
+            current_brdf = &brdf_configs[material_.brdf_id - 1];
           }
-          else {
-            material_manager->add(material_.id, create_material(material_, nullptr));
-          }
+          auto new_material = create_material(material_, current_brdf);
+          scene.materials_[material_.id] = std::move(new_material);
         }
 
         for (const Parser::Sphere_ &sphere_ : parsed_scene.spheres)

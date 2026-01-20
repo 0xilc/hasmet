@@ -11,7 +11,6 @@
 #include "glm/geometric.hpp"
 #include "light/light.h"
 #include "material/material.h"
-#include "material/material_manager.h"
 #include "texture/texture_manager.h"
 #include "scene/scene.h"
 #include "core/timer.h"

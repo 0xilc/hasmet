@@ -60,6 +60,20 @@ inline float smith_geometry(const Vec3& n, const Vec3& h, const Vec3& wo, const 
 
 // TODO : fix specular reflection as it must have shininess coefficient too.
 void BlinnPhongMaterial::setup_bsdf(HitRecord& rec, BSDF& bsdf) const {
+  // TODO: Implement
+  switch (brdf_config_.type) {
+    case BRDFConfig::Type::OriginalBlinnPhong: 
+      break;
+    case BRDFConfig::Type::OriginalPhong: 
+      break;
+    case BRDFConfig::Type::ModifiedBlinnPhong: 
+      break;
+    case BRDFConfig::Type::ModifiedPhong: 
+      break;
+    case BRDFConfig::Type::TorranceSparrow: 
+      break;
+  }
+  
   bsdf.add(new LambertianReflection(kd_));
   bsdf.add(new SpecularReflection(ks_));
 }
