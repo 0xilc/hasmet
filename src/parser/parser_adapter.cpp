@@ -24,6 +24,7 @@
 #include "texture/texture.h"
 #include "texture/texture_manager.h"
 #include "image/image_manager.h"
+#include "material/bxdf_library.h"
 
 namespace hasmet
 {
@@ -450,10 +451,9 @@ namespace hasmet
             std::make_unique<SpotLight>(create_spot_light(light_)));
         }
         
-        // --> read environment lights
+        // --> read environment light
         for (const Parser::SphericalDirectionalLight_ &light_ : parsed_scene.spherical_directional_lights) {
-          scene.environment_lights_.push_back(
-              std::make_unique<EnvironmentLight>(create_spherical_directional_light(light_)));
+          scene.environment_light_= std::make_unique<EnvironmentLight>(create_spherical_directional_light(light_));
         }
 
         for (const Parser::Triangle_ &triangle_ : parsed_scene.triangles)

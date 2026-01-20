@@ -21,7 +21,7 @@ void Scene::add_material(std::unique_ptr<Material> mat) {
   materials_.push_back(std::move(mat));
 }
 
-const Material* Scene::get_material(int id) {
+const Material* Scene::get_material(int id) const {
   if (id < 0 || id >= materials_.size()) {
     LOG_ERROR("Invalid material id: " << id);
   }

@@ -8,7 +8,6 @@
 #include "film/film.h"
 #include "geometry/sphere.h"
 #include "geometry/triangle.h"
-#include "integrator/pathtracer.h"
 #include "integrator/whitted.h"
 #include "material/material.h"
 #include "parser/parser_adapter.h"
@@ -33,16 +32,17 @@ int main(int argc, char* argv[]) {
 
   try {
     LOG_INFO("Reading scene...");
-    std::string scene_path = "/home/ilc/Desktop/hw6/directLighting/inputs/cornellbox_jaroslav_glossy_area_sphere.json";
+    std::string scene_path = "/home/ilc/Desktop/hw1/directLighting/inputs/cornellbox_jaroslav_glossy_area_sphere.json";
     Scene scene = Parser::ParserAdapter::read_scene(scene_path);
     for (const std::unique_ptr<Camera>& camera : scene.cameras_) {
       Film film(camera->film_width_, camera->film_height_, camera->image_name_);
       std::unique_ptr<Integrator> integrator;
-      if (camera->renderer_ == "PathTracing") {
-        integrator = std::make_unique<PathTracerIntegrator>();
-      } else {
-        integrator = std::make_unique<WhittedIntegrator>();
-      }
+      // if (camera->renderer_ == "PathTracing") {
+      //   integrator = std::make_unique<PathTracerIntegrator>();
+      // } else {
+      //   integrator = std::make_unique<WhittedIntegrator>();
+      // }
+      integrator = std::make_unique<WhittedIntegrator>();
       integrator->render(scene, film, *camera);
       if (film.get_extension() == "ext") {
         film.write();
