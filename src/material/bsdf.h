@@ -32,12 +32,15 @@ public:
     Vec3 wo = frame.to_local(woW);
     if (bxdfs.empty()) return {};
     
-    // TODO: Stochastically pick one BxDF to sample
-    int index = 0;
-    BxDFSample s = bxdfs[index]->sample_f(wo, u);
+    int n = bxdfs.size();
+    int index = std::min((int)(u.x * n), n - 1);
+
+    Vec2 u_remapped(u.x * n - index, u.y);
+    BxDFSample s = bxdfs[index]->sample_f(wo, u_remapped);
     
     if (s.pdf > 0) {
       s.wi = frame.to_world(s.wi);
+      s.pdf /= n;
     }
     return s;
   }
