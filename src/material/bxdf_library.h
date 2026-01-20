@@ -8,6 +8,7 @@
 #include <cmath>
 #include <glm/gtc/constants.hpp>
 #include "core/frame.h"
+#include "material/material.h"
 
 namespace hasmet {
 
@@ -97,6 +98,42 @@ public:
 
 private:
   Color R;
+};
+
+class DielectricReflection : public BxDF {
+public:
+  DielectricReflection(float ior)
+      : BxDF(BxDFType(BSDF_SPECULAR | BSDF_REFLECTION)), ior(ior) {}
+  Color f(const Vec3& wo, const Vec3& wi) const override {return Color(0.0f);}
+
+  BxDFSample sample_f(const Vec3& wo, const Vec2& u) const override {
+    BxDFSample s;
+    s.wi = Vec3(-wo.x, -wo.y, wo.z);
+    s.pdf = 1.0f;
+
+    bool entering = wo.z > 0;
+    float etaI = entering ? 1.0f : ior;
+    float etaT = entering ? ior : 1.0;
+
+    float cosThetaI = std::abs(wo.z);
+    float sin2ThetaI = std::max(0.0f, 1.0f - cosThetaI * cosThetaI);
+    float sin2ThetaT = (etaI / etaT) * (etaI / etaT) * sin2ThetaI;
+    
+    float F = 1.0f;
+    if (sin2ThetaT < 1.0f) {
+      float cosThetaT = std::sqrt(1.0f - sin2ThetaT);
+      F = fresnel_dielectric(cosThetaI, etaI, etaT, cosThetaT);
+    }
+
+    s.f = Color(F) / std::max(1e-6f, std::abs(s.wi.z));
+    s.sampled_type = type;
+    return s;
+  }
+
+  float pdf(const Vec3& wo, const Vec3& wi) const override { return 0.0f; }
+
+private:
+  float ior;
 };
 
 class SpecularTransmission : public BxDF {
