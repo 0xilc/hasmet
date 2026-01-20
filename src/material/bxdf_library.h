@@ -46,11 +46,14 @@ inline float smith_geometry(const Vec3& n, const Vec3& h, const Vec3& wo, const 
 
 class LambertianReflection : public BxDF {
 public:
-  LambertianReflection(const Color& reflectance)
-      : BxDF(BxDFType(BSDF_DIFFUSE | BSDF_REFLECTION)), R(reflectance) {}
+  LambertianReflection(const Color& reflectance, bool is_normalized = false)
+      : BxDF(BxDFType(BSDF_DIFFUSE | BSDF_REFLECTION)), R(reflectance), is_normalized(is_normalized) {}
 
   Color f(const Vec3& wo, const Vec3& wi) const override {
-    return R * glm::one_over_pi<float>();
+    if(is_normalized) {
+      return R * glm::one_over_pi<float>();
+    }
+    return R;
   }
 
   BxDFSample sample_f(const Vec3& wo, const Vec2& u) const override{
@@ -60,6 +63,7 @@ public:
     s.wi = Vec3(r * std::cos(phi), r * std::sin(phi),
                 std::sqrt(std::max(0.0f, 1.0f - u.y)));
     s.pdf = pdf(wo, s.wi);
+    s.f = f(wo, s.wi);
     s.sampled_type = type;
     return s;
   }
@@ -70,6 +74,7 @@ public:
 
 private:
   Color R;
+  bool is_normalized;
 };
 
 class SpecularReflection : public BxDF {
