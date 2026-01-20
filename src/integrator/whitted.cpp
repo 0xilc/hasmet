@@ -85,10 +85,7 @@ Color WhittedIntegrator::trace_ray(Ray &ray, const Scene &scene, PathState state
     return scene.environment_light_->sample_le(ray);
   }
 
-  Color throughput(1.0f);
-  if (state.current_medium) {
-    throughput = state.current_medium->transmittance(rec.t);
-  }
+  Color throughput = state.current_medium ? state.current_medium->transmittance(rec.t) : Color(1.0f);
 
   const Material &mat = *scene.get_material(rec.material_id);
   BSDF bsdf(rec);
@@ -97,28 +94,23 @@ Color WhittedIntegrator::trace_ray(Ray &ray, const Scene &scene, PathState state
 
   Color L = shade_direct(bsdf, rec, woW, scene, ctx) * throughput;
 
-  Vec2 u = ctx.sampler.get_2d(ctx.pixel_id, ctx.sample_index, state.depth + 100);
-  BxDFSample bs = bsdf.sample_f(woW, u);
-
-  if (bs.pdf > 0 && (bs.sampled_type & BSDF_SPECULAR)) {
+  bsdf.foreach_specular_sample(woW, [&](const BxDFSample& bs) {
     PathState next_state = state;
     next_state.depth--;
-    
-    // Update medium
+
     if (bs.sampled_type & BSDF_TRANSMISSION) {
       bool entering = glm::dot(woW, rec.normal) > 0.0f;
       next_state.current_medium = entering ? mat.get_internal_medium() : nullptr;
     }
-
-    Vec3 offset_dir =
-        (is_same_hemisphere(bs.wi, rec.normal)) ? rec.normal : -rec.normal;
-    Ray next_ray(rec.p + (offset_dir * 0.00006f), bs.wi);
+    Vec3 offset_dir = (is_same_hemisphere(bs.wi, rec.normal)) ? rec.normal : -rec.normal;
+    Ray next_ray(rec.p + offset_dir * (0.00006f), bs.wi);
     next_ray.time = ray.time;
+
     Color L_recursive = trace_ray(next_ray, scene, next_state, ctx);
-    
     float cos_theta = std::abs(glm::dot(bs.wi, rec.normal));
-    L += (bs.f * L_recursive * cos_theta * throughput) / bs.pdf;
-  }
+
+    L += bs.f * L_recursive * cos_theta * throughput;
+  });
 
   return L;
 }

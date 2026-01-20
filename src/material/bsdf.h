@@ -56,6 +56,21 @@ public:
     return bxdfs.empty() ? 0.0f : pdf_val / bxdfs.size();
   }
 
+  template <typename F>
+  void foreach_specular_sample(const Vec3& woW, F&& callback) const {
+    Vec3 wo = frame.to_local(woW);
+
+    for (auto b : bxdfs) {
+      if (b->type & (BSDF_SPECULAR | BSDF_TRANSMISSION)) {
+        BxDFSample s = b->sample_f(wo, Vec2(0.0f));
+
+        if (s.pdf > 0) {
+          s.wi = frame.to_world(s.wi);
+          callback(s);
+        }
+      }
+    }
+  }
 private:
   Frame frame;
   std::vector<BxDF*> bxdfs;
