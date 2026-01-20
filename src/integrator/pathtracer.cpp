@@ -5,7 +5,6 @@
 #include "core/types.h"
 #include "film/film.h"
 #include "glm/geometric.hpp"
-#include "material/material_manager.h"
 #include "scene/scene.h"
 #include <cmath>
 #include "core/frame.h"

@@ -32,11 +32,14 @@ class Scene {
 
   bool intersect(Ray& r, HitRecord& rec) const;
   bool is_occluded(const Ray& r) const;
+  void build_bvh();
 
   void add_shape(Instance shape);
   void add_point_light(std::unique_ptr<PointLight> light);
   void add_ambient_light(std::unique_ptr<AmbientLight> light);
-  void build_bvh();
+  void add_material(std::unique_ptr<Material> mat);
+
+  const Material* get_material(int id);
 
   BVH<Instance> bvh_;
   std::vector<Instance> objects_;
@@ -49,6 +52,7 @@ class Scene {
   std::vector<std::unique_ptr<Camera>> cameras_;
   std::unique_ptr<AmbientLight> ambient_light_;
   RenderContext render_context_;
+  std::vector<std::unique_ptr<Material>> materials_;
 };
 
 } // namespace hasmet

@@ -11,7 +11,6 @@
 #include "integrator/pathtracer.h"
 #include "integrator/whitted.h"
 #include "material/material.h"
-#include "material/material_manager.h"
 #include "parser/parser_adapter.h"
 #include "scene/scene.h"
 #include "parser/parser.h"

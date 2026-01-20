@@ -1,6 +1,7 @@
 #include "scene.h"
 
 #include "core/logging.h"
+#include <memory>
 namespace hasmet {
 Scene::Scene() {}
 
@@ -14,6 +15,18 @@ void Scene::add_point_light(std::unique_ptr<PointLight> light) {
 
 void Scene::add_ambient_light(std::unique_ptr<AmbientLight> light) {
   ambient_light_ = std::move(light);
+}
+
+void Scene::add_material(std::unique_ptr<Material> mat) {
+  materials_.push_back(std::move(mat));
+}
+
+const Material* Scene::get_material(int id) {
+  if (id < 0 || id >= materials_.size()) {
+    LOG_ERROR("Invalid material id: " << id);
+  }
+
+  return materials_[id].get();
 }
 
 bool Scene::intersect(Ray& r, HitRecord& rec) const {

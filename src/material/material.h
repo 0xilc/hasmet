@@ -6,12 +6,21 @@
 #include "bsdf.h"
 
 namespace hasmet {
-enum class MaterialType{
-	BlinnPhong,
-	Mirror,
-	Conductor,
-	Dielectric,
-  Unlit
+
+// TODO: Refactor this, as it's only used by blinnphong materials.
+struct BRDFConfig {
+    enum class Type {
+        OriginalBlinnPhong,
+        OriginalPhong,
+        ModifiedBlinnPhong,
+        ModifiedPhong,
+        TorranceSparrow
+    };
+
+    Type type = Type::OriginalBlinnPhong;
+    bool normalized = false;
+    float exponent = 1.0f;
+    bool kd_fresnel = false;
 };
 
 class Material {
@@ -33,7 +42,7 @@ private:
 
 class BlinnPhongMaterial : public Material {
 public:
-  BlinnPhongMaterial(Color diffuse, Color specular, float phong_exponent)
+  BlinnPhongMaterial(Color diffuse, Color specular, float phong_exponent, BRDFConfig brdf_cfg)
     : kd_(diffuse), ks_(specular), shininess_(phong_exponent) {}
   
   void setup_bsdf(HitRecord& rec, BSDF& bsdf) const override;
@@ -41,6 +50,7 @@ private:
   Color kd_;
   Color ks_;
   float shininess_;
+  BRDFConfig brdf_config_;
 };
 
 class ConductorMaterial : public Material {
