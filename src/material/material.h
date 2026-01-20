@@ -5,6 +5,7 @@
 #include <memory>
 #include "bsdf.h"
 #include "core/medium.h"
+#include "core/logging.h"
 
 namespace hasmet {
 
@@ -58,13 +59,14 @@ private:
 
 class ConductorMaterial : public Material {
 public:
-  ConductorMaterial(Color index_refraction, Color absorption_coeff, float roughness) 
-    : eta_(index_refraction), k_(absorption_coeff), roughness_(roughness){};
+  ConductorMaterial(Color index_refraction, Color absorption_coeff, Color mirror_reflectance, float roughness) 
+    : eta_(index_refraction), k_(absorption_coeff), km_(mirror_reflectance), roughness_(roughness){};
   
   void setup_bsdf(HitRecord& rec, BSDF& bsdf) const override;
 private:
   Color eta_;          // Index of refraction
   Color k_;            // Absorption coefficient
+  Color km_;           // Mirror reflectance
   float roughness_;
 };
 

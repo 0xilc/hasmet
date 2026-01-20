@@ -219,6 +219,7 @@ namespace hasmet
           return std::make_unique<ConductorMaterial>(
             Color(material_.refraction_index),
             absorption,
+            mirror,
             material_.roughness
           );
         }

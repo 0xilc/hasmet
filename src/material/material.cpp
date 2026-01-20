@@ -47,6 +47,7 @@ void MirrorMaterial::setup_bsdf(HitRecord& rec, BSDF& bsdf) const {
 }
 
 void ConductorMaterial::setup_bsdf(HitRecord& rec, BSDF& bsdf) const {
+  bsdf.add(new ConductorReflection(eta_, k_, km_));
 }
 
 void DielectricMaterial::setup_bsdf(HitRecord& rec, BSDF& bsdf) const {
