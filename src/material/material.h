@@ -32,7 +32,8 @@ public:
 
 class MirrorMaterial : public Material {
 public:
-  MirrorMaterial(Color reflection_coefficient, float roughness);
+  MirrorMaterial(Color reflection_coefficient, float roughness)
+    : R_(reflection_coefficient), roughness_(roughness) {};
 
   void setup_bsdf(HitRecord& rec, BSDF& bsdf) const override;
 private:
