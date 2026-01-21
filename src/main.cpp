@@ -15,6 +15,7 @@
 #include "parser/parser.h"
 #include "core/timer.h"
 #include "film/tonemap.h"
+#include "integrator/pathtracer.h"
 
 using namespace hasmet;
 
@@ -32,17 +33,16 @@ int main(int argc, char* argv[]) {
 
   try {
     LOG_INFO("Reading scene...");
-    std::string scene_path = "/home/ilc/Desktop/hw1/inputs/other_dragon.json";
+    std::string scene_path = "/home/ilc/Desktop/hw6/pathTracing/inputs/cornellbox_sphere_light.json";
     Scene scene = Parser::ParserAdapter::read_scene(scene_path);
     for (const std::unique_ptr<Camera>& camera : scene.cameras_) {
       Film film(camera->film_width_, camera->film_height_, camera->image_name_);
       std::unique_ptr<Integrator> integrator;
-      // if (camera->renderer_ == "PathTracing") {
-      //   integrator = std::make_unique<PathTracerIntegrator>();
-      // } else {
-      //   integrator = std::make_unique<WhittedIntegrator>();
-      // }
-      integrator = std::make_unique<WhittedIntegrator>();
+      if (camera->renderer_ == "PathTracing") {
+        integrator = std::make_unique<PathTracerIntegrator>();
+      } else {
+        integrator = std::make_unique<WhittedIntegrator>();
+      }
       integrator->render(scene, film, *camera);
       if (film.get_extension() == "ext") {
         film.write();

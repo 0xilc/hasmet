@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bxdf.h"
+#include "core/logging.h"
 #include "core/types.h"
 #include "glm/exponential.hpp"
 #include "glm/geometric.hpp"
