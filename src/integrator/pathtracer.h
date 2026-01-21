@@ -3,6 +3,7 @@
 #include "integrator.h"
 #include "core/types.h"
 #include "core/sampler.h"
+#include "integrator/whitted.h"
 
 namespace hasmet {
 
@@ -16,7 +17,7 @@ class PathTracerIntegrator : public Integrator {
                       const Camera& camera) const override;
 
  private:
-  Color trace_path(Ray& ray, const Scene& scene, Sampler& sampler, int pid, int sid, int max_depth) const;
+  Color trace_path(Ray& ray, const Scene& scene, SamplingContext& ctx, int max_depth) const;
   Sampler sampler_;
   struct RenderConfig {
     bool use_nee;

@@ -19,19 +19,6 @@
 #include "texture/texture_manager.h"
 
 namespace hasmet {
-struct SamplingContext {
-  Sampler &sampler;
-  int pixel_id;
-  int sample_index;
-  int num_samples;
-};
-
-struct PathState {
-  int depth;
-  const Medium* current_medium;
-
-  PathState(int d) : depth(d), current_medium(nullptr) {}
-};
 
 namespace {
 inline bool is_same_hemisphere(const glm::vec3 &v1, glm::vec3 &v2) {

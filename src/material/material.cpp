@@ -3,6 +3,7 @@
 #include <glm/gtc/constants.hpp>
 #include <memory>
 #include "core/hit_record.h"
+#include "core/logging.h"
 #include "core/ray.h"
 #include "core/types.h"
 #include "glm/exponential.hpp"
@@ -15,7 +16,7 @@ namespace hasmet {
 // TODO : fix specular reflection as it must have shininess coefficient too.
 void BlinnPhongMaterial::setup_bsdf(HitRecord& rec, BSDF& bsdf) const {
   Color effective_kd = kd_;
-
+  
   // Specular Component
   switch (brdf_config_.type) {
     case BRDFConfig::Type::OriginalBlinnPhong:

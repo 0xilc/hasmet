@@ -30,13 +30,14 @@ class Sampler {
   }
 
   glm::vec2 get_2d(int pixel_id, int sample_idx, int dimension) const {
-    uint32_t hash = hash_uint32(pixel_id) ^ hash_uint32(dimension * 31692);
-    int index = (hash + sample_idx) % TABLE_SIZE;
-    return table_[index];
+    return glm::vec2(get_1d(pixel_id, sample_idx, dimension), 
+                         get_1d(pixel_id, sample_idx, dimension));
   }
 
   float get_1d(int pixel_id, int sample_idx, int dimension) const {
-    return get_2d(pixel_id, sample_idx, dimension).x;
+    static thread_local std::mt19937 gen(std::random_device{}());
+        static thread_local std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+        return dist(gen);
   }
 
  private:
