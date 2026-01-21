@@ -196,6 +196,7 @@ namespace hasmet
 
       std::unique_ptr<Material> create_material(const Parser::Material_ &material_, BRDFConfig* brdf_cfg)
       {
+        Color ambient = create_color(material_.ambient_reflectance);
         Color diffuse = create_color(material_.diffuse_reflectance);
         Color specular = create_color(material_.specular_reflectance);
         Color mirror = create_color(material_.mirror_reflectance);
@@ -247,6 +248,7 @@ namespace hasmet
         }
         // Default blinn-phong
         return std::make_unique<BlinnPhongMaterial>(
+          ambient,
           diffuse,
           specular,
           material_.phong_exponent,
