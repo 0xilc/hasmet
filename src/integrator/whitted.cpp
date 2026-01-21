@@ -92,8 +92,15 @@ Color WhittedIntegrator::trace_ray(Ray &ray, const Scene &scene, PathState state
   mat.setup_bsdf(rec, bsdf);
   Vec3 woW = -glm::normalize(ray.direction);
 
-  Color L = shade_direct(bsdf, rec, woW, scene, ctx) * throughput;
+  Color L{0.0f};
+  
+  // Ambient Light
+  L += mat.get_ambient_reflectance() * scene.ambient_light_->radiance;
 
+  // Direct Lights
+  L += shade_direct(bsdf, rec, woW, scene, ctx) * throughput;
+
+  // Recursive Components
   bsdf.foreach_specular_sample(woW, [&](const BxDFSample& bs) {
     PathState next_state = state;
     next_state.depth--;

@@ -31,6 +31,7 @@ public:
 
   virtual void setup_bsdf(HitRecord& rec, BSDF& bsdf) const = 0;
   virtual const Medium* get_internal_medium() const { return nullptr; }
+  virtual Color get_ambient_reflectance() const { return Color(0.0f); }
 };
 
 class MirrorMaterial : public Material {
@@ -46,11 +47,14 @@ private:
 
 class BlinnPhongMaterial : public Material {
 public:
-  BlinnPhongMaterial(Color diffuse, Color specular, float phong_exponent, BRDFConfig brdf_cfg)
-    : kd_(diffuse), ks_(specular), shininess_(phong_exponent) {}
+  BlinnPhongMaterial(Color ambient, Color diffuse, Color specular, float phong_exponent, BRDFConfig brdf_cfg)
+    : ka_(ambient), kd_(diffuse), ks_(specular), shininess_(phong_exponent) {}
   
   void setup_bsdf(HitRecord& rec, BSDF& bsdf) const override;
+
+  Color get_ambient_reflectance() const override{ return ka_; }
 private:
+  Color ka_;
   Color kd_;
   Color ks_;
   float shininess_;
