@@ -218,6 +218,8 @@ namespace hasmet
         
         if (type_str == "conductor") {
           return std::make_unique<ConductorMaterial>(
+            specular,
+            material_.phong_exponent,
             Color(material_.refraction_index),
             absorption,
             mirror,

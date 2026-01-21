@@ -125,7 +125,6 @@ Color WhittedIntegrator::trace_ray(Ray &ray, const Scene &scene, PathState state
 Color WhittedIntegrator::shade_direct(const BSDF &bsdf, const HitRecord &rec,
                                       const Vec3 &woW, const Scene &scene, const SamplingContext& ctx) const {
   Color L_direct(0.0f);
-
   auto process_lights = [&](const auto& light_list) {
     for (const auto& light : light_list) {
       glm::vec2 u = ctx.sampler.get_2d(ctx.pixel_id, ctx.sample_index, 0);
