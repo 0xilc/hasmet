@@ -45,6 +45,7 @@ void MirrorMaterial::setup_bsdf(HitRecord& rec, BSDF& bsdf) const {
 }
 
 void ConductorMaterial::setup_bsdf(HitRecord& rec, BSDF& bsdf) const {
+  bsdf.add(new BlinnPhongReflection(ks_, p_, false, false));
   bsdf.add(new ConductorReflection(eta_, k_, km_));
 }
 

@@ -68,15 +68,17 @@ private:
 
 class ConductorMaterial : public Material {
 public:
-  ConductorMaterial(Color index_refraction, Color absorption_coeff, Color mirror_reflectance, float roughness) 
-    : eta_(index_refraction), k_(absorption_coeff), km_(mirror_reflectance), roughness_(roughness){};
+  ConductorMaterial(Color specular, float phong, Color index_refraction, Color absorption_coeff, Color mirror_reflectance, float roughness) 
+    : ks_(specular), p_(phong), eta_(index_refraction), k_(absorption_coeff), km_(mirror_reflectance), roughness_(roughness){};
   
   void setup_bsdf(HitRecord& rec, BSDF& bsdf) const override;
 private:
+  Color ks_;
   Color eta_;          // Index of refraction
   Color k_;            // Absorption coefficient
   Color km_;           // Mirror reflectance
   float roughness_;
+  float p_;
 };
 
 class DielectricMaterial : public Material {
