@@ -36,13 +36,18 @@ public:
 
 class MirrorMaterial : public Material {
 public:
-  MirrorMaterial(Color reflection_coefficient, float roughness)
-    : R_(reflection_coefficient), roughness_(roughness) {};
+  MirrorMaterial(Color ambient, Color diffuse, Color specular, Color mirror, float p)
+    : ka_(ambient), kd_(diffuse), ks_(specular), km_(mirror), p_(p) {};
 
   void setup_bsdf(HitRecord& rec, BSDF& bsdf) const override;
+
+  Color get_ambient_reflectance() const override { return ka_; }
 private:
-  Color R_;
-  float roughness_;
+  Color ka_;
+  Color kd_;
+  Color ks_;
+  Color km_;
+  float p_;
 };
 
 class BlinnPhongMaterial : public Material {

@@ -213,7 +213,7 @@ namespace hasmet
         std::transform(type_str.begin(), type_str.end(), type_str.begin(), ::tolower);
         
         if (type_str == "mirror") {
-          return std::make_unique<MirrorMaterial>(mirror, material_.roughness);
+          return std::make_unique<MirrorMaterial>(ambient, diffuse, specular, mirror, material_.phong_exponent);
         }
         
         if (type_str == "conductor") {

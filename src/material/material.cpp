@@ -39,11 +39,9 @@ void BlinnPhongMaterial::setup_bsdf(HitRecord& rec, BSDF& bsdf) const {
 }
 
 void MirrorMaterial::setup_bsdf(HitRecord& rec, BSDF& bsdf) const {
-  if (roughness_ > 0.0f) {
-    // TODO: ADD Microfacet reflection BxDF here.
-  }
-
-  bsdf.add(new SpecularReflection(R_));
+  bsdf.add(new LambertianReflection(kd_));
+  bsdf.add(new BlinnPhongReflection(ks_, p_, false, false));
+  bsdf.add(new SpecularReflection(km_));
 }
 
 void ConductorMaterial::setup_bsdf(HitRecord& rec, BSDF& bsdf) const {
