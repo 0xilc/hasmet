@@ -18,25 +18,28 @@ void BlinnPhongMaterial::setup_bsdf(HitRecord& rec, BSDF& bsdf) const {
   Color effective_kd = kd_;
   
   // Specular Component
-  switch (brdf_config_.type) {
-    case BRDFConfig::Type::OriginalBlinnPhong:
-      bsdf.add(new BlinnPhongReflection(ks_, shininess_, false, false));
-      break;
-    case BRDFConfig::Type::OriginalPhong: 
-      bsdf.add(new PhongReflection(ks_, shininess_, false, false));
-      break;
-    case BRDFConfig::Type::ModifiedBlinnPhong: 
-      bsdf.add(new BlinnPhongReflection(ks_, shininess_, true, brdf_config_.normalized));
-      break;
-    case BRDFConfig::Type::ModifiedPhong:
-      bsdf.add(new PhongReflection(ks_, shininess_, true, brdf_config_.normalized));
-      break;
-    case BRDFConfig::Type::TorranceSparrow: 
-      bsdf.add(new MicrofacetReflection(ks_, shininess_, 1.5f));
-      break;
+  if (glm::length(ks_) > 1e-5f) {
+    switch (brdf_config_.type) {
+      case BRDFConfig::Type::OriginalBlinnPhong:
+        bsdf.add(new BlinnPhongReflection(ks_, shininess_, false, false));
+        break;
+      case BRDFConfig::Type::OriginalPhong: 
+        bsdf.add(new PhongReflection(ks_, shininess_, false, false));
+        break;
+      case BRDFConfig::Type::ModifiedBlinnPhong: 
+        bsdf.add(new BlinnPhongReflection(ks_, shininess_, true, brdf_config_.normalized));
+        break;
+      case BRDFConfig::Type::ModifiedPhong:
+        bsdf.add(new PhongReflection(ks_, shininess_, true, brdf_config_.normalized));
+        break;
+      case BRDFConfig::Type::TorranceSparrow: 
+        bsdf.add(new MicrofacetReflection(ks_, shininess_, 1.5f));
+        break;
+    }
   }
-  
-  bsdf.add(new LambertianReflection(effective_kd, brdf_config_.normalized));
+  if (glm::length(kd_) > 1e-5f) {
+    bsdf.add(new LambertianReflection(kd_, brdf_config_.normalized));
+  }
 }
 
 void MirrorMaterial::setup_bsdf(HitRecord& rec, BSDF& bsdf) const {
