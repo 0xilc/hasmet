@@ -29,19 +29,35 @@ public:
   }
 
   BxDFSample sample_f(const Vec3& woW, const Vec2& u) const {
-    Vec3 wo = frame.to_local(woW);
     if (bxdfs.empty()) return {};
-    
+    Vec3 wo = frame.to_local(woW);
+
     int n = bxdfs.size();
     int index = std::min((int)(u.x * n), n - 1);
-
     Vec2 u_remapped(u.x * n - index, u.y);
+
     BxDFSample s = bxdfs[index]->sample_f(wo, u_remapped);
-    
-    if (s.pdf > 0) {
-      s.wi = frame.to_world(s.wi);
-      s.pdf /= n;
+    if (s.pdf <= 0) return {};
+
+    if (bxdfs[index]->type & BSDF_SPECULAR) {
+        s.wi = frame.to_world(s.wi);
+        s.pdf /= n;
+        return s;
     }
+
+    s.wi = frame.to_world(s.wi);
+    s.f = Color(0.0f);
+    s.pdf = 0.0f;
+    int smooth_count = 0;
+
+    for (auto b : bxdfs) {
+        if (!(b->type & BSDF_SPECULAR)) {
+            s.f += b->f(wo, frame.to_local(s.wi));
+            s.pdf += b->pdf(wo, frame.to_local(s.wi));
+            smooth_count++;
+        }
+    }
+    s.pdf /= n;
     return s;
   }
 
