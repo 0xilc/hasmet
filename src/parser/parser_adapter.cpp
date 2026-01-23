@@ -666,6 +666,13 @@ namespace hasmet
           scene.planes_.push_back(std::move(plane_inst));
         }
 
+        // Create light indices array
+        for (int i = 0; i < scene.objects_.size(); i++) {
+          if (scene.objects_[i].is_light()) {
+            scene.light_indices_.push_back(i);
+          }
+        }
+        
         scene.build_bvh();
         return scene;
       }

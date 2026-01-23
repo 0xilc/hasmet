@@ -1,4 +1,5 @@
 #pragma once
+#include "core/hit_record.h"
 #include "core/ray.h"
 #include "integrator.h"
 #include "core/types.h"
@@ -18,6 +19,7 @@ class PathTracerIntegrator : public Integrator {
 
  private:
   Color trace_path(Ray& ray, const Scene& scene, SamplingContext& ctx, int max_depth) const;
+  Color estimate_direct(const Scene& scene, const BSDF& bsdf, const HitRecord& rec, const Vec3& woW, SamplingContext& ctx, int depth) const;
   Sampler sampler_;
   struct RenderConfig {
     bool use_nee;
