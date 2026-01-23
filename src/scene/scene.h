@@ -43,12 +43,13 @@ class Scene {
 
   BVH<Instance> bvh_;
   std::vector<Instance> objects_;
+  std::vector<int> light_indices_;
   std::vector<Instance> planes_;
   std::vector<std::unique_ptr<PointLight>> point_lights_;
   std::vector<std::unique_ptr<AreaLight>> area_lights_;
   std::vector<std::unique_ptr<SpotLight>> spot_lights_;
-  std::unique_ptr<EnvironmentLight> environment_light_;
   std::vector<std::unique_ptr<DirectionalLight>> directional_lights_;
+  std::unique_ptr<EnvironmentLight> environment_light_;
   std::vector<std::unique_ptr<Camera>> cameras_;
   std::unique_ptr<AmbientLight> ambient_light_;
   RenderContext render_context_;

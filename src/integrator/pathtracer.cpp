@@ -101,6 +101,8 @@ Color PathTracerIntegrator::trace_path(Ray &ray, const Scene &scene, SamplingCon
           //   L += throughput * emission * weight;
           // }
         }
+        
+        L += throughput * estimate_direct(scene, bsdf, rec, woW, ctx, depth);
 
         if (depth >= max_depth) break;
 
@@ -128,4 +130,39 @@ Color PathTracerIntegrator::trace_path(Ray &ray, const Scene &scene, SamplingCon
     return L;
 }
 
+Color PathTracerIntegrator::estimate_direct(const Scene& scene, const BSDF& bsdf, const HitRecord& rec, const Vec3& woW, SamplingContext& ctx, int depth) const {
+  Color Ld(0.0f);
+
+  int num_point = scene.point_lights_.size();
+  int num_area = scene.area_lights_.size();
+  int num_spot = scene.spot_lights_.size();
+  int total_lights = num_point + num_area + num_spot;
+  if (total_lights == 0) return Ld;
+
+  float light_pick_pdf = 1.0f / total_lights;
+  int rand_idx = (int)(ctx.sampler.get_1d(ctx.pixel_id, ctx.sample_index, depth + 200) * total_lights);
+  rand_idx = std::min(rand_idx, total_lights - 1);
+
+  Light* selected_light = nullptr;
+  if (rand_idx < num_point) selected_light = scene.point_lights_[rand_idx].get();
+  else if (rand_idx < num_point + num_area) selected_light = scene.area_lights_[rand_idx - num_point].get();
+  else selected_light = scene.spot_lights_[rand_idx - (num_point + num_area)].get();
+
+  Vec2 u_light = ctx.sampler.get_2d(ctx.pixel_id, ctx.sample_index, depth + 300);
+  LightSample ls = selected_light->sample_li(rec, u_light);
+
+  if (ls.pdf > 0 && glm::length(ls.L) > 0) {
+      Ray shadow_ray(rec.p + rec.normal * 1e-4f, ls.wi);
+      shadow_ray.t_max = ls.dist - 2e-4f;
+
+      if (!scene.is_occluded(shadow_ray)) {    
+          float cos_theta = std::max(0.0f, glm::dot(rec.normal, ls.wi));
+          Color f = bsdf.f(woW, ls.wi);
+          
+          Ld = (f * ls.L * cos_theta) / (ls.pdf * light_pick_pdf);
+      }
+  }
+
+  return Ld;
+}
 } // namespace hasmet
