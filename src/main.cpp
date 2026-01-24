@@ -20,21 +20,20 @@
 using namespace hasmet;
 
 int main(int argc, char* argv[]) {
-  // if (argc != 2) {
-  //   LOG_ERROR("Usage: raytracer <input_json_file>");
-  //   return 1;
-  // }
+  if (argc != 2) {
+    LOG_ERROR("Usage: raytracer <input_json_file>");
+    return 1;
+  }
 
-  // std::filesystem::path scene_path(argv[1]);
-  // if (!std::filesystem::exists(scene_path)) {
-  //   LOG_ERROR("Input file does not exist: " << scene_path);
-  //   return 1;
-  // }
+  std::filesystem::path scene_path(argv[1]);
+  if (!std::filesystem::exists(scene_path)) {
+    LOG_ERROR("Input file does not exist: " << scene_path);
+    return 1;
+  }
 
   try {
     LOG_INFO("Reading scene...");
-    std::string scene_path = "/home/ilc/Desktop/hw6/pathTracing/inputs/cornell_glass_mirror.json";
-    Scene scene = Parser::ParserAdapter::read_scene(scene_path);
+    Scene scene = Parser::ParserAdapter::read_scene(scene_path.string());
     for (const std::unique_ptr<Camera>& camera : scene.cameras_) {
       Film film(camera->film_width_, camera->film_height_, camera->image_name_);
       std::unique_ptr<Integrator> integrator;
