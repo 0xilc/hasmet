@@ -62,7 +62,7 @@ void PathTracerIntegrator::render(const Scene &scene, Film &film,
 
           Ray ray = camera.generateRay(static_cast<float>(x), static_cast<float>(y), u_pixel, u_lens);
           
-          pixel_color += trace_path(ray, scene, ctx, 6);
+          pixel_color += trace_path(ray, scene, ctx, max_depth);
         }
         film.addSample(x, y, pixel_color / static_cast<float>(camera.num_samples_));
       }
@@ -102,15 +102,12 @@ Color PathTracerIntegrator::trace_path(Ray &ray, const Scene &scene, SamplingCon
           // }
         }
         
-        L += throughput * estimate_direct(scene, bsdf, rec, woW, ctx, depth);
+        // L += throughput * estimate_direct(scene, bsdf, rec, woW, ctx, depth);
 
-        if (depth >= max_depth) break;
-
-        // TODO: add nee
         Vec2 u = ctx.sampler.get_2d(ctx.pixel_id, ctx.sample_index, depth + 10);
         BxDFSample bs = bsdf.sample_f(woW, u);
 
-        if (bs.pdf <= 0.0f || glm::length(bs.f) == 0.0f) break;
+        if (bs.pdf <= 0.0f || luminance(bs.f) < 1e-8f) break;
 
         float cos_theta = std::abs(glm::dot(bs.wi, rec.normal));
         throughput *= (bs.f * cos_theta) / bs.pdf;
@@ -118,7 +115,7 @@ Color PathTracerIntegrator::trace_path(Ray &ray, const Scene &scene, SamplingCon
         is_specular_bounce = (bs.sampled_type & BSDF_SPECULAR) != 0;
 
         if (depth >= 3) {
-          float p_live = std::min(std::max({throughput.r, throughput.g, throughput.b}), 0.99f);
+          float p_live = std::min(luminance(throughput), 0.99f);
           if (ctx.sampler.get_1d(ctx.pixel_id, ctx.sample_index, depth + 50) > p_live) break;
 
           throughput /= p_live;
@@ -152,7 +149,8 @@ Color PathTracerIntegrator::estimate_direct(const Scene& scene, const BSDF& bsdf
   LightSample ls = selected_light->sample_li(rec, u_light);
 
   if (ls.pdf > 0 && glm::length(ls.L) > 0) {
-      Ray shadow_ray(rec.p + rec.normal * 1e-4f, ls.wi);
+      Vec3 bias_normal = glm::dot(rec.normal, ls.wi) > 0 ? rec.normal : -rec.normal;
+      Ray shadow_ray(rec.p + bias_normal * 1e-4f, ls.wi);
       shadow_ray.t_max = ls.dist - 2e-4f;
 
       if (!scene.is_occluded(shadow_ray)) {    

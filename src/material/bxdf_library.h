@@ -311,7 +311,16 @@ public:
     return s;
   }
 
-  float pdf(const Vec3& wo, const Vec3& wi) const override { return 0.0f; }
+  float pdf(const Vec3& wo, const Vec3& wi) const override {
+    if (wo.z <= 0 || wi.z <= 0) return 0.0f;
+
+    Vec3 h = glm::normalize(wo + wi);
+    float cos_theta_h = std::max(0.0f, h.z);
+    float cos_theta_d = std::max(0.0f, glm::dot(h, wi));
+
+    float pdf_h = ((p + 1.0f) / (2.0f * glm::pi<float>())) * std::pow(cos_theta_h, p);
+    return pdf_h / (4.0f * std::max(0.0001f, cos_theta_d));
+  }
 
 private:
   Color ks;

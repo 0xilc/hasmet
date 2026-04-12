@@ -53,7 +53,7 @@ private:
 class BlinnPhongMaterial : public Material {
 public:
   BlinnPhongMaterial(Color ambient, Color diffuse, Color specular, float phong_exponent, BRDFConfig brdf_cfg)
-    : ka_(ambient), kd_(diffuse), ks_(specular), shininess_(phong_exponent) {}
+    : ka_(ambient), kd_(diffuse), ks_(specular), shininess_(phong_exponent), brdf_config_(brdf_cfg) {}
   
   void setup_bsdf(HitRecord& rec, BSDF& bsdf) const override;
 
