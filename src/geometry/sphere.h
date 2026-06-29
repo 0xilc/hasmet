@@ -13,6 +13,8 @@ class Sphere : public Hittable {
 
   virtual bool intersect(Ray& r, HitRecord& rec) const override;
   virtual AABB get_aabb() const override;
+  SurfaceSample sample_surface(const Vec2& u) const override;
+  float get_area() const override;
 
  private:
   AABB local_aabb_;

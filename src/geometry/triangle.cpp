@@ -89,4 +89,28 @@ bool Triangle::intersect(Ray& ray, HitRecord& rec) const {
 }
 
 AABB Triangle::get_aabb() const { return local_aabb_; }
+
+float Triangle::get_area() const {
+  Vec3 edge1 = vertices_[1] - vertices_[0];
+  Vec3 edge2 = vertices_[2] - vertices_[0];
+  return 0.5f * glm::length(glm::cross(edge1, edge2));
+}
+
+SurfaceSample Triangle::sample_surface(const Vec2& u) const {
+  // Uniform sampling on triangle via barycentric coords
+  float su = std::sqrt(u.x);
+  float b0 = 1.0f - su;
+  float b1 = u.y * su;
+  float b2 = 1.0f - b0 - b1;
+
+  Vec3 edge1 = vertices_[1] - vertices_[0];
+  Vec3 edge2 = vertices_[2] - vertices_[0];
+
+  SurfaceSample ss;
+  ss.p = b0 * vertices_[0] + b1 * vertices_[1] + b2 * vertices_[2];
+  ss.n = glm::normalize(glm::cross(edge1, edge2));
+  ss.pdf = 1.0f / get_area();
+  return ss;
+}
+
 } // namespace hasmet

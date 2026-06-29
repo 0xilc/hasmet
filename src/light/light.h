@@ -15,5 +15,6 @@ class Light{
  public:
   virtual ~Light() = default;
   virtual LightSample sample_li(const HitRecord& rec, const Vec2& u) const = 0;
+  virtual float pdf_li(const HitRecord& rec, const Vec3& wi) const { return 0.0f; }
 };
 } // namespace hasmet

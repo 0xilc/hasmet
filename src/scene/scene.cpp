@@ -64,4 +64,37 @@ bool Scene::is_occluded(const Ray& r) const {
 
 void Scene::build_bvh() { bvh_.build(objects_); }
 
+int Scene::get_total_light_count() const {
+  return static_cast<int>(point_lights_.size() + area_lights_.size() +
+                          spot_lights_.size() + light_indices_.size());
+}
+
+float Scene::light_pdf(const Ray& ray, const HitRecord& rec) const {
+  int total = get_total_light_count();
+  if (total == 0) return 0.0f;
+
+  float light_pick_pdf = 1.0f / total;
+
+  // Check if the hit is an object light
+  if (!rec.radiance.has_value()) return 0.0f;
+
+  // Find which object light was hit and get its pdf
+  for (int idx : light_indices_) {
+    float pdf = objects_[idx].pdf_li(rec, ray.direction);
+    if (pdf > 0.0f) {
+      return pdf * light_pick_pdf;
+    }
+  }
+
+  // Check area lights
+  for (const auto& al : area_lights_) {
+    float pdf = al->pdf_li(rec, ray.direction);
+    if (pdf > 0.0f) {
+      return pdf * light_pick_pdf;
+    }
+  }
+
+  return 0.0f;
+}
+
 } // namespace hasmet

@@ -60,4 +60,25 @@ bool Sphere::intersect(Ray& r, HitRecord& rec) const {
 }
 
 AABB Sphere::get_aabb() const { return local_aabb_; }
+
+float Sphere::get_area() const {
+  return 4.0f * glm::pi<float>() * radius_ * radius_;
+}
+
+SurfaceSample Sphere::sample_surface(const Vec2& u) const {
+  // Uniform sampling on sphere surface
+  float z = 1.0f - 2.0f * u.x;
+  float r = std::sqrt(std::max(0.0f, 1.0f - z * z));
+  float phi = 2.0f * glm::pi<float>() * u.y;
+
+  Vec3 local_n(r * std::cos(phi), r * std::sin(phi), z);
+  Vec3 p = center_ + radius_ * local_n;
+
+  SurfaceSample ss;
+  ss.p = p;
+  ss.n = local_n;
+  ss.pdf = 1.0f / get_area();
+  return ss;
+}
+
 } // namespace hasmet

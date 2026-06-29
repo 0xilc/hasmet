@@ -1,5 +1,6 @@
 #pragma once
 #include "hittable.h"
+#include "light/light.h"
 #include <memory>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -73,8 +74,55 @@ class Instance : public Hittable {
 
   bool is_light() const { return glm::length(radiance_) > 0; }
 
-  void sample_surface(const Vec3& shading_p, Sampler& sampler, Vec3& out_p, Vec3& out_n, float out_pdf) const {
-    // TODO: Implement this for Next event estimation
+  LightSample sample_li(const HitRecord& rec, const Vec2& u) const {
+    SurfaceSample ss = object_->sample_surface(u);
+    // Transform sampled point and normal to world space
+    Vec3 world_p = Vec3(transform_ * glm::vec4(ss.p, 1.0f));
+    glm::mat3 normal_matrix = glm::transpose(glm::mat3(inv_transform_));
+    Vec3 world_n = glm::normalize(normal_matrix * ss.n);
+
+    Vec3 wi_full = world_p - rec.p;
+    float dist2 = glm::dot(wi_full, wi_full);
+    float dist = std::sqrt(dist2);
+    Vec3 wi = wi_full / dist;
+
+    float cos_light = std::abs(glm::dot(world_n, -wi));
+    if (cos_light < 1e-8f) return {};
+
+    // Convert area PDF to solid-angle PDF: pdf_area * dist^2 / cos_light
+    // Account for transform scaling on area
+    float scale_factor = glm::length(glm::cross(
+        Vec3(transform_[0]), Vec3(transform_[1])));
+    float world_area = object_->get_area() * scale_factor;
+    float pdf_area = 1.0f / world_area;
+    float pdf_solid = pdf_area * dist2 / cos_light;
+
+    Color L = radiance_ * cos_light / dist2;
+    return { L, wi, pdf_solid, dist };
+  }
+
+  float pdf_li(const HitRecord& rec, const Vec3& wi) const {
+    // Cast a ray to find intersection with this object
+    Ray test_ray(rec.p + wi * 1e-4f, wi);
+    HitRecord test_rec;
+
+    Ray local_ray = test_ray;
+    local_ray.origin = Vec3(inv_transform_ * glm::vec4(local_ray.origin, 1.0f));
+    local_ray.direction = Vec3(inv_transform_ * glm::vec4(local_ray.direction, 0.0f));
+
+    if (!object_->intersect(local_ray, test_rec)) return 0.0f;
+
+    float dist2 = test_rec.t * test_rec.t;
+    glm::mat3 normal_matrix = glm::transpose(glm::mat3(inv_transform_));
+    Vec3 world_n = glm::normalize(normal_matrix * test_rec.normal);
+    float cos_light = std::abs(glm::dot(world_n, -wi));
+    if (cos_light < 1e-8f) return 0.0f;
+
+    float scale_factor = glm::length(glm::cross(
+        Vec3(transform_[0]), Vec3(transform_[1])));
+    float world_area = object_->get_area() * scale_factor;
+    float pdf_area = 1.0f / world_area;
+    return pdf_area * dist2 / cos_light;
   }
 
   Color radiance_{0.0f};

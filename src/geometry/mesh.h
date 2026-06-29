@@ -13,6 +13,8 @@ class Mesh : public Hittable {
 
   virtual bool intersect(Ray& ray, HitRecord& rec) const override;
   virtual AABB get_aabb() const override;
+  SurfaceSample sample_surface(const Vec2& u) const override;
+  float get_area() const override;
 
   BVH<Triangle> blas_;
   std::vector<Triangle> faces_;

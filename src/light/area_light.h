@@ -27,6 +27,7 @@ struct AreaLight : public Light {
   }
   
   LightSample sample_li(const HitRecord& rec, const Vec2& u) const override;
+  float pdf_li(const HitRecord& rec, const Vec3& wi) const override;
 };
 
 } // namespace hasmet

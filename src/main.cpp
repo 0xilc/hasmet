@@ -38,7 +38,9 @@ int main(int argc, char* argv[]) {
       Film film(camera->film_width_, camera->film_height_, camera->image_name_);
       std::unique_ptr<Integrator> integrator;
       if (camera->renderer_ == "PathTracing") {
-        integrator = std::make_unique<PathTracerIntegrator>();
+        auto pt = std::make_unique<PathTracerIntegrator>();
+        pt->configure(camera->renderer_params_);
+        integrator = std::move(pt);
       } else {
         integrator = std::make_unique<WhittedIntegrator>();
       }

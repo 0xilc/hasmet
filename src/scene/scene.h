@@ -40,6 +40,8 @@ class Scene {
   void add_material(std::unique_ptr<Material> mat);
 
   const Material* get_material(int id) const;
+  float light_pdf(const Ray& ray, const HitRecord& rec) const;
+  int get_total_light_count() const;
 
   BVH<Instance> bvh_;
   std::vector<Instance> objects_;
